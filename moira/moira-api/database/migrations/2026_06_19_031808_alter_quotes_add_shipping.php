@@ -1,0 +1,24 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('quotes', function (Blueprint $table): void {
+            $table->string('shipping_method_code')->nullable()->after('checkout_address_id');
+            $table->string('shipping_method_label')->nullable()->after('shipping_method_code');
+            $table->decimal('shipping_cost', 10, 2)->default(0)->after('shipping_method_label');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('quotes', function (Blueprint $table): void {
+            $table->dropColumn(['shipping_method_code', 'shipping_method_label', 'shipping_cost']);
+        });
+    }
+};

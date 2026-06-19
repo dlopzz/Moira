@@ -1,0 +1,15 @@
+@import '/vendor/filament/filament/dist/theme.css';
+
+@import 'tailwindcss';
+
+/* Filament maneja dark mode con la clase .dark en el <html>, no con prefers-color-scheme */
+@variant dark (&:where(.dark, .dark *));
+
+@source '../../../views/**/*.blade.php';
+@source '../../../../app/Filament/**/*.php';
+@source '../../../../app/Livewire/**/*.php';
+
+/* Equaliza el espaciado entre ítems sueltos (sin grupo) con el espacio entre grupos */
+.fi-sidebar-group[data-group-label=""] .fi-sidebar-group-items {
+    row-gap: calc(var(--spacing) * 7);
+}

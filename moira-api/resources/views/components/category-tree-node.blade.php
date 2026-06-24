@@ -42,14 +42,14 @@
             href="{{ \App\Filament\Resources\Categories\CategoryResource::getUrl('edit', ['record' => $category]) }}"
             class="flex-1 flex items-center gap-1.5 rounded-md px-2 py-1 text-sm transition-colors min-w-0
                 {{ $category->id === $currentCategoryId
-                    ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-semibold'
+                    ? 'bg-green-50 dark:bg-green-950/40 text-green-800 dark:text-green-300 font-semibold'
                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800' }}"
         >
             @if($hasChildren)
-                <span x-show="open" class="shrink-0 text-blue-400">
+                <span x-show="open" class="shrink-0 text-green-600">
                     <x-heroicon-o-folder-open class="w-4 h-4"/>
                 </span>
-                <span x-show="!open" x-cloak class="shrink-0 text-blue-400">
+                <span x-show="!open" x-cloak class="shrink-0 text-green-600">
                     <x-heroicon-o-folder class="w-4 h-4"/>
                 </span>
             @else
@@ -67,7 +67,7 @@
                 </span>
             @elseif($category->products_count > 0)
                 {{-- Hoja: cuenta productos --}}
-                <span class="ml-auto text-xs text-blue-400 dark:text-blue-500 shrink-0 pl-1">
+                <span class="ml-auto text-xs text-green-600 dark:text-green-500 shrink-0 pl-1">
                     {{ $category->products_count }}
                 </span>
             @endif

@@ -6,7 +6,6 @@ const nextConfig: NextConfig = {
       {
         protocol: 'http',
         hostname: 'moura.test',
-        port: '8080',
         pathname: '/storage/**',
       },
     ],

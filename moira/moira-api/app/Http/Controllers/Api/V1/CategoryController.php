@@ -13,7 +13,21 @@ class CategoryController extends Controller
     {
         $categories = Category::whereNull('parent_id')
             ->where('is_active', true)
-            ->with(['children' => fn ($q) => $q->where('is_active', true)->orderBy('sort_order')->orderBy('name')])
+            ->with(['children' => fn ($q) => $q
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->with(['children' => fn ($q2) => $q2
+                    ->where('is_active', true)
+                    ->orderBy('sort_order')
+                    ->orderBy('name')
+                    ->with(['children' => fn ($q3) => $q3
+                        ->where('is_active', true)
+                        ->orderBy('sort_order')
+                        ->orderBy('name')
+                    ])
+                ])
+            ])
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();

@@ -85,7 +85,7 @@ class CategoryForm
                             ->disk('public')
                             ->visibility('public')
                             ->directory('categories')
-                            ->imageEditor()
+                            ->imageResizeMode('cover')
                             ->imageCropAspectRatio('1:1')
                             ->imageResizeTargetWidth(600)
                             ->imageResizeTargetHeight(600)

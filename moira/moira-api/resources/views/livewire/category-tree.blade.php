@@ -5,7 +5,7 @@
         @if($currentCategoryId)
             <a wire:navigate
                href="{{ \App\Filament\Resources\Categories\CategoryResource::getUrl('create') }}?parent_id={{ $currentCategoryId }}"
-               class="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+               class="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 hover:text-green-900 dark:text-green-500 dark:hover:text-green-300 transition-colors"
             >
                 <x-heroicon-o-plus class="w-3.5 h-3.5 shrink-0"/>
                 Agregar subcategoría

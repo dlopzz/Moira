@@ -1,4 +1,12 @@
 @import "tailwindcss";
+@import "../styles/avanam-global.css";
+@import "../styles/avanam-content.css";
+@import "../styles/avanam-header.css";
+@import "../styles/avanam-megamenu.css";
+@import "../styles/avanam-woocommerce.css";
+@import "../styles/avanam-woocommerce-account.css";
+@import "../styles/avanam-layout.css";
+@import "../styles/avanam-footer.css";
 
 /* ── Moira Bikinis — Design Tokens (Avanam/Fabzy) ─── */
 :root {
@@ -7,8 +15,8 @@
   --global-palette2: #000000;
   --global-palette3: #325b0e;
   --global-palette4: #878787;
-  --global-palette5: #6d6d6d;
-  --global-palette6: #a1a1a1;
+  --global-palette5: #a1a1a1;
+  --global-palette6: #b0b0b0;
   --global-palette7: #f5f5f5;
   --global-palette8: #fafafa;
   --global-palette9: #ffffff;
@@ -63,24 +71,1522 @@ body {
   overflow-x: clip;
 }
 
+/* Replicates Avan's PHP-generated inline rule:
+   body, input, select, optgroup, textarea { font-size:14px; line-height:1.6; letter-spacing:1px; ... }
+   avanam-global.css normalize sets line-height:1.15 on inputs — this overrides it. */
+input, select, optgroup, textarea {
+  font-family: var(--font-montserrat), Montserrat, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 1px;
+  color: var(--global-palette4);
+}
+
 h1, h2, h3, h4, h5, h6 {
   color: var(--title);
   line-height: 1.4;
   font-weight: 500;
 }
 
-h1 { letter-spacing: 0px; }
+/* Explicit sizes — Tailwind preflight resets them to inherit (= body 14px) */
+h1 { font-size: 40px; font-weight: 500; line-height: 1.25; letter-spacing: 0px; }
+h2 { font-size: 28px; font-weight: 500; }
+h3 { font-size: 24px; font-weight: 300; line-height: 1.2; }
+h4 { font-size: 22px; }
+h5 { font-size: 20px; font-weight: 600; letter-spacing: 3px; }
+h6 { font-size: 18px; }
 
+/* Avanam: links are gray (palette4), not green */
 a {
-  color: var(--title);
+  color: var(--global-palette4);
   transition: color 0.2s ease;
 }
-a:hover { color: var(--accent); }
+a:hover { color: var(--global-palette1); }
 
 /* ── Sticky nav animation ─────────────────────────── */
 @keyframes slide-down {
   from { transform: translateY(-100%); opacity: 0; }
   to   { transform: translateY(0);     opacity: 1; }
+}
+
+/* ── Entry Hero (Avanam archive banner) ───────────── */
+/* Avanam: no padding on .entry-hero itself — height comes from entry-header min-height */
+.entry-hero {
+  position: relative;
+  background-color: var(--global-palette7);
+}
+.entry-hero-container-inner {
+  position: relative;
+  background: var(--global-palette7);
+}
+.hero-section-overlay {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+}
+.hero-container {
+  position: relative;
+  z-index: 1;
+}
+/* Avanam entry-header: flex, align center, min-height 130px for product archive */
+.entry-hero.product-archive-hero-section .entry-header {
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: left;
+  margin-bottom: 0;
+}
+@media screen and (max-width: 1024px) {
+  .entry-hero.product-archive-hero-section .entry-header { min-height: 100px; }
+}
+@media screen and (max-width: 767px) {
+  .entry-hero.product-archive-hero-section .entry-header { min-height: 70px; }
+}
+.page-title.archive-title {
+  font-size: 1.75rem;
+  font-weight: 500;
+  margin: 0.25rem 0 0;
+  color: var(--title);
+}
+
+/* ── Breadcrumbs (Avanam: product-archive uses palette3=green) ── */
+.base-breadcrumb-container {
+  font-size: 14px;
+  color: var(--global-palette3);
+  margin-bottom: 0.25rem;
+}
+.base-breadcrumb-container a {
+  color: var(--global-palette3);
+  text-decoration: none;
+}
+.base-breadcrumb-container a:hover { color: var(--global-palette1); }
+.bc-delimiter {
+  margin: 0 0.35rem;
+  opacity: 0.7;
+}
+
+/* ── Sidebar mobile hidden ────────────────────────── */
+@media (max-width: 1024px) {
+  #secondary.primary-sidebar { display: none; }
+}
+
+/* ── Price filter widget ──────────────────────────── */
+.price-filter-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.price-filter-wrap input[type="number"] {
+  width: 100%;
+  border: 1px solid var(--border);
+  padding: 0.375rem 0.5rem;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--surface);
+  outline: none;
+}
+.price-filter-wrap input[type="number"]:focus {
+  border-color: var(--accent);
+}
+.price-filter-btn {
+  background: var(--global-palette-btn-bg);
+  color: var(--global-palette-btn);
+  border: none;
+  padding: 0.45rem 1rem;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.price-filter-btn:hover {
+  background: var(--global-palette-btn-bg-hover);
+}
+.price-filter-clear {
+  font-size: 12px;
+  color: var(--text-medium);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+.price-filter-clear:hover { color: var(--text); }
+
+/* ── Loading / empty states ───────────────────────── */
+.woo-loading,
+.woo-empty {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--text-medium);
+  font-size: 14px;
+}
+
+/* ── Pagination (Avanam style) ────────────────────── */
+.woocommerce-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+.woocommerce-pagination .page-numbers {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  text-decoration: none;
+}
+.woocommerce-pagination .page-numbers:hover {
+  background: var(--global-palette7);
+  border-color: var(--accent);
+  color: var(--title);
+}
+.woocommerce-pagination .page-numbers.current {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface);
+  font-weight: 600;
+}
+
+/* ── Layout ───────────────────────────────────────── */
+.site-container {
+  max-width: var(--global-content-width);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--global-content-edge-padding);
+  padding-right: var(--global-content-edge-padding);
+}
+/* Avanam: content-area uses margin (not padding) to allow background separation.
+   Double class (0,2,0) overrides avanam-global.css .content-area { margin: 5rem 0 } (0,1,0)
+   which loads later and would otherwise win via source order at equal specificity. */
+.content-area.content-area {
+  margin-top: 3rem;
+  margin-bottom: 3rem;
+}
+@media screen and (max-width: 1024px) {
+  .content-area.content-area { margin-top: 2rem; margin-bottom: 2rem; }
+}
+@media screen and (max-width: 767px) {
+  .content-area.content-area { margin-top: 1rem; margin-bottom: 1rem; }
+}
+.content-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3.5em;
+}
+/* Avanam: has-sidebar on body (ancestor of content-container) sets two-column layout */
+.has-sidebar.has-left-sidebar .content-container {
+  grid-template-columns: 260px 1fr;
+}
+/* Mobile: collapse to single column when sidebar is hidden */
+@media screen and (max-width: 1024px) {
+  .has-sidebar.has-left-sidebar .content-container {
+    grid-template-columns: 1fr;
+  }
+}
+.primary-sidebar {
+  min-width: 0;
+}
+.site-main {
+  min-width: 0;
+}
+
+/* ── Widget (Avanam primary-sidebar.widget-area) ───── */
+.widget {
+  margin-bottom: 1.8em;
+  color: var(--global-palette4);
+}
+.widget-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: var(--global-palette3);
+}
+/* sidebar links — gray, hover accent */
+.sidebar-inner-wrap a:not(.button):not(.filter-link):not(.price-filter-btn) {
+  color: var(--global-palette4);
+}
+.sidebar-inner-wrap a:not(.button):not(.filter-link):not(.price-filter-btn):hover {
+  color: var(--global-palette1);
+}
+.widget-content {
+  font-size: 13px;
+  color: var(--global-palette4);
+}
+
+/* ── Shop top row (Avanam avanam/assets/css/woocommerce.min.css) ── */
+.base-shop-top-row {
+  padding-bottom: var(--global-sm-spacing, 0.75rem);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+@media screen and (min-width: 768px) {
+  .base-shop-top-row {
+    justify-content: flex-end;
+  }
+}
+.base-woo-results-count {
+  flex-grow: 1;
+  margin-bottom: 0.5em;
+  line-height: 30px;
+}
+.base-woo-results-count p {
+  margin: 0;
+}
+@media screen and (max-width: 1024px) {
+  .base-woo-results-count {
+    display: none;
+  }
+}
+@media screen and (min-width: 768px) {
+  .base-woo-results-count {
+    margin-bottom: 0;
+  }
+}
+.woocommerce-result-count {
+  font-size: 13px;
+  color: var(--text-medium);
+  margin: 0;
+}
+/* ordering — solo borde inferior, sin caja */
+select.orderby {
+  padding: 4px 25px 4px 5px;
+  height: auto;
+  border-radius: 0;
+  font-size: 90%;
+  background-color: transparent;
+  border-top: none;
+  border-right: none;
+  border-left: none;
+  border-bottom: 1px solid var(--border);
+  font-weight: 500;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-size: auto 18px;
+  background-repeat: no-repeat;
+  background-position: right 0 top 50%;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNSIgaGVpZ2h0PSIyNSIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2U9IiNiYmIiPjxwYXRoIGQ9Ik02IDlsNiA2IDYtNiIvPjwvc3ZnPg==");
+  color: var(--text);
+  transition: border-color 0.2s;
+}
+select.orderby:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+/* grid/list toggle — Avanam exact values */
+.base-product-toggle-container,
+.base-product-toggle-container .base-toggle-shop-layout {
+  display: flex;
+  align-items: center;
+}
+.base-product-toggle-container .base-toggle-shop-layout {
+  padding: 0 8px;
+  color: var(--global-palette5);
+  margin-left: 0.5em;
+  border: none;
+  height: 33px;
+  border-radius: 3px;
+  background: var(--global-palette7);
+  box-shadow: none;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.base-product-toggle-container .base-toggle-shop-layout .base-svg-iconset {
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+.base-product-toggle-container .base-toggle-shop-layout .base-list-svg {
+  top: -1px;
+  position: relative;
+}
+/* Avanam theme CSS: active/hover usa palette4 (#878787), no el btn-bg verde */
+.base-product-toggle-container .base-toggle-shop-layout.toggle-active,
+.base-product-toggle-container .base-toggle-shop-layout:hover {
+  color: var(--global-palette-btn);
+  background: var(--global-palette4);
+  box-shadow: none;
+}
+/* Avanam: hidden por default, solo visible ≥576px */
+.base-woo-toggle {
+  display: none;
+}
+@media screen and (min-width: 576px) {
+  .base-woo-toggle {
+    display: block;
+  }
+}
+.base-product-toggle-container.base-product-toggle-outer {
+  display: flex;
+  align-items: center;
+}
+
+/* ── Layered nav filter widgets (Avanam tmcore plugin) ── */
+
+/* hint -- tooltip (templatemela-core/assets/css/frontend.css) */
+[class*=hint--] {
+  --hint-background: #000;
+  --hint-text: #fff;
+  position: relative;
+  display: inline-block;
+}
+[class*=hint--]:before, [class*=hint--]:after {
+  position: absolute;
+  transform: translate3d(0,0,0);
+  visibility: hidden;
+  opacity: 0;
+  z-index: 1000000;
+  pointer-events: none;
+  transition: 0.3s ease;
+  transition-delay: 0ms;
+}
+[class*=hint--]:hover:before, [class*=hint--]:hover:after {
+  visibility: visible;
+  opacity: 1;
+  transition-delay: 100ms;
+}
+[class*=hint--]:before {
+  content: "";
+  position: absolute;
+  background: transparent;
+  border: 7px solid transparent;
+  z-index: 1000001;
+}
+[class*=hint--]:after {
+  background: var(--hint-background);
+  color: var(--hint-text);
+  padding: 5px;
+  font-size: 12px;
+  font-weight: normal;
+  line-height: 14px;
+  white-space: nowrap;
+  border-radius: 3px;
+}
+[class*=hint--][aria-label]:after { content: attr(aria-label); }
+.hint--top:before { border-top-color: var(--hint-background); margin-bottom: -13px; }
+.hint--top:before, .hint--top:after { bottom: 100%; left: 50%; }
+.hint--top:before { left: calc(50% - 7px); }
+.hint--top:after { transform: translateX(-50%); }
+.hint--top:hover:before { transform: translateY(-8px); }
+.hint--top:hover:after { transform: translateX(-50%) translateY(-8px); }
+
+/* reset button defaults for filter-link */
+.filter-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  display: inline-block;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* flex list layout */
+.tmcore-wp-widget-filter ul.show-display-inline {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.tmcore-wp-widget-filter ul.show-display-inline li {
+  margin: 0 10px 10px 0;
+}
+
+/* color swatches — list-style-color */
+.tmcore-wp-widget-filter ul.list-style-color .term-shape,
+.tmcore-wp-widget-filter ul.list-style-image .term-shape {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: block;
+  border-radius: 0;
+}
+.tmcore-wp-widget-filter ul.list-style-color .term-shape .term-shape-bg,
+.tmcore-wp-widget-filter ul.list-style-image .term-shape .term-shape-bg {
+  --size: 100%;
+  transition: all 0.25s ease;
+  display: block;
+  position: absolute;
+  top: 0; left: 0;
+  width: var(--size); height: var(--size);
+  border-radius: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: inset 0 0 0 1px rgba(150,150,150,0.5);
+}
+.tmcore-wp-widget-filter ul.list-style-color .term-shape .term-shape-border,
+.tmcore-wp-widget-filter ul.list-style-image .term-shape .term-shape-border {
+  --size: 100%;
+  display: block;
+  position: absolute;
+  top: 0; left: 0;
+  width: var(--size); height: var(--size);
+  border-radius: 0;
+  border: 1px solid #000;
+  opacity: 0;
+}
+.tmcore-wp-widget-filter ul.list-style-color .filter-link:hover .term-shape-border,
+.tmcore-wp-widget-filter ul.list-style-color li.chosen .term-shape-border {
+  opacity: 1;
+}
+.tmcore-wp-widget-filter ul.list-style-color .filter-link:hover .term-shape-bg,
+.tmcore-wp-widget-filter ul.list-style-color li.chosen .term-shape-bg {
+  transform: scale(0.75);
+  box-shadow: none;
+}
+.tmcore-wp-widget-filter ul.show-labels-off.list-style-color li .term-name,
+.tmcore-wp-widget-filter ul.show-labels-off.list-style-image li .term-name {
+  display: none;
+}
+.tmcore-wp-widget-filter ul.show-labels-off.list-style-color li .term-shape,
+.tmcore-wp-widget-filter ul.show-labels-off.list-style-image li .term-shape {
+  margin: 0;
+}
+
+/* text swatches — list-style-text (talle, size) */
+.tmcore-wp-widget-filter ul.list-style-text .filter-link {
+  border: 1px solid var(--global-gray-400);
+  border-radius: 0;
+  line-height: 22px;
+  padding: 5px 9px;
+  min-width: 42px;
+  user-select: none;
+  text-align: center;
+  display: inline-block;
+  font-size: 13px;
+  color: var(--global-palette4);
+  background: var(--global-palette9);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+.tmcore-wp-widget-filter ul.list-style-text li.chosen .filter-link,
+.tmcore-wp-widget-filter ul.list-style-text .filter-link:hover {
+  background: #000;
+  border-color: #000;
+  color: #fff;
+}
+
+/* active filters bar — Avanam active-filters-bar / active-filters-list */
+.active-filters-bar {
+  margin-bottom: 1rem;
+}
+.active-filters-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.active-filters-list .remove-filter-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  line-height: 24px;
+  padding: 2px 10px 2px 30px;
+  background: #e8e8e8;
+  color: #000;
+  border-radius: 5px;
+  margin: 0 15px 10px 0;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+.active-filters-list .remove-filter-link:hover {
+  color: #fff;
+  background: #000;
+}
+/* × icon via pseudo-elements */
+.active-filters-list .remove-filter-link .filter-link-text:before,
+.active-filters-list .remove-filter-link .filter-link-text:after {
+  content: "";
+  height: 13px;
+  border-left: 2px solid #000;
+  position: absolute;
+  left: 15px;
+  top: 7px;
+  transition: border-color 0.2s;
+}
+.active-filters-list .remove-filter-link .filter-link-text:before {
+  transform: rotate(-45deg);
+}
+.active-filters-list .remove-filter-link .filter-link-text:after {
+  transform: rotate(45deg);
+}
+.active-filters-list .remove-filter-link:hover .filter-link-text:before,
+.active-filters-list .remove-filter-link:hover .filter-link-text:after {
+  border-color: #fff;
+}
+/* "Quitar todos" link */
+.active-filters-list .remove-all-filters-link {
+  margin: 0 15px 10px 0;
+  font-weight: 400;
+  font-size: 13px;
+  white-space: nowrap;
+  display: block;
+  text-transform: capitalize;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text);
+  padding: 0;
+  transition: color 0.2s;
+}
+.active-filters-list .remove-all-filters-link:hover {
+  color: #000;
+}
+
+/* ── Product grid (Avanam ul.products) ───────────── */
+ul.products.product-archive {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  column-gap: 1.875em;
+  row-gap: 1.875em;
+}
+/* Avanam: grid-ss-col-2 (mobile 2 col), grid-sm-col-3 (tablet 3), grid-lg-col-4 (desktop 4) */
+ul.products.product-archive.grid-cols.grid-ss-col-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+@media screen and (min-width: 576px) {
+  ul.products.product-archive.grid-cols.grid-sm-col-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media screen and (min-width: 1025px) {
+  ul.products.product-archive.grid-cols.grid-lg-col-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+@media screen and (max-width: 1024px) {
+  ul.products.product-archive.grid-cols {
+    column-gap: 0.938em;
+    row-gap: 0.938em;
+  }
+}
+/* list view */
+ul.products.product-archive.products-list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  grid-template-columns: none;
+}
+ul.products.product-archive li.product.loop-entry.content-bg {
+  background: var(--global-palette9);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Product Cards (Avanam loop-entry) ────────────── */
+
+/* card container */
+.loop-entry.content-bg {
+  background: var(--global-palette9);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0px 15px 15px -10px rgba(0,0,0,0.05);
+}
+
+/* image area */
+.loop-entry .product-thumbnail {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  aspect-ratio: 3 / 4;
+}
+.loop-entry .product-thumbnail .woocommerce-loop-image-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  outline-offset: -5px;
+}
+.loop-entry .product-thumbnail .loop-product-image {
+  transition: transform 0.4s ease;
+}
+.loop-entry:hover .product-thumbnail .loop-product-image {
+  transform: scale(1.05);
+}
+/* placeholder when no image */
+.loop-entry .product-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: var(--global-palette7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.loop-entry .product-image-placeholder::after {
+  content: "📦";
+  font-size: 2.5rem;
+  opacity: 0.4;
+}
+
+/* wishlist / action buttons — top right column */
+.loop-entry .product-thumbnail .product-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+/* card content area — Avanam entry-content-wrap */
+.loop-entry .entry-content-wrap {
+  padding: 1rem 1rem 1.5rem;
+  position: relative;
+  margin: 0 0.5em;
+  border-radius: 0.25rem;
+  transition: transform 0.3s cubic-bezier(0.17, 0.67, 0.35, 0.95);
+}
+/* grid only: center title, price, button as Avanam does */
+.loop-entry .product-details:not(.list-content-wrap) {
+  text-align: center;
+}
+
+/* product title — Avanam: font-weight 400, font-size 14px, color palette4=gray */
+.loop-entry .woocommerce-loop-product__title {
+  padding: 0.5rem 0 0.3rem;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--global-palette4);
+}
+.loop-entry .woocommerce-loop-product__title a {
+  color: var(--global-palette4);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.loop-entry .woocommerce-loop-product__title a:hover {
+  color: var(--global-palette1);
+}
+
+/* price */
+.loop-entry .price {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.6px;
+  color: var(--global-palette3);
+  margin: 0;
+}
+.loop-entry .price del {
+  color: var(--global-palette4);
+  opacity: 0.5;
+  display: inline-block;
+}
+.loop-entry .price ins {
+  background: none;
+  font-weight: 500;
+  display: inline-block;
+  color: var(--global-palette2);
+  text-decoration: none;
+}
+.loop-entry .price .woocommerce-Price-amount {
+  font-size: inherit;
+  color: inherit;
+}
+
+/* add-to-cart / ver-producto — hidden below card, slides up on hover */
+.loop-entry .product-action-wrap {
+  width: auto;
+  position: absolute;
+  bottom: -1.8rem;
+  left: 0;
+  right: 0;
+  margin-top: 0;
+  padding: 0;
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.17, 0.67, 0.35, 0.95);
+}
+.loop-entry:hover .entry-content-wrap {
+  transform: translateY(-2rem);
+}
+.loop-entry:hover .product-action-wrap {
+  bottom: -0.8rem;
+  opacity: 1;
+}
+.loop-entry .product-action-wrap .button,
+.loop-entry .product-action-wrap .add_to_cart_button {
+  color: var(--global-palette-btn);
+  background: var(--global-palette-btn-bg);
+  text-align: center;
+  display: inline-block;
+  width: auto;
+  vertical-align: top;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 0;
+  border: 2px none transparent;
+  box-shadow: none;
+  transition: color 0.2s ease, background 0.2s ease, border 0.2s ease;
+  cursor: pointer;
+}
+.loop-entry .product-action-wrap .button:hover,
+.loop-entry .product-action-wrap .add_to_cart_button:hover {
+  background: var(--global-palette-btn-bg-hover);
+  color: var(--global-palette-btn-hover);
+}
+
+/* mobile: always show button, no hover lift */
+@media screen and (max-width: 767px) {
+  .loop-entry .product-action-wrap {
+    position: static;
+    opacity: 1;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    bottom: auto;
+  }
+  .loop-entry:hover .entry-content-wrap {
+    transform: none;
+  }
+}
+
+/* ── List view card ───────────────────────────────── */
+.loop-entry.products-list-entry {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  overflow: visible;
+}
+.loop-entry .list-thumbnail {
+  width: 120px;
+  height: 160px;
+  flex-shrink: 0;
+  aspect-ratio: auto;
+}
+.loop-entry .list-thumbnail .woocommerce-loop-image-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.loop-entry .list-content-wrap {
+  flex: 1;
+  margin: 0;
+  padding: 0.5rem 0;
+  border-radius: 0;
+  transform: none !important;
+}
+.loop-entry .loop-product-category {
+  font-size: 11px;
+  color: var(--text-medium);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+/* ── Single Product Detail (Avanam) ──────────────── */
+
+/* breadcrumb hero for single product — same height and color as archive */
+.entry-hero.single-product-hero-section .entry-header {
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+@media screen and (max-width: 1024px) {
+  .entry-hero.single-product-hero-section .entry-header { min-height: 100px; }
+}
+@media screen and (max-width: 767px) {
+  .entry-hero.single-product-hero-section .entry-header { min-height: 70px; }
+}
+
+.single-product-content-area {
+  margin: 3rem 0;
+}
+
+.single-product-container {
+  max-width: var(--global-content-width);
+  margin: 0 auto;
+  padding-left: var(--global-content-edge-padding);
+  padding-right: var(--global-content-edge-padding);
+}
+
+/* wrap-summary: two-column flex (images | summary) */
+.wrap-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2em;
+  margin-bottom: 2.5em;
+}
+
+/* ===== Product Gallery ===== */
+
+.base-product-image-wrap.product-images {
+  width: calc(57% - 1em);
+}
+
+@media (max-width: 1024px) {
+  .base-product-image-wrap.product-images {
+    width: 100%;
+  }
+}
+
+.woocommerce-product-gallery {
+  position: relative;
+}
+
+.product_image {
+  position: relative;
+}
+
+/* Main image: indented to leave room for thumbnail column */
+.gallery-has-thumbnails .base-product-gallery-main {
+  margin-left: 20%;
+}
+
+/* Main image aspect-ratio container */
+.product-main-image-inner {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+}
+
+/* Thumbnail column: absolute left */
+.base-product-gallery-thumbnails {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 20%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Track: leaves a 10px gap on the right */
+.base-product-gallery-thumbnails .splide__track {
+  width: calc(100% - 10px);
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* List: vertical stack — needs height so calc(20%) on children resolves */
+.base-product-gallery-thumbnails .splide__list {
+  display: block;
+  height: 100%;
+  list-style: none;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Individual thumbnail — same class Avanam uses */
+.bt-woo-gallery-thumbnail {
+  display: block;
+  width: 100%;
+  /* 5 slots: 5×(20%–8px) + 4×10px = 100% of track */
+  height: calc(20% - 8px);
+  margin-bottom: 10px;
+  cursor: pointer;
+  border: 0;
+  padding: 0;
+  overflow: visible;
+  box-sizing: border-box;
+  list-style: none;
+  outline: transparent solid 1px;
+  outline-offset: -1px;
+  transition: outline 0.25s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.bt-woo-gallery-thumbnail.is-active,
+.bt-woo-gallery-thumbnail:hover {
+  outline: 2px solid #efefef;
+  outline-offset: -4px;
+}
+
+.bt-woo-gallery-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.25s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+/* Scale image in on active/hover — reveals the outline border */
+.bt-woo-gallery-thumbnail.is-active img,
+.bt-woo-gallery-thumbnail:hover img {
+  transform: scale3d(0.86, 0.86, 0.86);
+}
+
+/* Mobile: thumbnails appear below main image as horizontal strip */
+@media (max-width: 767px) {
+  .product_image {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .gallery-has-thumbnails .base-product-gallery-main {
+    margin-left: 0;
+  }
+
+  .base-product-gallery-thumbnails {
+    position: static;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .base-product-gallery-thumbnails .splide__track {
+    width: 100%;
+    height: auto;
+    overflow: hidden;
+  }
+
+  .base-product-gallery-thumbnails .splide__list {
+    display: flex;
+    flex-direction: row;
+    height: auto;
+  }
+
+  .bt-woo-gallery-thumbnail {
+    width: calc(25% - 7.5px);
+    height: auto;
+    aspect-ratio: 3 / 4;
+    flex-shrink: 0;
+    margin-bottom: 0;
+    margin-right: 10px;
+  }
+}
+
+/* summary column */
+.summary.entry-summary {
+  flex: 1;
+  min-width: min(300px, 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+@media screen and (max-width: 719px) {
+  .summary.entry-summary {
+    min-width: 100%;
+    margin-left: 0;
+  }
+}
+
+div.product .product_title,
+.product_title.entry-title {
+  clear: none;
+  margin: 0 0 0.3em;
+  padding: 0;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--global-palette3);
+  line-height: 1.25;
+}
+
+.wrap_price_rating {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+div.product p.price,
+div.product span.price,
+.summary .price {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--global-palette2);
+  margin: 0;
+}
+
+div.product p.price del,
+div.product span.price del,
+.summary .price del {
+  opacity: 0.5;
+}
+
+div.product p.price ins,
+div.product span.price ins,
+.summary .price ins {
+  background: inherit;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.woocommerce-product-details__short-description {
+  margin-bottom: 1em;
+  color: var(--global-palette4);
+  font-size: 0.9em;
+  line-height: 1.7;
+}
+
+.woocommerce-product-details__short-description p { margin: 0; }
+
+/* variant selectors */
+.variations-wrap { margin-bottom: 1em; }
+
+.variation-row { margin-bottom: 0.75em; }
+
+.variation-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--global-palette3);
+  margin: 0 0 0.5em;
+}
+
+/* variation options — matching Avanam bt_variation_swatches style */
+.variation-options {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -5px;
+}
+
+.variation-option {
+  padding: 4px 10px;
+  line-height: 1.5;
+  margin: 5px;
+  border: 2px solid var(--global-gray-400);
+  border-radius: 3px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: transparent;
+  font-size: 13px;
+  color: var(--global-palette4);
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.variation-option:hover {
+  border-color: var(--global-palette1);
+}
+
+.variation-option.selected {
+  border-color: var(--global-palette1);
+  background: transparent;
+  color: var(--global-palette2);
+}
+
+.variation-option.unavailable {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* stock badge — Moira has no div.product so selectors must be flat */
+.entry-product-stock {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  line-height: 1.5;
+  font-size: 14px;
+  margin-bottom: 1em;
+  width: max-content;
+}
+.entry-product-stock.in-stock {
+  color: #2a7a25;
+  background-color: #e6f7e6;
+}
+.entry-product-stock.out-of-stock {
+  color: var(--danger);
+  background-color: rgba(231, 76, 60, 0.1);
+}
+
+/* error */
+.single-product-error {
+  color: var(--danger);
+  font-size: 13px;
+  margin-bottom: 0.5em;
+}
+
+/* form.cart — flex-wrap natural: qty+add-to-cart same row, buy-now wraps when no space
+   At wide single-column (≥640px) all three fit; at desktop two-column buy-now wraps below */
+form.cart {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1em;
+}
+
+form.cart .quantity.spinners-added {
+  flex-shrink: 0;
+}
+
+form.cart .single_add_to_cart_button {
+  flex-shrink: 0;
+}
+
+form.cart .quantity.spinners-added {
+  width: 102px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--global-palette8);
+  border: 1px solid var(--global-gray-400);
+  border-radius: 2px;
+}
+
+form.cart .quantity .quantity-btn {
+  width: 30px;
+  height: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--global-palette4);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+form.cart .quantity .quantity-btn:hover { color: var(--global-palette2); }
+
+form.cart .quantity .qty {
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  border: none;
+  background: none;
+  font-size: 14px;
+  padding: 0;
+  color: var(--global-palette2);
+  -moz-appearance: textfield;
+}
+
+form.cart .quantity .qty::-webkit-outer-spin-button,
+form.cart .quantity .qty::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* mirrors .woocommerce div.product .button.single_add_to_cart_button in avanam */
+.single_add_to_cart_button.button.alt {
+  height: 40px;
+  line-height: 40px;
+  padding: 0 2em;
+  text-align: center;
+  background-color: var(--global-palette-btn-bg);
+  color: var(--global-palette-btn);
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+
+.single_add_to_cart_button.button.alt:hover:not(:disabled) {
+  background-color: var(--global-palette-btn-bg-hover);
+  color: var(--global-palette-btn-hover);
+}
+
+.single_add_to_cart_button.button.alt:disabled,
+.single_add_to_cart_button.button.alt.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* wrap_after_button */
+.wrap_after_button {
+  border-bottom: 1px solid var(--global-gray-400);
+  padding-bottom: 1em;
+  margin-bottom: 1em;
+  display: flex;
+  align-items: center;
+  gap: 1em;
+}
+
+.wrap_compare_wishlist {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+/* Share popup */
+.share-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.share-popup-inner {
+  background: var(--global-palette9);
+  min-width: 320px;
+  max-width: min(480px, 90vw);
+  box-shadow: 0 0 2rem rgba(0, 0, 0, 0.2);
+}
+
+.share-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 30px;
+  border-bottom: 1px solid var(--global-gray-400);
+}
+
+.share-popup-title {
+  font-size: 0.9em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+  color: var(--global-palette2);
+}
+
+.share-popup-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: var(--global-palette4);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.share-popup-close:hover { color: var(--global-palette2); }
+
+.share-popup-content {
+  padding: 20px 30px 30px;
+}
+
+.share-url-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.share-url-input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--global-gray-400);
+  font-size: 13px;
+  color: var(--global-palette4);
+  background: var(--global-palette8);
+  outline: none;
+}
+
+.share-copy-btn {
+  flex-shrink: 0;
+  height: 40px;
+  padding: 0 16px;
+  white-space: nowrap;
+}
+
+/* Wishlist + compare/share buttons (Avanam woosw-btn / woosc-btn style) */
+.woosw-btn,
+.woosc-btn {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  outline: none;
+  padding: 0;
+  color: var(--global-palette3);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+.woosw-btn:hover,
+.woosc-btn:hover { color: var(--global-palette3); }
+.woosw-btn-has-icon .woosw-btn-icon,
+.woosc-btn-has-icon .woosc-btn-icon {
+  display: flex;
+  align-items: center;
+  margin-right: 7px;
+}
+
+/* product meta */
+.product_meta > span {
+  display: block;
+  color: var(--global-palette6);
+  font-size: 0.875em;
+  margin-bottom: 0.3em;
+}
+
+.product_meta > span a {
+  color: var(--global-palette6);
+}
+
+.product_meta > span a:hover {
+  color: var(--global-palette1);
+}
+
+/* tabs */
+.woocommerce-tabs.wc-tabs-wrapper {
+  margin-bottom: 70px;
+  border: 1px solid var(--global-gray-400);
+  border-radius: 5px;
+  display: block;
+  overflow: hidden;
+}
+
+@media screen and (max-width: 767px) {
+  .woocommerce-tabs.wc-tabs-wrapper { margin-bottom: 50px; }
+}
+
+ul.tabs.wc-tabs {
+  padding: 30px 30px 0;
+  margin: 0;
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  background: var(--global-palette8);
+}
+
+ul.tabs.wc-tabs::before {
+  position: absolute;
+  content: "";
+  width: 100%;
+  bottom: 0;
+  left: 0;
+  border-bottom: 1px solid var(--global-gray-400);
+  z-index: 1;
+}
+
+ul.tabs.wc-tabs li {
+  border: 1px solid var(--global-gray-400);
+  background-color: var(--global-palette8);
+  display: inline-block;
+  position: relative;
+  z-index: 0;
+  border-radius: 3px 3px 0 0;
+  margin: 0 2px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+ul.tabs.wc-tabs li a {
+  display: inline-block;
+  padding: 0.75em 1.25em;
+  font-weight: 500;
+  color: var(--global-palette5);
+  text-decoration: none;
+  font-size: calc(100% + 1px);
+  transition: color 0.2s;
+}
+
+ul.tabs.wc-tabs li a:hover { color: var(--global-palette3); }
+
+ul.tabs.wc-tabs li.active {
+  background: var(--global-palette9);
+  z-index: 2;
+  border-bottom-color: var(--global-palette9);
+}
+
+ul.tabs.wc-tabs li.active a { color: var(--global-palette3); }
+
+.woocommerce-Tabs-panel {
+  padding: 30px;
+  margin: 0;
+  background: var(--global-palette9);
+}
+
+@media screen and (max-width: 767px) {
+  ul.tabs.wc-tabs { padding: 15px 15px 0; }
+  .woocommerce-Tabs-panel { padding: 15px; }
+}
+
+.product-description-content { color: var(--global-palette4); font-size: 14px; line-height: 1.7; }
+.product-description-content p { margin-bottom: 0.75em; }
+.product-description-content table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
+.product-description-content table th,
+.product-description-content table td { border: 1px solid var(--global-gray-400); padding: 8px 12px; font-size: 13px; }
+.product-description-content table th { background: var(--global-palette7); font-weight: 600; color: var(--global-palette2); }
+
+/* reviews */
+.woocommerce-Reviews { max-width: 700px; }
+
+.review-rating-summary {
+  margin-bottom: 1.5em;
+  font-size: 1em;
+  color: var(--global-palette4);
+}
+
+.review-item {
+  border-bottom: 1px solid var(--global-gray-400);
+  padding-bottom: 1.25em;
+  margin-bottom: 1.25em;
+}
+
+.review-item:last-child { border-bottom: none; }
+
+.review-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  margin-bottom: 0.5em;
+  font-size: 0.875em;
+  color: var(--global-palette4);
+}
+
+.review-meta strong { color: var(--global-palette2); }
+
+.review-title {
+  font-weight: 600;
+  color: var(--global-palette2);
+  font-size: 0.9em;
+  margin: 0 0 0.25em;
+}
+
+.review-body {
+  font-size: 0.9em;
+  color: var(--global-palette4);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* related products */
+section.related.products { clear: both; margin-bottom: 2em; }
+
+section.related.products > h2 {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: var(--global-palette2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1.25em;
 }
 
 /* ── CMS rich-text ────────────────────────────────── */
@@ -97,3 +1603,541 @@ a:hover { color: var(--accent); }
 .cms-content em { font-style: italic; }
 .cms-content blockquote { border-left: 3px solid var(--border); padding-left: 1rem; color: var(--text-medium); margin: 1rem 0; font-style: italic; }
 .cms-content hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+/* ── Wishlist popup (#woosw_wishlist) ─────────────── */
+.woosw-popup {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 99999;
+  background: rgba(0,0,0,0.7);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+.woosw-popup.woosw-show {
+  opacity: 1;
+  visibility: visible;
+}
+.woosw-popup * { box-sizing: border-box; }
+.woosw-popup-inner {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.woosw-popup-content {
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  max-height: 100%;
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate3d(-50%, -50%, 0);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.5s;
+  overflow: hidden;
+  background: #fff;
+}
+.woosw-popup.woosw-show .woosw-popup-content {
+  top: 50%;
+}
+.woosw-popup-content > div { align-self: stretch; }
+
+/* top bar */
+.woosw-popup-content-top {
+  flex: 0 0 auto;
+  height: 48px;
+  line-height: 48px;
+  padding: 0 60px 0 20px;
+  position: relative;
+  color: #fff;
+  font-weight: 700;
+  background-color: #222;
+}
+.woosw-count-wrapper::before { content: "("; }
+.woosw-count-wrapper::after  { content: ")"; }
+.woosw-popup-close {
+  display: inline-block;
+  position: absolute;
+  top: 0; right: 0;
+  width: 48px; height: 48px;
+  line-height: 48px;
+  text-align: center;
+  cursor: pointer;
+  color: #999;
+  font-size: 20px;
+}
+.woosw-popup-close::after {
+  content: "✕";
+}
+
+/* mid (items list) */
+.woosw-popup-content-mid {
+  display: block;
+  position: relative;
+  min-height: 80px;
+  flex: 1 1 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: #fff;
+}
+.woosw-popup-content-mid-message {
+  display: block;
+  padding: 20px;
+  text-align: center;
+  color: var(--global-palette4);
+}
+.woosw-items { margin: 0; padding: 10px 0; }
+.woosw-item { padding: 0 20px; }
+.woosw-item-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px dashed #eee;
+}
+.woosw-item:first-child .woosw-item-inner { border-top: none; }
+.woosw-item-inner > div { margin-right: 10px; }
+.woosw-item-inner > div:last-child { margin-right: 0; }
+.woosw-item--image {
+  width: 80px;
+  flex: 0 0 80px;
+}
+.woosw-item--image img {
+  width: 100%;
+  height: auto;
+  border: none;
+  padding: 0; margin: 0;
+  box-shadow: none;
+}
+.woosw-item--no-image {
+  width: 80px; height: 80px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--global-palette7);
+  font-size: 1.5rem;
+}
+.woosw-item--info { flex-grow: 1; }
+.woosw-item--name,
+.woosw-item--name a {
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--global-palette2);
+  font-size: 13px;
+}
+.woosw-item--name a:hover { color: var(--global-palette1); }
+.woosw-item--price {
+  color: var(--global-palette3);
+  font-weight: 500;
+  font-size: 13px;
+  margin-top: 4px;
+}
+.woosw-item--remove {
+  width: 14px;
+  flex: 0 0 14px;
+  font-size: 0;
+}
+.woosw-item--remove span {
+  display: inline-block;
+  width: 14px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: #999;
+  line-height: 1;
+}
+.woosw-item--remove span::before { content: "✕"; }
+.woosw-item--remove span:hover::before { color: #cc6055; }
+
+/* bottom bar */
+.woosw-popup-content-bot {
+  flex: 0 0 auto;
+  padding: 20px;
+  position: relative;
+  background: #fff;
+  text-transform: uppercase;
+  overflow: hidden;
+}
+.woosw-popup-content-bot-inner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+}
+.woosw-popup-content-bot-inner a {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--global-palette2);
+  text-decoration: none;
+  border-bottom: 1px solid var(--global-palette2);
+  letter-spacing: 1px;
+}
+.woosw-popup-content-bot-inner a:hover { color: var(--global-palette1); border-color: var(--global-palette1); }
+
+/* "añadido" notice */
+.woosw-notice {
+  display: block;
+  text-align: center;
+  width: 100%;
+  height: 48px;
+  line-height: 48px;
+  padding: 0 20px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 400;
+  background: var(--global-palette3);
+  position: absolute;
+  left: 0; bottom: 0;
+  transform: translate3d(0, 100%, 0);
+  transition: all 0.5s;
+  opacity: 0;
+  visibility: hidden;
+  letter-spacing: 1px;
+}
+.woosw-notice.woosw-notice-show {
+  transform: translate3d(0, 0, 0);
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ── Cart Drawer ──────────────────────────────────────────────────────── */
+#cart-drawer.popup-drawer .drawer-inner {
+  background: var(--global-palette9);
+  color: var(--global-palette3);
+  max-width: 400px;
+  overflow-x: hidden;
+}
+@media screen and (max-width: 1024px) {
+  #cart-drawer .drawer-inner {
+    max-width: 300px;
+  }
+}
+#cart-drawer .drawer-header {
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--global-gray-400);
+  padding: 0 1.5rem;
+  min-height: 56px;
+}
+#cart-drawer .cart-toggle-close {
+  color: var(--global-palette4);
+  font-size: 20px;
+}
+#cart-drawer .cart-toggle-close:hover {
+  color: var(--global-palette3);
+}
+#cart-drawer .drawer-content {
+  padding: 0;
+}
+
+/* ── Sidebar widget titles (matches Avanam inline typography) ──────────── */
+.primary-sidebar.widget-area .widget-title {
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: var(--global-palette3);
+  display: block;
+}
+
+/* ── List view product card ────────────────────────────────────────────── */
+.products-list-view li.product.loop-entry {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  align-items: center;
+  padding: 1.5rem;
+  gap: 0;
+}
+.products-list-view li.product .product-thumbnail {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: var(--global-palette7);
+  border-radius: 2px;
+}
+.products-list-view li.product .entry-content-wrap {
+  padding: 0 0.5rem 0 1.5rem;
+  text-align: left;
+}
+.products-list-view li.product .woocommerce-loop-product__title {
+  font-size: 1.2em;
+}
+.products-list-view li.product .product-action-wrap {
+  width: auto;
+  position: static;
+  margin-top: 1em;
+  padding: 0;
+  opacity: 1;
+  transition: none;
+  display: block;
+  justify-content: unset;
+}
+.products-list-view li.product .product-action-wrap .button:not(.kb-button) {
+  display: inline-block;
+  width: auto;
+}
+.products-list-view li.product .product-excerpt {
+  font-size: 0.9em;
+  color: var(--global-palette5);
+  margin: 0.4em 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.products-list-view li.product + li.product {
+  border-top: 1px solid var(--global-gray-400);
+}
+
+/* ── Grid view: fabzy layout overrides ────────────────────────────────── */
+/* Center-align content in grid (not list) view */
+.woocommerce ul.products:not(.products-list-view) li.product .product-details.entry-content-wrap {
+  text-align: center;
+}
+
+/* Grid view: product-action-wrap centered + correct bottom offset */
+.woocommerce ul.products:not(.products-list-view) li.product .product-details.entry-content-wrap .product-action-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  bottom: -1.8rem;
+  padding: 0;
+}
+
+/* Grid view: button auto-width so flex centering works */
+.woocommerce ul.products:not(.products-list-view) li.product .product-details.entry-content-wrap .product-action-wrap .button:not(.kb-button) {
+  display: inline-block;
+  width: auto;
+}
+
+/* Grid hover: slide content up 2.6rem (matches fabzy, overrides avanam's 2rem) */
+.woocommerce ul.products.woo-archive-action-on-hover:not(.products-list-view) li.product:hover .entry-content-wrap,
+.woocommerce ul.products.woo-archive-action-on-hover:not(.products-list-view) li.product:focus-within .entry-content-wrap {
+  transform: translateY(-2.6rem);
+}
+
+
+/* ── Payment icons ────────────────────────────────────── */
+.single-product-payments {
+  margin-bottom: 1.5em;
+  margin-top: 0;
+  padding: 0.75em 1em;
+  border: none;
+  border-radius: 0.25rem;
+  background-color: var(--global-palette8);
+  text-align: center;
+}
+.single-product-payments ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5em;
+}
+.single-product-payments li { margin: 0; }
+.single-product-payments .base-svg-iconset svg { height: 25px; width: auto; display: block; }
+
+/* ── Sale badge in summary (before product title, matching Avanam) ── */
+.summary .onsale {
+  display: inline-block;
+  position: static;
+  margin: 0 0 0.6em;
+  padding: 0.3em 0.6em;
+  font-weight: 700;
+  font-size: 0.75em;
+  line-height: 1.2;
+  border-radius: 0.25rem;
+  background-color: var(--global-palette-highlight);
+  color: var(--global-palette2);
+}
+
+/* ── Cart page ──────────────────────────────────────── */
+
+/* Page container vertical spacing */
+.cart-page-container { padding-top: 2em; padding-bottom: 4em; }
+
+/* Quantity spinner inside cart table (matches product page spinner) */
+.woocommerce-cart-form .quantity.spinners-added {
+  width: 102px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--global-gray-400);
+  border-radius: 2px;
+  background: var(--global-palette9);
+}
+.woocommerce-cart-form .quantity .quantity-btn {
+  width: 30px;
+  height: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--global-palette4);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.woocommerce-cart-form .quantity .quantity-btn:hover { color: var(--global-palette2); }
+.woocommerce-cart-form .quantity .qty {
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  border: none;
+  background: none;
+  font-size: 14px;
+  padding: 0;
+  color: var(--global-palette2);
+  -moz-appearance: textfield;
+}
+.woocommerce-cart-form .quantity .qty::-webkit-outer-spin-button,
+.woocommerce-cart-form .quantity .qty::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Remove button (<button>, not <a>) */
+.woocommerce button.remove {
+  display: block;
+  font-size: 1.25em;
+  height: 24px;
+  width: 24px;
+  text-align: center;
+  line-height: 22px;
+  border-radius: 100%;
+  color: var(--danger) !important;
+  font-weight: 700;
+  background: none;
+  border: 1px solid var(--global-gray-400);
+  cursor: pointer;
+  margin: 0 auto;
+  padding: 0;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.woocommerce button.remove:hover {
+  color: #fff !important;
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+/* Product name column: left-align override (shop_table sets text-align:left but cart images center) */
+.woocommerce-cart table.cart td.product-name,
+.woocommerce-cart table.cart th.product-name {
+  text-align: left;
+}
+
+/* Product thumbnail: ensure no border from responsive rule */
+.woocommerce-cart table.cart td.product-thumbnail { text-align: center; }
+
+/* Product price and subtotal: right-align and green color */
+.woocommerce-cart table.cart td.product-price,
+.woocommerce-cart table.cart td.product-subtotal {
+  text-align: right;
+  color: var(--global-palette3);
+  font-weight: 500;
+}
+
+/* No-image placeholder in cart */
+.cart-item-no-image {
+  width: 86px;
+  height: 115px;
+  background: var(--global-palette7);
+  display: block;
+}
+
+/* Item SKU under product name */
+.cart-item-sku {
+  font-size: 11px;
+  color: var(--global-palette6);
+  margin: 0.25em 0 0;
+}
+
+/* Coupon applied state */
+.applied-coupon {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  font-size: 14px;
+  color: var(--global-palette4);
+  flex-wrap: wrap;
+}
+
+/* Coupon error message */
+.coupon-error {
+  font-size: 13px;
+  color: var(--danger);
+  width: 100%;
+  margin: 0.5em 0 0;
+}
+
+/* Cart totals: right-aligned box below the table */
+.woocommerce.woocommerce-cart .cart-collaterals .cart_totals {
+  float: right;
+  width: 48%;
+}
+.woocommerce.woocommerce-cart .cart-collaterals::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+.woocommerce.woocommerce-cart .cart_totals h2 {
+  font-size: 1em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--global-palette2);
+  margin-bottom: 0.75em;
+}
+.woocommerce-cart .cart_totals .order-total th,
+.woocommerce-cart .cart_totals .order-total td {
+  font-size: 1.1em;
+  font-weight: 700;
+}
+.woocommerce-cart .cart_totals .discount td {
+  color: var(--global-palette3);
+}
+
+/* Empty cart notice */
+.cart-empty.woocommerce-info {
+  padding: 1em 1em 1em 3.5em;
+  margin: 0 0 2em;
+  background-color: var(--global-palette8);
+  border-top: 3px solid var(--global-palette3);
+  border-left: 0;
+  position: relative;
+  font-size: 14px;
+  color: var(--global-palette4);
+}
+.cart-empty.woocommerce-info::before {
+  content: "ℹ";
+  position: absolute;
+  left: 1.25em;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.1em;
+  color: var(--global-palette3);
+}
+
+/* Return to shop */
+.return-to-shop { text-align: center; margin: 1em 0 2em; }
+
+/* Cart loading */
+.cart-loading { padding: 2em 0; color: var(--global-palette4); font-size: 14px; }
+
+@media screen and (max-width: 719px) {
+  .woocommerce.woocommerce-cart .cart-collaterals .cart_totals {
+    float: none;
+    width: 100%;
+  }
+}

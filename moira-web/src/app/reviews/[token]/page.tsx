@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { api, ApiError } from '@/lib/api';
+import { api, ApiError, imageUrl } from '@/lib/api';
 
 type ReviewInfo = {
   token: string;
@@ -124,7 +124,7 @@ export default function ReviewFormPage() {
           <div className="flex items-center gap-4 px-6 py-5 border-b border-gray-100">
             <div className="relative w-16 h-16 flex-none rounded-lg overflow-hidden bg-gray-100">
               {info?.product.image ? (
-                <Image src={info.product.image} alt={info.product.name} fill className="object-cover" sizes="64px" />
+                <Image src={imageUrl(info.product.image)!} alt={info.product.name} fill className="object-cover" sizes="64px" />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center text-gray-300 text-2xl">📦</div>
               )}

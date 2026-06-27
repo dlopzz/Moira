@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Products\Schemas;
 
+use App\Filament\Support\WebpConverter;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -129,6 +130,7 @@ class ProductForm
                     ->imageCropAspectRatio('1:1')
                     ->imageResizeTargetWidth(800)
                     ->imageResizeTargetHeight(800)
+                    ->saveUploadedFileUsing(WebpConverter::saveAs('products'))
                     ->columnSpanFull()
                     ->helperText('Máximo 5 imágenes. La primera es la imagen principal.'),
 

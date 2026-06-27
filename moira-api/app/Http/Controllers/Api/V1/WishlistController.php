@@ -18,7 +18,12 @@ class WishlistController extends Controller
 
         return response()->json([
             'product_ids' => $products->pluck('id')->values()->all(),
-            'data' => ProductResource::collection($products),
+            'data' => $products->map(function ($product) use ($request) {
+                return array_merge(
+                    (new ProductResource($product))->resolve($request),
+                    ['date_added' => $product->pivot?->created_at?->format('d/m/Y')]
+                );
+            })->values(),
         ]);
     }
 

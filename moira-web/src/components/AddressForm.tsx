@@ -67,7 +67,7 @@ export function AddressForm({ form, errors, loading, onChange, onSubmit }: Props
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4 max-w-md">
+    <form onSubmit={onSubmit} className="address-form">
       <FormField
         label="Etiqueta *"
         placeholder="Casa, Trabajo, ..."
@@ -91,18 +91,18 @@ export function AddressForm({ form, errors, loading, onChange, onSubmit }: Props
         onChange={(e) => set('address_line_2', e.target.value)}
       />
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Código postal * {zipLoading && <span className="text-gray-400 font-normal">(buscando...)</span>}
+      <div className="co-field form-row">
+        <label className="co-label">
+          Código postal *{zipLoading && <span className="co-field-hint"> (buscando...)</span>}
         </label>
         <input
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="input-text"
           value={form.zip_code}
           onChange={(e) => set('zip_code', e.target.value)}
           onBlur={(e) => lookupZip(e.target.value)}
           required
         />
-        {errors.zip_code && <p className="text-red-600 text-xs mt-1">{errors.zip_code}</p>}
+        {errors.zip_code && <span className="co-field-error">{errors.zip_code}</span>}
       </div>
 
       <FormField
@@ -113,12 +113,12 @@ export function AddressForm({ form, errors, loading, onChange, onSubmit }: Props
         required
       />
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Provincia *</label>
+      <div className="co-field form-row">
+        <label className="co-label">Provincia *</label>
         <select
           value={form.state}
           onChange={(e) => set('state', e.target.value)}
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="input-text addr-select"
           required
         >
           <option value="">Seleccioná una provincia</option>
@@ -126,16 +126,12 @@ export function AddressForm({ form, errors, loading, onChange, onSubmit }: Props
             <option key={p} value={p}>{p}</option>
           ))}
         </select>
-        {errors.state && <p className="text-red-600 text-xs mt-1">{errors.state}</p>}
+        {errors.state && <span className="co-field-error">{errors.state}</span>}
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">País</label>
-        <input
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-gray-50 text-gray-500"
-          value="Argentina"
-          disabled
-        />
+      <div className="co-field form-row">
+        <label className="co-label">País</label>
+        <input className="input-text" value="Argentina" disabled />
         <input type="hidden" value="AR" name="country" />
       </div>
 
@@ -148,22 +144,31 @@ export function AddressForm({ form, errors, loading, onChange, onSubmit }: Props
         required
       />
 
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={!!form.is_default}
-          onChange={(e) => set('is_default', e.target.checked)}
-        />
-        Usar como dirección predeterminada
-      </label>
+      <div className="address-form-checkboxes">
+        <label className="co-checkbox-label">
+          <input
+            type="checkbox"
+            checked={!!form.is_default_billing}
+            onChange={(e) => set('is_default_billing', e.target.checked)}
+          />
+          Usar como dirección de facturación predeterminada
+        </label>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
-      >
-        {loading ? 'Guardando...' : 'Guardar'}
-      </button>
+        <label className="co-checkbox-label">
+          <input
+            type="checkbox"
+            checked={!!form.is_default_shipping}
+            onChange={(e) => set('is_default_shipping', e.target.checked)}
+          />
+          Usar como dirección de envío predeterminada
+        </label>
+      </div>
+
+      <div className="address-form-submit">
+        <button type="submit" disabled={loading} className="button alt">
+          {loading ? 'Guardando...' : 'Guardar dirección'}
+        </button>
+      </div>
     </form>
   );
 }

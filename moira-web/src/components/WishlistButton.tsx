@@ -1,50 +1,78 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
-import { getToken } from '@/lib/auth';
-import { useWishlist } from '@/lib/wishlist-context';
+import { useWishlist, type WishlistItem } from '@/lib/wishlist-context';
+
+function HeartIcon({ filled }: { filled: boolean }) {
+  return filled ? (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="var(--global-palette3)" stroke="none">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  ) : (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--global-palette4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  );
+}
 
 export default function WishlistButton({
-  productId,
+  product,
   inline = false,
 }: {
-  productId: number;
+  product: WishlistItem;
   inline?: boolean;
 }) {
   const { isInWishlist, toggle } = useWishlist();
-  const router = useRouter();
-  const pathname = usePathname();
-  const inWishlist = isInWishlist(productId);
+  const inWishlist = isInWishlist(product.id);
 
   async function handleClick(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-    if (!getToken()) {
-      router.push(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
-      return;
+    try {
+      await toggle(product);
+    } catch {
+      // silently ignore
     }
-    await toggle(productId);
   }
 
-  const cls = inline
-    ? 'p-1.5 rounded-full hover:bg-gray-100 transition-colors'
-    : 'absolute top-2 right-2 p-1.5 bg-white/80 backdrop-blur-sm rounded-full shadow-sm hover:bg-white transition-colors z-10';
+  if (inline) {
+    return (
+      <button
+        onClick={handleClick}
+        className="woosw-btn woosw-btn-has-icon woosw-btn-icon-text"
+        aria-label={inWishlist ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+      >
+        <span className="woosw-btn-icon">
+          <HeartIcon filled={inWishlist} />
+        </span>
+        <span className="woosw-btn-text">Favoritos</span>
+      </button>
+    );
+  }
 
   return (
     <button
       onClick={handleClick}
-      className={cls}
       aria-label={inWishlist ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+      style={{
+        position: 'absolute',
+        top: '8px',
+        right: '8px',
+        zIndex: 10,
+        width: '34px',
+        height: '34px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--global-palette9)',
+        border: inWishlist ? '1px solid var(--global-palette3)' : '1px solid transparent',
+        borderRadius: '50%',
+        boxShadow: 'rgba(0,0,0,0.16) 0px 1px 3px',
+        transition: 'border-color 0.2s ease',
+        cursor: 'pointer',
+        padding: 0,
+      }}
     >
-      {inWishlist ? (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-        </svg>
-      ) : (
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-400 hover:text-yellow-400 transition-colors" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-        </svg>
-      )}
+      <HeartIcon filled={inWishlist} />
     </button>
   );
 }

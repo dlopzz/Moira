@@ -2,12 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { api, type Category } from '@/lib/api';
-import '@/styles/avanam-global.css';
-import '@/styles/avanam-content.css';
-import '@/styles/avanam-header.css';
-import '@/styles/avanam-megamenu.css';
-import '@/styles/avanam-woocommerce.css';
-import '@/styles/avanam-layout.css';
+import { getToken } from '@/lib/auth';
+import { useCart } from '@/lib/cart-context';
+import LoginDrawer from '@/components/LoginDrawer';
 
 const ArrowDown = () => (
   <span className="dropdown-nav-toggle">
@@ -64,16 +61,22 @@ function MobileNavItem({
 }
 
 export default function Header() {
+  const { cart, toggleCart } = useCart();
+  const cartCount = cart?.summary.items_count ?? 0;
   const [categories, setCategories] = useState<Category[]>([]);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [drawerOpen, setDrawerOpen]     = useState(false);
   const [expanded, setExpanded]         = useState<Set<number>>(new Set());
+  const [isLoggedIn, setIsLoggedIn]     = useState(false);
+  const [loginDrawerVisible, setLoginDrawerVisible] = useState(false);
+  const [loginDrawerOpen, setLoginDrawerOpen]       = useState(false);
 
   useEffect(() => {
     api.getCategories().then(r => {
       const root = r.data[0];
       setCategories(root?.children ?? r.data);
     }).catch(() => {});
+    setIsLoggedIn(!!getToken());
   }, []);
 
   useEffect(() => {
@@ -107,6 +110,26 @@ export default function Header() {
     setDrawerOpen(false);
     setTimeout(() => setDrawerVisible(false), 300);
     document.body.style.overflow = '';
+  };
+
+  const openLoginDrawer = () => {
+    setLoginDrawerVisible(true);
+    requestAnimationFrame(() => requestAnimationFrame(() => setLoginDrawerOpen(true)));
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeLoginDrawer = () => {
+    setLoginDrawerOpen(false);
+    setTimeout(() => setLoginDrawerVisible(false), 300);
+    document.body.style.overflow = '';
+  };
+
+  const handleAccountClick = () => {
+    if (isLoggedIn) {
+      window.location.href = '/profile';
+    } else {
+      openLoginDrawer();
+    }
   };
 
   const toggleItem = (id: number) => {
@@ -198,39 +221,43 @@ export default function Header() {
                                 <ul id="primary-menu" className="menu">
                                   {categories.map((cat) => {
                                     const children = cat.children ?? [];
-                                    const cols = Math.min(children.length + (cat.image_url ? 1 : 0), 6);
+                                    const showImage = children.length > 0 && !!cat.image_url;
+                                    const cols = Math.min(children.length + (showImage ? 1 : 0), 6);
+                                    const hasDrop = children.length > 0;
                                     return (
                                       <li key={cat.id} id={`menu-item-cat-${cat.id}`}
-                                        className={`menu-item menu-item-type-taxonomy menu-item-object-product_cat menu-item-has-children base-menu-mega-enabled base-menu-mega-width-content base-menu-mega-columns-${cols} base-menu-mega-layout-equal`}>
+                                        className={`menu-item menu-item-type-taxonomy menu-item-object-product_cat${hasDrop ? ` menu-item-has-children base-menu-mega-enabled base-menu-mega-width-content base-menu-mega-columns-${cols} base-menu-mega-layout-equal` : ''}`}>
                                         <a href={`/categories/${cat.slug}`}>
-                                          <span className="nav-drop-title-wrap">{cat.name}<ArrowDown /></span>
+                                          <span className="nav-drop-title-wrap">{cat.name}{hasDrop && <ArrowDown />}</span>
                                         </a>
-                                        <ul className="sub-menu">
-                                          {children.map(child => {
-                                            const grandchildren = child.children ?? [];
-                                            return (
-                                              <li key={child.id} className={`menu-item${grandchildren.length > 0 ? ' menu-item-has-children' : ''}`}>
-                                                <a href={`/categories/${child.slug}`}>
-                                                  <span className="nav-drop-title-wrap">{child.name}</span>
-                                                </a>
-                                                {grandchildren.length > 0 && (
-                                                  <ul className="sub-menu">
-                                                    {grandchildren.map(gc => (
-                                                      <li key={gc.id} className="menu-item">
-                                                        <a href={`/categories/${gc.slug}`}>{gc.name}</a>
-                                                      </li>
-                                                    ))}
-                                                  </ul>
-                                                )}
+                                        {hasDrop && (
+                                          <ul className="sub-menu">
+                                            {children.map(child => {
+                                              const grandchildren = child.children ?? [];
+                                              return (
+                                                <li key={child.id} className={`menu-item${grandchildren.length > 0 ? ' menu-item-has-children' : ''}`}>
+                                                  <a href={`/categories/${child.slug}`}>
+                                                    <span className="nav-drop-title-wrap">{child.name}</span>
+                                                  </a>
+                                                  {grandchildren.length > 0 && (
+                                                    <ul className="sub-menu">
+                                                      {grandchildren.map(gc => (
+                                                        <li key={gc.id} className="menu-item">
+                                                          <a href={`/categories/${gc.slug}`}>{gc.name}</a>
+                                                        </li>
+                                                      ))}
+                                                    </ul>
+                                                  )}
+                                                </li>
+                                              );
+                                            })}
+                                            {showImage && (
+                                              <li className="menu-item mega-menu-image-col">
+                                                <img src={cat.image_url!} alt={cat.name} className="mega-menu-image" />
                                               </li>
-                                            );
-                                          })}
-                                          {cat.image_url && (
-                                            <li className="menu-item mega-menu-image-col">
-                                              <img src={cat.image_url} alt={cat.name} className="mega-menu-image" />
-                                            </li>
-                                          )}
-                                        </ul>
+                                            )}
+                                          </ul>
+                                        )}
                                       </li>
                                     );
                                   })}
@@ -246,14 +273,13 @@ export default function Header() {
                             <div className="header-divider2" />
                           </div>
                           <div className="site-header-item site-header-focus-item">
-                            <div className="header-account-wrap header-account-control-wrap header-account-style-icon_title_label">
-                              <button className="header-account-button">
+                            <div className="header-account-wrap header-account-control-wrap header-account-action-modal header-account-style-icon_title_label">
+                              <button className="drawer-toggle header-account-button" onClick={handleAccountClick} aria-expanded={loginDrawerOpen}>
                                 <span className="base-svg-iconset">
                                   <svg className="thebase-svg-icon thebase-account-svg" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 680 800"><title>Account</title><path d="M620,771c.66-8.78,1.16-17.58,2-26.34,2.66-27.06,9.23-52.82,26.25-74.82a94.58,94.58,0,0,1,51-34.12c48.28-13.21,92.92-34.28,134.68-61.67,14.65-9.61,32.71-2.6,35.6,14.15,1.71,9.88-2.21,17.94-10.77,22.89-22.17,12.82-44.22,25.94-67,37.57-25.38,13-52.27,22.29-79.78,29.9-22.87,6.32-35.15,22.94-41,44.92-6.8,25.59-6.63,51.76-5.49,77.94.29,6.64,1.31,13.26,1.76,19.9.3,4.43,2.41,6.94,6.38,9,31.24,16.29,64,28.78,97.75,38.67,71.15,20.83,143.87,28.82,217.78,25.83,83-3.36,163-20,238.85-54.79,7.25-3.33,14.34-7,21.36-10.84,1.52-.82,3.32-2.63,3.52-4.18,4.59-34.24,5.48-68.5-3.14-102.23-6.07-23.72-20.74-39.68-45.4-45.54a266.78,266.78,0,0,1-26.66-8.3,515.26,515.26,0,0,1-115.4-57.55c-15.5-10.35-14.87-31.22,1-39.22,8.34-4.19,16.3-2.92,24.05,2.21a480.55,480.55,0,0,0,104.25,52.07c8.3,3,16.69,5.74,25.21,7.94,39.41,10.19,63.84,35.68,75.05,74.08,3.52,12.06,4.84,24.77,7.17,37.17.28,1.46.62,2.9.93,4.35v63c-1,6.89-2.19,13.76-3,20.68-1.75,15.07-8,26.63-22.72,33.08-20.71,9.06-40.68,19.92-61.68,28.18-64.18,25.26-131.08,38.56-199.78,43.23-8,.54-15.89,1.22-23.83,1.83H933c-2-.27-3.92-.72-5.88-.8a707.29,707.29,0,0,1-146.88-21.31c-46.87-12-92-28.55-134.57-51.86-11.26-6.16-18.36-14.38-20.33-27-.75-4.76-1.84-9.48-2.36-14.26-1.13-10.56-2-21.16-3-31.74Z" transform="translate(-620 -140)"/><path d="M973,140c9.52,1.49,19.16,2.42,28.53,4.55,66.23,15.08,108.45,55.84,123.16,121.82,14.84,66.59,12,133.13-11.71,197.77-12.17,33.11-31.8,61-61.49,81.06-24,16.21-50.81,23.83-79.38,25.5-32,1.86-62.82-3-91.33-18.44-33.85-18.39-56.07-47-70.71-82-16.15-38.52-22-79.06-22.28-120.53-.19-32.38,1.23-64.7,11.25-95.86,20.14-62.69,63.42-99,127.76-111,6.68-1.23,13.46-2,20.2-2.94ZM831.94,343.33c.48,34.44,3.77,66,14,96.46,5.33,15.88,12.53,30.81,22.68,44.22,19.13,25.28,44.87,38.67,76.13,41.46,33,2.95,64.24-1.82,90.68-24,16.62-13.91,27.59-31.84,35.58-51.75,10-24.82,14.7-50.79,16.45-77.33,2.09-31.69,1.57-63.36-5.63-94.44-8.87-38.25-29.78-67.32-67.07-82.59-23.44-9.6-48-12.44-73-9.42-48.32,5.81-82.25,30.36-98.78,77C833.46,289.8,832.89,317.84,831.94,343.33Z" transform="translate(-620 -140)"/></svg>
                                 </span>
                                 <div className="header-account-content">
-                                  <span className="header-account-title">ACCOUNT</span>
-                                  <span className="header-account-label">GET ALL OPTION</span>
+                                  <span className="header-account-title">CUENTA</span>
                                 </div>
                               </button>
                             </div>
@@ -262,14 +288,13 @@ export default function Header() {
                             <div className="header-cart-wrap base-header-cart">
                               <span className="header-cart-empty-check header-cart-is-empty-true"></span>
                               <div className="header-cart-inner-wrap cart-show-label-true cart-style-slide">
-                                <button className="header-cart-button">
+                                <button className="header-cart-button" onClick={toggleCart} aria-label="Abrir carrito">
                                   <span className="base-svg-iconset">
                                     <svg className="thebase-svg-icon thebase-shopping-cart-svg" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" viewBox="0 0 639 800"><title>Shopping Cart</title><path d="M926.19,672.43c2-2.86,2.93-4.71,4.32-6.1q55.41-55.55,110.89-111c6.14-6.16,13.14-9,21.71-6.38a19.59,19.59,0,0,1,9.92,30.72,48.17,48.17,0,0,1-4.39,4.77q-63,63.11-126.12,126.18c-11.24,11.23-22,11.21-33.29-.05q-29-29-58-57.94c-5.29-5.26-8.25-11.32-6.86-18.86s6-13,13.33-15.47c7.83-2.63,14.83-.64,20.63,5.13q21.63,21.48,43.11,43.11C922.76,667.81,923.78,669.38,926.19,672.43Z" transform="translate(-641 -140)"/><path d="M1280,828v17c-1.56,6.42-2.56,13-4.76,19.22-13.84,38.83-42.54,61.08-81.29,71.7-6.84,1.87-14,2.74-21,4.08H748c-7-1.34-14.1-2.22-21-4.08-37.83-10.29-66.14-31.87-80.48-69.35-2.63-6.9-3.75-14.37-5.57-21.57V828c1.29-12.55,2.74-25.09,3.86-37.66,4.18-46.94,8.21-93.89,12.38-140.83q8.25-92.79,16.6-185.58,6.51-72.9,12.95-145.79c1.39-15.45,8.38-21.69,24.06-21.7q43.47,0,87,0c1.92,0,3.85-.16,5.79-.25.42-5.48.7-10.45,1.21-15.39A156.33,156.33,0,0,1,918.75,145.83c9.56-2.64,19.49-3.92,29.25-5.83h24a35.13,35.13,0,0,0,3.87.83,156.57,156.57,0,0,1,139.22,131.6c1.21,7.83,1.71,15.77,2.58,24h48.07c15.66,0,31.32-.14,47,.05,13,.16,20.36,7.3,21.39,20.14.65,8.13,1.41,16.26,2.14,24.39q6.81,75.87,13.6,151.75,6.75,76.14,13.38,152.28,6.91,78.38,13.93,156.74C1277.94,810.54,1279,819.27,1280,828ZM725.24,336.45c-.16,1.35-.28,2.17-.35,3l-7.29,81.62q-4.79,53.74-9.59,107.5-4.23,47.53-8.4,95.06-4.79,54-9.62,108c-2.83,31.86-5.32,63.75-8.63,95.55-2,18.74,3.32,34.62,16.2,47.94C714.5,892.65,735.77,900,759.77,900q200.72.07,401.43-.06a95.46,95.46,0,0,0,20.31-2.09c22.06-4.85,40.1-15.83,51.73-35.88,7.14-12.3,7.3-25.47,6-39.22-3.52-35.63-6.38-71.33-9.55-107q-5.23-59-10.56-118-4.74-53.5-9.4-107-5.34-60.46-10.75-120.94c-1-11.07-2-22.14-3.07-33.24h-78.79v5.89c0,21.17.12,42.33-.07,63.49a19.67,19.67,0,0,1-25.52,18.94c-8.76-2.62-14.14-10.26-14.18-20.65-.09-20.66,0-41.33,0-62,0-1.92-.17-3.84-.27-5.78H843.73v5.73c0,20.16.06,40.32-.06,60.49a33,33,0,0,1-1.33,9.81,19.59,19.59,0,0,1-21.16,13.13c-9.85-1.55-17.08-9.29-17.16-19.13-.19-21.49-.08-43-.09-64.48v-5.61ZM843.5,296.1h233.19c4.33-32.1-19.35-76.72-53-97.52-41.07-25.4-83.45-26.14-124.64-1C862.94,219.65,845.26,253.36,843.5,296.1Z" transform="translate(-641 -140)"/></svg>
                                   </span>
-                                  <span className="header-cart-total header-cart-is-empty-true">0</span>
+                                  <span className="header-cart-total">{cartCount}</span>
                                   <div className="header-cart-content">
-                                    <span className="header-cart-title">VIEW CART</span>
-                                    <span className="header-cart-label">ITEMS</span>
+                                    <span className="header-cart-title">CARRITO</span>
                                   </div>
                                 </button>
                               </div>
@@ -307,9 +332,9 @@ export default function Header() {
                       </div>
                       <div className="site-header-item site-header-focus-item">
                         <div className="header-search-advanced header-item-search-advanced">
-                          <form role="search" method="get" className="search-form">
+                          <form role="search" method="get" action="/search" className="search-form">
                             <div className="input-container">
-                              <input type="search" className="search-field" placeholder="Search products…" name="s" autoComplete="off" />
+                              <input type="search" className="search-field" placeholder="Buscar productos…" name="q" autoComplete="off" />
                             </div>
                             <button type="submit" className="search-submit">
                               <span className="search-btn-icon">
@@ -407,21 +432,21 @@ export default function Header() {
                           </div>
                           <div className="site-header-item site-header-focus-item">
                             <div className="header-mobile-account-wrap header-account-control-wrap header-account-action-link header-account-style-icon">
-                              <a href="/account" className="header-account-button">
+                              <button className="header-account-button" onClick={handleAccountClick} aria-expanded={loginDrawerOpen}>
                                 <span className="base-svg-iconset">
                                   <svg className="thebase-svg-icon thebase-account-svg" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 680 800"><title>Account</title><path d="M620,771c.66-8.78,1.16-17.58,2-26.34,2.66-27.06,9.23-52.82,26.25-74.82a94.58,94.58,0,0,1,51-34.12c48.28-13.21,92.92-34.28,134.68-61.67,14.65-9.61,32.71-2.6,35.6,14.15,1.71,9.88-2.21,17.94-10.77,22.89-22.17,12.82-44.22,25.94-67,37.57-25.38,13-52.27,22.29-79.78,29.9-22.87,6.32-35.15,22.94-41,44.92-6.8,25.59-6.63,51.76-5.49,77.94.29,6.64,1.31,13.26,1.76,19.9.3,4.43,2.41,6.94,6.38,9,31.24,16.29,64,28.78,97.75,38.67,71.15,20.83,143.87,28.82,217.78,25.83,83-3.36,163-20,238.85-54.79,7.25-3.33,14.34-7,21.36-10.84,1.52-.82,3.32-2.63,3.52-4.18,4.59-34.24,5.48-68.5-3.14-102.23-6.07-23.72-20.74-39.68-45.4-45.54a266.78,266.78,0,0,1-26.66-8.3,515.26,515.26,0,0,1-115.4-57.55c-15.5-10.35-14.87-31.22,1-39.22,8.34-4.19,16.3-2.92,24.05,2.21a480.55,480.55,0,0,0,104.25,52.07c8.3,3,16.69,5.74,25.21,7.94,39.41,10.19,63.84,35.68,75.05,74.08,3.52,12.06,4.84,24.77,7.17,37.17.28,1.46.62,2.9.93,4.35v63c-1,6.89-2.19,13.76-3,20.68-1.75,15.07-8,26.63-22.72,33.08-20.71,9.06-40.68,19.92-61.68,28.18-64.18,25.26-131.08,38.56-199.78,43.23-8,.54-15.89,1.22-23.83,1.83H933c-2-.27-3.92-.72-5.88-.8a707.29,707.29,0,0,1-146.88-21.31c-46.87-12-92-28.55-134.57-51.86-11.26-6.16-18.36-14.38-20.33-27-.75-4.76-1.84-9.48-2.36-14.26-1.13-10.56-2-21.16-3-31.74Z" transform="translate(-620 -140)"/><path d="M973,140c9.52,1.49,19.16,2.42,28.53,4.55,66.23,15.08,108.45,55.84,123.16,121.82,14.84,66.59,12,133.13-11.71,197.77-12.17,33.11-31.8,61-61.49,81.06-24,16.21-50.81,23.83-79.38,25.5-32,1.86-62.82-3-91.33-18.44-33.85-18.39-56.07-47-70.71-82-16.15-38.52-22-79.06-22.28-120.53-.19-32.38,1.23-64.7,11.25-95.86,20.14-62.69,63.42-99,127.76-111,6.68-1.23,13.46-2,20.2-2.94ZM831.94,343.33c.48,34.44,3.77,66,14,96.46,5.33,15.88,12.53,30.81,22.68,44.22,19.13,25.28,44.87,38.67,76.13,41.46,33,2.95,64.24-1.82,90.68-24,16.62-13.91,27.59-31.84,35.58-51.75,10-24.82,14.7-50.79,16.45-77.33,2.09-31.69,1.57-63.36-5.63-94.44-8.87-38.25-29.78-67.32-67.07-82.59-23.44-9.6-48-12.44-73-9.42-48.32,5.81-82.25,30.36-98.78,77C833.46,289.8,832.89,317.84,831.94,343.33Z" transform="translate(-620 -140)"/></svg>
                                 </span>
-                              </a>
+                              </button>
                             </div>
                           </div>
                           <div className="site-header-item site-header-focus-item">
                             <div className="header-mobile-cart-wrap base-header-cart">
                               <div className="header-cart-inner-wrap">
-                                <button className="header-cart-button">
+                                <button className="header-cart-button" onClick={toggleCart} aria-label="Abrir carrito">
                                   <span className="base-svg-iconset">
                                     <svg className="thebase-svg-icon thebase-shopping-cart-svg" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.5" viewBox="0 0 639 800"><title>Shopping Cart</title><path d="M926.19,672.43c2-2.86,2.93-4.71,4.32-6.1q55.41-55.55,110.89-111c6.14-6.16,13.14-9,21.71-6.38a19.59,19.59,0,0,1,9.92,30.72,48.17,48.17,0,0,1-4.39,4.77q-63,63.11-126.12,126.18c-11.24,11.23-22,11.21-33.29-.05q-29-29-58-57.94c-5.29-5.26-8.25-11.32-6.86-18.86s6-13,13.33-15.47c7.83-2.63,14.83-.64,20.63,5.13q21.63,21.48,43.11,43.11C922.76,667.81,923.78,669.38,926.19,672.43Z" transform="translate(-641 -140)"/><path d="M1280,828v17c-1.56,6.42-2.56,13-4.76,19.22-13.84,38.83-42.54,61.08-81.29,71.7-6.84,1.87-14,2.74-21,4.08H748c-7-1.34-14.1-2.22-21-4.08-37.83-10.29-66.14-31.87-80.48-69.35-2.63-6.9-3.75-14.37-5.57-21.57V828c1.29-12.55,2.74-25.09,3.86-37.66,4.18-46.94,8.21-93.89,12.38-140.83q8.25-92.79,16.6-185.58,6.51-72.9,12.95-145.79c1.39-15.45,8.38-21.69,24.06-21.7q43.47,0,87,0c1.92,0,3.85-.16,5.79-.25.42-5.48.7-10.45,1.21-15.39A156.33,156.33,0,0,1,918.75,145.83c9.56-2.64,19.49-3.92,29.25-5.83h24a35.13,35.13,0,0,0,3.87.83,156.57,156.57,0,0,1,139.22,131.6c1.21,7.83,1.71,15.77,2.58,24h48.07c15.66,0,31.32-.14,47,.05,13,.16,20.36,7.3,21.39,20.14.65,8.13,1.41,16.26,2.14,24.39q6.81,75.87,13.6,151.75,6.75,76.14,13.38,152.28,6.91,78.38,13.93,156.74C1277.94,810.54,1279,819.27,1280,828ZM725.24,336.45c-.16,1.35-.28,2.17-.35,3l-7.29,81.62q-4.79,53.74-9.59,107.5-4.23,47.53-8.4,95.06-4.79,54-9.62,108c-2.83,31.86-5.32,63.75-8.63,95.55-2,18.74,3.32,34.62,16.2,47.94C714.5,892.65,735.77,900,759.77,900q200.72.07,401.43-.06a95.46,95.46,0,0,0,20.31-2.09c22.06-4.85,40.1-15.83,51.73-35.88,7.14-12.3,7.3-25.47,6-39.22-3.52-35.63-6.38-71.33-9.55-107q-5.23-59-10.56-118-4.74-53.5-9.4-107-5.34-60.46-10.75-120.94c-1-11.07-2-22.14-3.07-33.24h-78.79v5.89c0,21.17.12,42.33-.07,63.49a19.67,19.67,0,0,1-25.52,18.94c-8.76-2.62-14.14-10.26-14.18-20.65-.09-20.66,0-41.33,0-62,0-1.92-.17-3.84-.27-5.78H843.73v5.73c0,20.16.06,40.32-.06,60.49a33,33,0,0,1-1.33,9.81,19.59,19.59,0,0,1-21.16,13.13c-9.85-1.55-17.08-9.29-17.16-19.13-.19-21.49-.08-43-.09-64.48v-5.61ZM843.5,296.1h233.19c4.33-32.1-19.35-76.72-53-97.52-41.07-25.4-83.45-26.14-124.64-1C862.94,219.65,845.26,253.36,843.5,296.1Z" transform="translate(-641 -140)"/></svg>
                                   </span>
-                                  <span className="header-cart-total">0</span>
+                                  <span className="header-cart-total">{cartCount}</span>
                                 </button>
                               </div>
                             </div>
@@ -439,6 +464,14 @@ export default function Header() {
         </div>
 
       </header>
+
+      {/* ── LOGIN DRAWER ── */}
+      <LoginDrawer
+        visible={loginDrawerVisible}
+        open={loginDrawerOpen}
+        onClose={closeLoginDrawer}
+        onLoginSuccess={() => setIsLoggedIn(true)}
+      />
 
       {/* ── MOBILE DRAWER ── */}
       {drawerVisible && (

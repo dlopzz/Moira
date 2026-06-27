@@ -10,6 +10,7 @@ class QuoteItem extends Model
     protected $fillable = [
         'quote_id',
         'product_id',
+        'product_slug',
         'variant_id',
         'variant_label',
         'product_name',

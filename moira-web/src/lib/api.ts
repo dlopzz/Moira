@@ -1,4 +1,16 @@
 const BASE = process.env.NEXT_PUBLIC_API_URL!;
+const STORAGE_ORIGIN = BASE.replace(/\/api\/.*$/, '');
+
+const priceFormatter = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+export function formatPrice(price: number): string {
+  return priceFormatter.format(price);
+}
+
+export function imageUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  return `${STORAGE_ORIGIN}${path}`;
+}
 
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -9,7 +21,18 @@ type RequestOptions = {
   method?: string;
   body?: unknown;
   token?: string | null;
+  guestToken?: string | null;
 };
+
+function getGuestToken(): string {
+  if (typeof window === 'undefined') return '';
+  let t = localStorage.getItem('guest_cart_token');
+  if (!t) {
+    t = crypto.randomUUID();
+    localStorage.setItem('guest_cart_token', t);
+  }
+  return t;
+}
 
 async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   const token = opts.token !== undefined ? opts.token : getToken();
@@ -17,7 +40,12 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
     'Content-Type': 'application/json',
     Accept: 'application/json',
   };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  if (opts.guestToken) {
+    headers['X-Guest-Token'] = opts.guestToken;
+  }
 
   const res = await fetch(`${BASE}${path}`, {
     method: opts.method ?? 'GET',
@@ -51,6 +79,9 @@ export class ApiError extends Error {
 export const api = {
   register: (data: { first_name: string; last_name: string; email: string; date_of_birth: string; password: string; password_confirmation: string }) =>
     request<{ data: Customer; token: string }>('/auth/register', { method: 'POST', body: data }),
+
+  checkEmail: (email: string) =>
+    request<{ exists: boolean }>('/auth/check-email', { method: 'POST', body: { email } }),
 
   login: (data: { email: string; password: string }) =>
     request<{ data: Customer; token: string }>('/auth/login', { method: 'POST', body: data }),
@@ -95,7 +126,19 @@ export const api = {
     if (params.max_price != null) q.set('max_price', String(params.max_price));
     if (params.per_page) q.set('per_page', String(params.per_page));
     if (params.page) q.set('page', String(params.page));
+    if (params.attributes) {
+      for (const [key, value] of Object.entries(params.attributes)) {
+        q.set(`attributes[${key}]`, value);
+      }
+    }
     return request<{ data: Product[]; meta: PaginationMeta }>(`/products?${q}`, { token: null });
+  },
+
+  getProductFilters: (params: { category?: string; q?: string } = {}) => {
+    const q = new URLSearchParams();
+    if (params.category) q.set('category', params.category);
+    if (params.q) q.set('q', params.q);
+    return request<{ data: Record<string, string[]> }>(`/products/filters?${q}`, { token: null });
   },
 
   getProduct: (slug: string) =>
@@ -138,7 +181,7 @@ export const api = {
     request<{ product_ids: number[] }>('/wishlist/ids'),
 
   getWishlist: () =>
-    request<{ product_ids: number[]; data: Product[] }>('/wishlist'),
+    request<{ product_ids: number[]; data: Array<Product & { date_added?: string }> }>('/wishlist'),
 
   toggleWishlist: (productId: number) =>
     request<{ in_wishlist: boolean; product_id: number }>(`/wishlist/${productId}`, { method: 'POST' }),
@@ -159,6 +202,9 @@ export const api = {
   setCheckoutAddress: (address_id: number) =>
     request<{ message: string }>('/checkout/address', { method: 'POST', body: { address_id } }),
 
+  saveCheckoutNotes: (order_notes: string) =>
+    request<{ message: string }>('/checkout/notes', { method: 'POST', body: { order_notes } }),
+
   getShippingRates: () =>
     request<{ data: ShippingRate[] }>('/checkout/shipping-rates'),
 
@@ -168,24 +214,45 @@ export const api = {
       body: { code: rate.code, label: rate.label, price: rate.price },
     }),
 
-  // Cart
+  // Guest checkout (X-Guest-Token, no auth required)
+  getGuestCheckout: () =>
+    request<{ shipping_address: GuestShippingAddress | null; shipping_method: ShippingRate | null; order_notes: string | null }>(
+      '/guest-checkout', { guestToken: getGuestToken() }
+    ),
+
+  saveGuestAddress: (data: GuestShippingAddress & { order_notes?: string }) =>
+    request<{ message: string }>('/guest-checkout/address', {
+      method: 'POST', body: data, guestToken: getGuestToken(),
+    }),
+
+  getGuestShippingRates: () =>
+    request<{ data: ShippingRate[] }>('/guest-checkout/shipping-rates', { guestToken: getGuestToken() }),
+
+  selectGuestShipping: (rate: ShippingRate) =>
+    request<{ message: string }>('/guest-checkout/shipping', {
+      method: 'POST',
+      body: { code: rate.code, label: rate.label, price: rate.price },
+      guestToken: getGuestToken(),
+    }),
+
+  // Cart (guests send X-Guest-Token; authenticated users send Bearer + X-Guest-Token as fallback)
   getCart: () =>
-    request<{ data: Cart }>('/cart'),
+    request<{ data: Cart }>('/cart', { guestToken: getGuestToken() }),
 
   addToCart: (product_id: number, quantity = 1, variant_id?: number) =>
-    request<{ data: Cart }>('/cart/items', { method: 'POST', body: { product_id, quantity, variant_id } }),
+    request<{ data: Cart }>('/cart/items', { method: 'POST', body: { product_id, quantity, variant_id }, guestToken: getGuestToken() }),
 
   updateCartItem: (id: number, quantity: number) =>
-    request<{ data: Cart }>(`/cart/items/${id}`, { method: 'PUT', body: { quantity } }),
+    request<{ data: Cart }>(`/cart/items/${id}`, { method: 'PUT', body: { quantity }, guestToken: getGuestToken() }),
 
   removeCartItem: (id: number) =>
-    request<{ data: Cart }>(`/cart/items/${id}`, { method: 'DELETE' }),
+    request<{ data: Cart }>(`/cart/items/${id}`, { method: 'DELETE', guestToken: getGuestToken() }),
 
   applyCoupon: (code: string) =>
-    request<{ data: Cart }>('/cart/coupon', { method: 'POST', body: { code } }),
+    request<{ data: Cart }>('/cart/coupon', { method: 'POST', body: { code }, guestToken: getGuestToken() }),
 
   removeCoupon: () =>
-    request<{ data: Cart }>('/cart/coupon', { method: 'DELETE' }),
+    request<{ data: Cart }>('/cart/coupon', { method: 'DELETE', guestToken: getGuestToken() }),
 
   getAddresses: () =>
     request<{ data: Address[] }>('/addresses'),
@@ -199,8 +266,8 @@ export const api = {
   deleteAddress: (id: number) =>
     request<void>(`/addresses/${id}`, { method: 'DELETE' }),
 
-  setDefaultAddress: (id: number) =>
-    request<{ data: Address }>(`/addresses/${id}/default`, { method: 'PUT' }),
+  setDefaultAddress: (id: number, type: 'billing' | 'shipping') =>
+    request<{ data: Address }>(`/addresses/${id}/default/${type}`, { method: 'PUT' }),
 };
 
 export type Customer = {
@@ -224,10 +291,14 @@ export type Address = {
   zip_code: string;
   country: string;
   telephone: string;
-  is_default: boolean;
+  is_default_billing: boolean;
+  is_default_shipping: boolean;
 };
 
-export type AddressPayload = Omit<Address, 'id'>;
+export type AddressPayload = Omit<Address, 'id' | 'is_default_billing' | 'is_default_shipping'> & {
+  is_default_billing?: boolean;
+  is_default_shipping?: boolean;
+};
 
 export type Category = {
   id: number;
@@ -312,6 +383,7 @@ export type PaginationMeta = {
 export type CartItem = {
   id: number;
   product_id: number;
+  product_slug: string | null;
   variant_id: number | null;
   variant_label: string | null;
   name: string;
@@ -327,6 +399,18 @@ export type ShippingRate = {
   label: string;
   price: number;
   estimated_days: string;
+};
+
+export type GuestShippingAddress = {
+  email: string;
+  firstname: string;
+  lastname: string;
+  telephone: string;
+  street: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  country: string;
 };
 
 export type CartSummary = {
@@ -397,11 +481,12 @@ export type CmsPage = {
 export type ProductFilters = {
   q?: string;
   category?: string;
-  sort?: 'price_asc' | 'price_desc' | 'newest' | 'name';
+  sort?: 'price_asc' | 'price_desc' | 'newest' | 'name' | 'name_desc';
   min_price?: number;
   max_price?: number;
   per_page?: number;
   page?: number;
+  attributes?: Record<string, string>;
 };
 
 export type PaymentConfig = {

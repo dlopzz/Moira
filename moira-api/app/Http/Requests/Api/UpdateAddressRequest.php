@@ -22,8 +22,9 @@ class UpdateAddressRequest extends FormRequest
             'state'          => ['required', 'string', 'max:100'],
             'zip_code'       => ['required', 'string', 'max:20'],
             'country'        => ['required', 'string', 'size:2', 'in:AR'],
-            'telephone'      => ['required', 'string', 'max:30'],
-            'is_default'     => ['boolean'],
+            'telephone'           => ['required', 'string', 'max:30'],
+            'is_default_billing'  => ['boolean'],
+            'is_default_shipping' => ['boolean'],
         ];
     }
 }

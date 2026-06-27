@@ -2,7 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { api, ApiError, Address } from '@/lib/api';
+import { api, ApiError, type Address } from '@/lib/api';
+
+function AddressLines({ a }: { a: Address }) {
+  const lines: string[] = [];
+  if (a.street) lines.push(a.street);
+  if (a.address_line_2) lines.push(a.address_line_2);
+  const cityState = [a.city, a.state].filter(Boolean).join(', ');
+  if (cityState) lines.push(cityState);
+  if (a.zip_code) lines.push(a.zip_code);
+  if (a.telephone) lines.push(a.telephone);
+  return (
+    <>
+      {lines.map((line, i) => (
+        <span key={i}>{line}{i < lines.length - 1 && <br />}</span>
+      ))}
+    </>
+  );
+}
 
 export default function AddressesPage() {
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -27,60 +44,116 @@ export default function AddressesPage() {
     }
   }
 
-  async function handleSetDefault(id: number) {
+  async function handleSetDefault(id: number, type: 'billing' | 'shipping') {
     try {
-      await api.setDefaultAddress(id);
+      await api.setDefaultAddress(id, type);
       load();
     } catch (err) {
       if (err instanceof ApiError) setMessage(err.message);
     }
   }
 
-  if (loading) return <p className="text-sm text-gray-500">Cargando...</p>;
+  if (loading) return <p className="woocommerce-addresses-desc">Cargando...</p>;
+
+  const billing = addresses.find((a) => a.is_default_billing);
+  const shipping = addresses.find((a) => a.is_default_shipping);
 
   return (
-    <div className="bg-white rounded shadow p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-bold">Mis direcciones</h2>
-        <Link href="/profile/addresses/new" className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm font-medium hover:bg-blue-700">
-          + Agregar
-        </Link>
+    <div>
+      {/* ── Avanam-style default addresses ── */}
+      <p className="woocommerce-addresses-desc">
+        Las siguientes direcciones se utilizarán de forma predeterminada en la página de pago.
+      </p>
+
+      <div className="woocommerce-Addresses col2-set addresses">
+        <div className="u-column1 col-1 woocommerce-Address">
+          <header className="woocommerce-Address-title title">
+            <h2>Dirección de facturación</h2>
+            <Link
+              href={billing ? `/profile/addresses/${billing.id}/edit` : '/profile/addresses/new'}
+              className="edit"
+            >
+              {billing ? 'Editar' : 'Agregar'}
+            </Link>
+          </header>
+          {billing ? (
+            <address><AddressLines a={billing} /></address>
+          ) : (
+            <p className="no-address">No has configurado esta dirección.</p>
+          )}
+        </div>
+
+        <div className="u-column2 col-2 woocommerce-Address">
+          <header className="woocommerce-Address-title title">
+            <h2>Dirección de envío</h2>
+            <Link
+              href={shipping ? `/profile/addresses/${shipping.id}/edit` : '/profile/addresses/new'}
+              className="edit"
+            >
+              {shipping ? 'Editar' : 'Agregar'}
+            </Link>
+          </header>
+          {shipping ? (
+            <address><AddressLines a={shipping} /></address>
+          ) : (
+            <p className="no-address">No has configurado esta dirección.</p>
+          )}
+        </div>
       </div>
 
-      {message && <p className="text-red-600 text-sm mb-4">{message}</p>}
+      {/* ── Full address book ── */}
+      <div className="addresses-book">
+        <div className="addresses-book-header">
+          <h2>Mis direcciones</h2>
+          <Link href="/profile/addresses/new" className="button">
+            + Agregar
+          </Link>
+        </div>
 
-      {addresses.length === 0 ? (
-        <p className="text-gray-500 text-sm">No tenés direcciones guardadas.</p>
-      ) : (
-        <ul className="space-y-3">
-          {addresses.map((a) => (
-            <li key={a.id} className="border rounded p-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  {a.label && <p className="font-medium text-sm">{a.label}</p>}
-                  <p className="text-sm">{a.street}{a.address_line_2 ? `, ${a.address_line_2}` : ''}</p>
-                  <p className="text-sm">{a.city}, {a.state} {a.zip_code} — {a.country}</p>
-                  {a.telephone && <p className="text-sm text-gray-500">{a.telephone}</p>}
-                  {a.is_default && (
-                    <span className="inline-block mt-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
-                      Predeterminada
-                    </span>
-                  )}
+        {message && (
+          <p style={{ color: 'var(--color-alert)', fontSize: 14, marginBottom: '1em' }}>{message}</p>
+        )}
+
+        {addresses.length === 0 ? (
+          <p className="woocommerce-addresses-desc">No tenés direcciones guardadas.</p>
+        ) : (
+          <ul className="addresses-list">
+            {addresses.map((a) => (
+              <li key={a.id} className="address-item">
+                <div className="address-item-info">
+                  <strong>{a.label}</strong>
+                  <address><AddressLines a={a} /></address>
+                  <div className="address-badges">
+                    {a.is_default_billing && (
+                      <span className="address-badge address-badge-billing">Facturación</span>
+                    )}
+                    {a.is_default_shipping && (
+                      <span className="address-badge address-badge-shipping">Envío</span>
+                    )}
+                  </div>
                 </div>
-                <div className="flex gap-2 text-sm ml-4 shrink-0">
-                  <Link href={`/profile/addresses/${a.id}/edit`} className="text-blue-600 hover:underline">Editar</Link>
-                  {!a.is_default && (
-                    <button onClick={() => handleSetDefault(a.id)} className="text-gray-600 hover:underline">
-                      Predeterminar
+
+                <div className="address-item-actions">
+                  <Link href={`/profile/addresses/${a.id}/edit`}>Editar</Link>
+                  {!a.is_default_billing && (
+                    <button onClick={() => handleSetDefault(a.id, 'billing')}>
+                      Default facturación
                     </button>
                   )}
-                  <button onClick={() => handleDelete(a.id)} className="text-red-600 hover:underline">Eliminar</button>
+                  {!a.is_default_shipping && (
+                    <button onClick={() => handleSetDefault(a.id, 'shipping')}>
+                      Default envío
+                    </button>
+                  )}
+                  <button className="danger" onClick={() => handleDelete(a.id)}>
+                    Eliminar
+                  </button>
                 </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

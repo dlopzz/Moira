@@ -16,15 +16,7 @@ class CustomerAddress extends Model
         'zip_code',
         'country',
         'telephone',
-        'is_default',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'is_default' => 'boolean',
-        ];
-    }
 
     public function customer()
     {

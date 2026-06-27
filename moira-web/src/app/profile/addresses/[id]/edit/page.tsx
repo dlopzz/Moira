@@ -44,8 +44,8 @@ export default function EditAddressPage({ params }: { params: Promise<{ id: stri
   if (!form) return <p className="text-sm text-gray-500">Cargando...</p>;
 
   return (
-    <div className="bg-white rounded shadow p-6">
-      <h2 className="text-lg font-bold mb-6">Editar dirección</h2>
+    <div className="profile-content-box">
+      <h2 className="profile-section-title">Editar dirección</h2>
       <AddressForm form={form} errors={errors} loading={loading} onChange={setForm} onSubmit={handleSubmit} />
     </div>
   );

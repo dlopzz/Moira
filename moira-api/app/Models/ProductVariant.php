@@ -42,8 +42,8 @@ class ProductVariant extends Model
     /** Human-readable label derived from attributes: "Color: Rojo / Talle: M" */
     public function label(): string
     {
-        return collect($this->attributes)
-            ->map(fn ($value, $key) => "{$key}: {$value}")
+        return collect($this->getAttribute('attributes') ?? [])
+            ->map(fn ($value, $key) => ucfirst($key) . ': ' . $value)
             ->join(' / ');
     }
 }

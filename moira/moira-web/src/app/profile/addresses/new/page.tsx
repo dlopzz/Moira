@@ -14,7 +14,6 @@ const EMPTY: AddressPayload = {
   zip_code: '',
   country: 'AR',
   telephone: '',
-  is_default: false,
 };
 
 export default function NewAddressPage() {
@@ -42,8 +41,8 @@ export default function NewAddressPage() {
   }
 
   return (
-    <div className="bg-white rounded shadow p-6">
-      <h2 className="text-lg font-bold mb-6">Nueva dirección</h2>
+    <div className="profile-content-box">
+      <h2 className="profile-section-title">Nueva dirección</h2>
       <AddressForm form={form} errors={errors} loading={loading} onChange={setForm} onSubmit={handleSubmit} />
     </div>
   );

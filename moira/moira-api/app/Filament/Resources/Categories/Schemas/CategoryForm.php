@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Categories\Schemas;
 
+use App\Filament\Support\WebpConverter;
 use App\Models\Category;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -89,6 +90,7 @@ class CategoryForm
                             ->imageCropAspectRatio('1:1')
                             ->imageResizeTargetWidth(600)
                             ->imageResizeTargetHeight(600)
+                            ->saveUploadedFileUsing(WebpConverter::saveAs('categories'))
                             ->nullable(),
                     ]),
 

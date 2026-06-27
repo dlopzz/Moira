@@ -36,6 +36,18 @@ class CheckoutController extends Controller
         ]);
     }
 
+    public function saveNotes(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'order_notes' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $quote = Quote::getActiveForCustomer($request->user());
+        $quote->update(['order_notes' => $validated['order_notes'] ?? null]);
+
+        return response()->json(['message' => 'Notas guardadas.']);
+    }
+
     public function setAddress(Request $request): JsonResponse
     {
         $request->validate([

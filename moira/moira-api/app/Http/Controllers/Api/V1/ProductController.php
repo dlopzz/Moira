@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\ProductResource;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -36,10 +37,20 @@ class ProductController extends Controller
             $query->where('price', '<=', (float) $request->max_price);
         }
 
+        if ($request->filled('attributes')) {
+            foreach ((array) $request->input('attributes') as $key => $value) {
+                $query->whereHas('variants', function ($q) use ($key, $value): void {
+                    $q->where('is_active', true)
+                        ->whereRaw("attributes->>? = ?", [$key, $value]);
+                });
+            }
+        }
+
         match ($request->input('sort')) {
             'price_asc' => $query->orderBy('price'),
             'price_desc' => $query->orderByDesc('price'),
             'newest' => $query->latest(),
+            'name_desc' => $query->orderByDesc('name'),
             default => $query->orderBy('name'),
         };
 
@@ -55,6 +66,38 @@ class ProductController extends Controller
                 'last_page' => $products->lastPage(),
             ],
         ]);
+    }
+
+    public function filters(Request $request): JsonResponse
+    {
+        $query = ProductVariant::query()
+            ->where('is_active', true)
+            ->whereNotNull('attributes')
+            ->whereHas('product', fn ($q) => $q->where('is_active', true));
+
+        if ($request->filled('category')) {
+            $query->whereHas('product.categories', fn ($q) => $q->where('slug', $request->category));
+        }
+
+        if ($request->filled('q')) {
+            $search = $request->q;
+            $query->whereHas('product', fn ($q) => $q->whereRaw('name ILIKE ?', ["%{$search}%"])
+                ->orWhereRaw('short_description ILIKE ?', ["%{$search}%"]));
+        }
+
+        $filters = [];
+        $query->pluck('attributes')->each(function ($attrs) use (&$filters): void {
+            foreach ($attrs as $key => $value) {
+                $filters[$key][$value] = true;
+            }
+        });
+
+        $result = (object) [];
+        foreach ($filters as $key => $values) {
+            $result->$key = array_keys($values);
+        }
+
+        return response()->json(['data' => $result]);
     }
 
     public function featured(): JsonResponse

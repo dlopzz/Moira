@@ -3,6 +3,8 @@ import { Montserrat } from "next/font/google";
 import { CartProvider } from "@/lib/cart-context";
 import { WishlistProvider } from "@/lib/wishlist-context";
 import Footer from "@/components/Footer";
+import WishlistPopup from "@/components/WishlistPopup";
+import CartDrawer from "@/components/CartDrawer";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -28,6 +30,8 @@ export default function RootLayout({
           <WishlistProvider>
             {children}
             <Footer />
+            <WishlistPopup />
+            <CartDrawer />
           </WishlistProvider>
         </CartProvider>
       </body>

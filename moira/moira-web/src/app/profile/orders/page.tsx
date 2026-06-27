@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { api, type Order, type PaginationMeta } from '@/lib/api';
+import { api, type Order, type PaginationMeta, formatPrice } from '@/lib/api';
 import { getToken } from '@/lib/auth';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -102,7 +102,7 @@ export default function OrdersPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <p className="text-sm font-bold text-gray-900">${order.total.toFixed(2)}</p>
+                  <p className="text-sm font-bold text-gray-900">${formatPrice(order.total)}</p>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -130,7 +130,7 @@ export default function OrdersPage() {
                               {item.name}
                               <span className="text-gray-400 ml-1">× {item.quantity}</span>
                             </span>
-                            <span className="text-gray-900 font-medium">${item.subtotal.toFixed(2)}</span>
+                            <span className="text-gray-900 font-medium">${formatPrice(item.subtotal)}</span>
                           </div>
                         ))}
                       </div>
@@ -139,17 +139,17 @@ export default function OrdersPage() {
                       <div className="border-t border-gray-100 pt-3 space-y-1.5 text-sm">
                         <div className="flex justify-between text-gray-500">
                           <span>Subtotal</span>
-                          <span>${detail.subtotal.toFixed(2)}</span>
+                          <span>${formatPrice(detail.subtotal)}</span>
                         </div>
                         {detail.discount > 0 && (
                           <div className="flex justify-between text-green-600">
                             <span>Descuento</span>
-                            <span>−${detail.discount.toFixed(2)}</span>
+                            <span>−${formatPrice(detail.discount)}</span>
                           </div>
                         )}
                         <div className="flex justify-between font-bold text-gray-900">
                           <span>Total</span>
-                          <span>${detail.total.toFixed(2)}</span>
+                          <span>${formatPrice(detail.total)}</span>
                         </div>
                       </div>
 

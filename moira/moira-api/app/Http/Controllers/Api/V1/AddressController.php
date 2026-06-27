@@ -20,8 +20,10 @@ class AddressController extends Controller
         /** @var Customer $customer */
         $customer = $request->user();
 
+        $addresses = $customer->addresses()->get()->each->setRelation('customer', $customer);
+
         return response()->json([
-            'data' => AddressResource::collection($customer->addresses()->orderByDesc('is_default')->get()),
+            'data' => AddressResource::collection($addresses),
         ]);
     }
 
@@ -30,11 +32,21 @@ class AddressController extends Controller
         /** @var Customer $customer */
         $customer = $request->user();
 
-        if ($request->boolean('is_default')) {
-            $customer->addresses()->update(['is_default' => false]);
+        $validated = $request->validated();
+        $address = $customer->addresses()->create($validated);
+
+        $updates = [];
+        if (!empty($validated['is_default_billing'])) {
+            $updates['default_billing_address_id'] = $address->id;
+        }
+        if (!empty($validated['is_default_shipping'])) {
+            $updates['default_shipping_address_id'] = $address->id;
+        }
+        if ($updates) {
+            $customer->update($updates);
         }
 
-        $address = $customer->addresses()->create($request->validated());
+        $address->setRelation('customer', $customer->fresh());
 
         return response()->json([
             'data' => new AddressResource($address),
@@ -48,14 +60,24 @@ class AddressController extends Controller
         /** @var Customer $customer */
         $customer = $request->user();
 
-        if ($request->boolean('is_default')) {
-            $customer->addresses()->where('id', '!=', $address->id)->update(['is_default' => false]);
+        $validated = $request->validated();
+        $address->update($validated);
+
+        $updates = [];
+        if (!empty($validated['is_default_billing'])) {
+            $updates['default_billing_address_id'] = $address->id;
+        }
+        if (!empty($validated['is_default_shipping'])) {
+            $updates['default_shipping_address_id'] = $address->id;
+        }
+        if ($updates) {
+            $customer->update($updates);
         }
 
-        $address->update($request->validated());
+        $address->setRelation('customer', $customer->fresh());
 
         return response()->json([
-            'data' => new AddressResource($address->fresh()),
+            'data' => new AddressResource($address),
         ]);
     }
 
@@ -63,27 +85,45 @@ class AddressController extends Controller
     {
         $this->authorizeAddress($request, $address);
 
+        /** @var Customer $customer */
+        $customer = $request->user();
+
         Quote::where('checkout_address_id', $address->id)
             ->where('status', Quote::STATUS_ACTIVE)
             ->update(['checkout_address_id' => null]);
+
+        $updates = [];
+        if ($customer->default_billing_address_id === $address->id) {
+            $updates['default_billing_address_id'] = null;
+        }
+        if ($customer->default_shipping_address_id === $address->id) {
+            $updates['default_shipping_address_id'] = null;
+        }
+        if ($updates) {
+            $customer->update($updates);
+        }
 
         $address->delete();
 
         return response()->noContent();
     }
 
-    public function setDefault(Request $request, CustomerAddress $address): JsonResponse
+    public function setDefault(Request $request, CustomerAddress $address, string $type): JsonResponse
     {
         $this->authorizeAddress($request, $address);
+
+        abort_unless(in_array($type, ['billing', 'shipping'], true), 422, 'Invalid type');
 
         /** @var Customer $customer */
         $customer = $request->user();
 
-        $customer->addresses()->update(['is_default' => false]);
-        $address->update(['is_default' => true]);
+        $field = $type === 'billing' ? 'default_billing_address_id' : 'default_shipping_address_id';
+        $customer->update([$field => $address->id]);
+
+        $address->setRelation('customer', $customer->fresh());
 
         return response()->json([
-            'data' => new AddressResource($address->fresh()),
+            'data' => new AddressResource($address),
         ]);
     }
 

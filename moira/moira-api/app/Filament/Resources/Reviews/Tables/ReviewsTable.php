@@ -4,10 +4,12 @@ namespace App\Filament\Resources\Reviews\Tables;
 
 use App\Models\Review;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Collection;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
@@ -91,6 +93,20 @@ class ReviewsTable
             ])
             ->toolbarActions([
                 \Filament\Actions\BulkActionGroup::make([
+                    BulkAction::make('bulk_approve')
+                        ->label('Aprobar seleccionadas')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->action(fn (Collection $records) => $records->each->update(['is_approved' => true])),
+
+                    BulkAction::make('bulk_reject')
+                        ->label('Rechazar seleccionadas')
+                        ->icon('heroicon-o-x-circle')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->action(fn (Collection $records) => $records->each->update(['is_approved' => false])),
+
                     DeleteBulkAction::make(),
                 ]),
             ]);

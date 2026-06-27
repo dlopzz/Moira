@@ -1,96 +1,49 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { api, ApiError, Customer } from '@/lib/api';
-import { FormField } from '@/components/FormField';
+import { clearToken } from '@/lib/auth';
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [customer, setCustomer] = useState<Customer | null>(null);
-  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', date_of_birth: '' });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    api.getProfile().then((res) => {
-      setCustomer(res.data);
-      setForm({
-        first_name: res.data.first_name,
-        last_name: res.data.last_name,
-        email: res.data.email,
-        date_of_birth: res.data.dob ?? '',
-      });
-    });
+    api.getProfile().then((res) => setCustomer(res.data)).catch(() => {});
   }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setErrors({});
-    setMessage('');
-    setLoading(true);
+  async function handleLogout() {
     try {
-      const res = await api.updateProfile(form);
-      setCustomer(res.data);
-      setMessage('Perfil actualizado correctamente.');
-    } catch (err) {
-      if (err instanceof ApiError) {
-        if (err.errors) {
-          const flat: Record<string, string> = {};
-          for (const [k, v] of Object.entries(err.errors)) flat[k] = v[0];
-          setErrors(flat);
-        } else {
-          setMessage(err.message);
-        }
-      }
-    } finally {
-      setLoading(false);
+      await api.logout();
+    } catch (e) {
+      if (e instanceof ApiError && e.status !== 401) throw e;
     }
+    clearToken();
+    router.push('/');
   }
 
-  if (!customer) return <p className="text-sm text-gray-500">Cargando...</p>;
+  if (!customer) return <p>Cargando...</p>;
 
   return (
-    <div className="bg-white rounded shadow p-6">
-      <h2 className="text-lg font-bold mb-6">Mis datos</h2>
-      {message && <p className="text-green-700 bg-green-50 border border-green-200 rounded p-3 text-sm mb-4">{message}</p>}
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
-        <FormField
-          label="Nombre"
-          value={form.first_name}
-          onChange={(e) => setForm({ ...form, first_name: e.target.value })}
-          error={errors.first_name}
-          required
-        />
-        <FormField
-          label="Apellido"
-          value={form.last_name}
-          onChange={(e) => setForm({ ...form, last_name: e.target.value })}
-          error={errors.last_name}
-          required
-        />
-        <FormField
-          label="Email"
-          type="email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          error={errors.email}
-          required
-        />
-        <FormField
-          label="Fecha de nacimiento"
-          type="date"
-          value={form.date_of_birth}
-          onChange={(e) => setForm({ ...form, date_of_birth: e.target.value })}
-          error={errors.date_of_birth}
-        />
+    <>
+      <p>
+        Hola <strong>{customer.name}</strong> (¿no sos <strong>{customer.name}</strong>?{' '}
         <button
-          type="submit"
-          disabled={loading}
-          className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          onClick={handleLogout}
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'inherit', textDecoration: 'underline', font: 'inherit' }}
         >
-          {loading ? 'Guardando...' : 'Guardar cambios'}
+          Cerrar sesión
         </button>
-      </form>
-    </div>
+        )
+      </p>
+      <p>
+        Desde el panel de control de tu cuenta podés ver tus{' '}
+        <Link href="/profile/orders">pedidos recientes</Link>, gestionar tus{' '}
+        <Link href="/profile/addresses">direcciones de envío y facturación</Link> y{' '}
+        <Link href="/profile/edit-account">editar tu contraseña y los detalles de tu cuenta</Link>.
+      </p>
+    </>
   );
 }

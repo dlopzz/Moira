@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\CustomerAddress;
 
 class Quote extends Model
 {
@@ -17,8 +16,19 @@ class Quote extends Model
 
     protected $fillable = [
         'customer_id',
+        'guest_token',
+        'guest_email',
+        'shipping_firstname',
+        'shipping_lastname',
+        'shipping_telephone',
+        'shipping_street',
+        'shipping_city',
+        'shipping_state',
+        'shipping_zip_code',
+        'shipping_country',
         'status',
         'notes',
+        'order_notes',
         'coupon_id',
         'coupon_code',
         'discount_amount',
@@ -33,8 +43,8 @@ class Quote extends Model
     {
         return [
             'discount_amount' => 'decimal:2',
-            'shipping_cost'   => 'decimal:2',
-            'expires_at'      => 'datetime',
+            'shipping_cost' => 'decimal:2',
+            'expires_at' => 'datetime',
         ];
     }
 
@@ -77,6 +87,30 @@ class Quote extends Model
         }
 
         return static::reactivateOrCreate($customer, $expirationDays);
+    }
+
+    public static function getActiveForGuest(string $guestToken): static
+    {
+        $expirationDays = (int) SiteSetting::getValue('cart_expiration_days', '30');
+
+        $quote = static::where('guest_token', $guestToken)
+            ->where('status', self::STATUS_ACTIVE)
+            ->first();
+
+        if ($quote) {
+            if ($quote->expires_at && $quote->expires_at->isPast()) {
+                $quote->update(['status' => self::STATUS_EXPIRED]);
+                $quote = null;
+            } else {
+                return $quote;
+            }
+        }
+
+        return static::create([
+            'guest_token' => $guestToken,
+            'status' => self::STATUS_ACTIVE,
+            'expires_at' => now()->addDays($expirationDays),
+        ]);
     }
 
     private static function reactivateOrCreate(Customer $customer, int $expirationDays): static

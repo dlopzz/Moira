@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -23,6 +24,8 @@ class Customer extends Authenticatable implements MustVerifyEmail
         'is_active',
         'google_id',
         'email_verified_at',
+        'default_billing_address_id',
+        'default_shipping_address_id',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -54,9 +57,14 @@ class Customer extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(CustomerAddress::class);
     }
 
-    public function defaultAddress()
+    public function defaultBillingAddress(): BelongsTo
     {
-        return $this->hasOne(CustomerAddress::class)->where('is_default', true);
+        return $this->belongsTo(CustomerAddress::class, 'default_billing_address_id');
+    }
+
+    public function defaultShippingAddress(): BelongsTo
+    {
+        return $this->belongsTo(CustomerAddress::class, 'default_shipping_address_id');
     }
 
     public function wishlist()

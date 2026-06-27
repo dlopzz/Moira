@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { api, type MyReview } from '@/lib/api';
+import { api, type MyReview, imageUrl } from '@/lib/api';
 import { getToken } from '@/lib/auth';
 
 const STARS = [1, 2, 3, 4, 5];
@@ -50,19 +50,17 @@ export default function ReviewsPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-900 mb-6">Mis reseñas</h1>
-
       {pending.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Pendientes de envío</h2>
+          <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Pendientes de calificación</p>
           <div className="space-y-3">
             {pending.map((review) => (
               <div key={review.id} className="bg-white border border-yellow-200 rounded-xl p-4 flex items-center gap-4">
                 {review.product?.image && (
-                  <img src={review.product.image} alt={review.product.name} className="w-14 h-14 object-cover rounded-lg flex-none" />
+                  <img src={imageUrl(review.product.image)!} alt={review.product.name} className="w-14 h-14 object-cover rounded-lg flex-none" />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium truncate">
                     {review.product?.name ?? 'Producto eliminado'}
                   </p>
                   <p className="text-xs text-gray-400 mt-0.5">Pendiente de calificación</p>
@@ -81,29 +79,26 @@ export default function ReviewsPage() {
 
       {submitted.length > 0 && (
         <div>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Enviadas</h2>
+          <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Enviadas</p>
           <div className="space-y-3">
             {submitted.map((review) => (
               <div key={review.id} className="bg-white border border-gray-200 rounded-xl p-4">
                 <div className="flex items-start gap-4">
                   {review.product?.image && (
-                    <img src={review.product.image} alt={review.product?.name} className="w-14 h-14 object-cover rounded-lg flex-none" />
+                    <img src={imageUrl(review.product.image)!} alt={review.product?.name} className="w-14 h-14 object-cover rounded-lg flex-none" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2 mb-1">
+                    <div className="mb-1">
                       {review.product ? (
-                        <Link href={`/products/${review.product.slug}`} className="text-sm font-medium text-gray-900 hover:underline truncate">
+                        <Link href={`/products/${review.product.slug}`} className="text-sm font-medium hover:underline truncate">
                           {review.product.name}
                         </Link>
                       ) : (
                         <span className="text-sm font-medium text-gray-500 truncate">Producto eliminado</span>
                       )}
-                      <span className={`flex-none text-xs px-2 py-0.5 rounded-full ${review.is_approved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                        {review.is_approved ? 'Aprobada' : 'En revisión'}
-                      </span>
                     </div>
                     {review.rating && <StarRating rating={review.rating} />}
-                    {review.title && <p className="text-sm font-medium text-gray-800 mt-1">{review.title}</p>}
+                    {review.title && <p className="text-sm text-gray-600 mt-1">{review.title}</p>}
                     {review.body && <p className="text-sm text-gray-600 mt-0.5 line-clamp-2">{review.body}</p>}
                     <p className="text-xs text-gray-400 mt-1">
                       {new Date(review.submitted_at!).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}

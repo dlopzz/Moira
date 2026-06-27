@@ -24,12 +24,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const initialized = useRef(false);
 
   const refreshCart = useCallback(async () => {
-    if (!getToken()) return;
     try {
       const res = await api.getCart();
       setCart(res.data);
     } catch {
-      // not logged in or network error — silent
+      // network error — silent
     }
   }, []);
 

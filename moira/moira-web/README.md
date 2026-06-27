@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Moira — Headless E-commerce
 
-## Getting Started
+Plataforma de e-commerce headless compuesta por una API REST en Laravel y un frontend en Next.js.
 
-First, run the development server:
+## Stack Tecnológico
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Frontend — `moira-web`
+| Tecnología | Versión | Uso |
+|---|---|---|
+| [Next.js](https://nextjs.org) | 16.x | Framework React (App Router) |
+| [React](https://react.dev) | 19.x | UI |
+| [TypeScript](https://www.typescriptlang.org) | 5.x | Tipado estático |
+| CSS (custom) | — | Design system propio, paleta tipo Avanam/WooCommerce |
+
+### Backend — `moira-api`
+| Tecnología | Versión | Uso |
+|---|---|---|
+| [Laravel](https://laravel.com) | 13.x | API REST + panel admin |
+| [PHP](https://www.php.net) | 8.3 | Lenguaje del servidor |
+| [Laravel Sanctum](https://laravel.com/docs/sanctum) | 4.x | Autenticación por token |
+| [Filament](https://filamentphp.com) | 3.x | Panel de administración |
+| [Laravel Sail](https://laravel.com/docs/sail) | — | Entorno Docker local |
+| MySQL | 8.x | Base de datos |
+
+## Arquitectura
+
+```
+moira/
+├── moira-api/     # Laravel 13 — API REST + Filament admin
+└── moira-web/     # Next.js 16 — Storefront headless
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+El frontend consume la API en `http://moura.test:8080/api/v1`. La autenticación usa tokens Bearer (Laravel Sanctum). Los guests se identifican con un `X-Guest-Token` almacenado en `localStorage`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Funcionalidades
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Catálogo de productos con variantes (configurable / simple)
+- Carrito para usuarios autenticados y guests
+- Checkout Magento-style: email primero, detección de cuenta existente, login inline o continuar como invitado
+- Direcciones con defaults independientes de facturación y envío
+- Cupones de descuento
+- Wishlist
+- Órdenes y perfil de cliente
+- Reviews de productos por token
+- Panel admin con Filament (categorías, productos, órdenes, reviews)
 
-## Learn More
+## Desarrollo local
 
-To learn more about Next.js, take a look at the following resources:
+### API
+```bash
+cd moira-api
+./vendor/bin/sail up -d
+./vendor/bin/sail artisan migrate --seed
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Frontend
+```bash
+cd moira-web
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Frontend disponible en `http://localhost:3000`.

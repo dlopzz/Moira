@@ -17,9 +17,22 @@ use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
+    private function resolveQuote(Request $request): Quote
+    {
+        if ($request->user()) {
+            return Quote::getActiveForCustomer($request->user());
+        }
+
+        $guestToken = $request->header('X-Guest-Token', '');
+
+        abort_if(! $guestToken || ! preg_match('/^[0-9a-f\-]{36}$/i', $guestToken), 400, 'Token de invitado requerido.');
+
+        return Quote::getActiveForGuest($guestToken);
+    }
+
     public function index(Request $request): JsonResponse
     {
-        $quote = Quote::getActiveForCustomer($request->user());
+        $quote = $this->resolveQuote($request);
         $quote->load('items');
 
         return response()->json(['data' => new CartResource($quote)]);
@@ -57,7 +70,7 @@ class CartController extends Controller
             $price = (float) ($product->sale_price ?? $product->price);
         }
 
-        $quote = Quote::getActiveForCustomer($request->user());
+        $quote = $this->resolveQuote($request);
 
         $item = $quote->items()
             ->where('product_id', $product->id)
@@ -73,6 +86,7 @@ class CartController extends Controller
         } else {
             $quote->items()->create([
                 'product_id'    => $product->id,
+                'product_slug'  => $product->slug,
                 'variant_id'    => $variantId,
                 'variant_label' => $variantLabel,
                 'product_name'  => $product->name,
@@ -98,7 +112,8 @@ class CartController extends Controller
 
     public function updateItem(UpdateCartItemRequest $request, QuoteItem $item): JsonResponse
     {
-        abort_if($item->quote->customer_id !== $request->user()->id, 403);
+        $quote = $this->resolveQuote($request);
+        abort_if($item->quote_id !== $quote->id, 403);
 
         $price = (float) $item->unit_price;
         $newQty = $request->quantity;
@@ -123,8 +138,9 @@ class CartController extends Controller
 
     public function removeItem(Request $request, QuoteItem $item): JsonResponse
     {
+        $quote = $this->resolveQuote($request);
+        abort_if($item->quote_id !== $quote->id, 403);
         $quote = $item->quote;
-        abort_if($quote->customer_id !== $request->user()->id, 403);
 
         $item->delete();
 
@@ -142,7 +158,7 @@ class CartController extends Controller
 
     public function applyCoupon(ApplyCouponRequest $request): JsonResponse
     {
-        $quote = Quote::getActiveForCustomer($request->user());
+        $quote = $this->resolveQuote($request);
         $quote->load('items');
 
         $coupon = Coupon::where('code', strtoupper($request->code))
@@ -174,8 +190,8 @@ class CartController extends Controller
             : min((float) $coupon->value, $subtotal);
 
         $quote->update([
-            'coupon_id'       => $coupon->id,
-            'coupon_code'     => $coupon->code,
+            'coupon_id' => $coupon->id,
+            'coupon_code' => $coupon->code,
             'discount_amount' => round($discount, 2),
         ]);
 
@@ -187,11 +203,11 @@ class CartController extends Controller
 
     public function removeCoupon(Request $request): JsonResponse
     {
-        $quote = Quote::getActiveForCustomer($request->user());
+        $quote = $this->resolveQuote($request);
 
         $quote->update([
-            'coupon_id'       => null,
-            'coupon_code'     => null,
+            'coupon_id' => null,
+            'coupon_code' => null,
             'discount_amount' => 0,
         ]);
 

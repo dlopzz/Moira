@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
-import { api, type Cart, type Address, type PaymentConfig, ApiError } from '@/lib/api';
+import { api, type Cart, type Address, type PaymentConfig, ApiError, formatPrice } from '@/lib/api';
 import { getToken } from '@/lib/auth';
 import Header from '@/components/Header';
 import Breadcrumb from '@/components/Breadcrumb';
@@ -75,7 +75,7 @@ function SimulatorPanel({
           disabled={processing}
           className="flex-1 bg-green-600 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors"
         >
-          {processing ? 'Procesando...' : `✓ Aprobar pago $${total.toFixed(2)}`}
+          {processing ? 'Procesando...' : `✓ Aprobar pago $${formatPrice(total)}`}
         </button>
         <button
           onClick={() => onPay('fail')}
@@ -370,7 +370,7 @@ export default function CheckoutPaymentPage() {
                     disabled={processing || !sdkReady}
                     className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors text-sm mt-2"
                   >
-                    {processing ? 'Procesando pago...' : `Pagar $${cart?.summary.total.toFixed(2) ?? '0.00'}`}
+                    {processing ? 'Procesando pago...' : `Pagar $${cart?.summary.formatPrice(total) ?? '0.00'}`}
                   </button>
 
                   {!sdkReady && (
@@ -403,28 +403,28 @@ export default function CheckoutPaymentPage() {
                       {item.variant_label && <span className="text-gray-400 block text-xs">{item.variant_label}</span>}
                       <span className="text-gray-400"> ×{item.quantity}</span>
                     </span>
-                    <span className="text-gray-900 font-medium flex-none">${item.subtotal.toFixed(2)}</span>
+                    <span className="text-gray-900 font-medium flex-none">${item.subformatPrice(total)}</span>
                   </div>
                 ))}
               </div>
               <div className="border-t border-gray-100 mt-3 pt-3 space-y-1.5 text-sm">
                 <div className="flex justify-between text-gray-500">
-                  <span>Subtotal</span><span>${cart.summary.subtotal.toFixed(2)}</span>
+                  <span>Subtotal</span><span>${cart.summary.subformatPrice(total)}</span>
                 </div>
                 <div className="flex justify-between text-gray-500">
                   <span>Envío{cart.shipping?.label ? ` (${cart.shipping.label})` : ''}</span>
                   <span className={cart.summary.shipping_cost === 0 ? 'text-green-600' : ''}>
-                    {cart.summary.shipping_cost === 0 ? 'Gratis' : `$${cart.summary.shipping_cost.toFixed(2)}`}
+                    {cart.summary.shipping_cost === 0 ? 'Gratis' : `$${formatPrice(cart.summary.shipping_cost)}`}
                   </span>
                 </div>
                 {cart.summary.discount > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span>Descuento{cart.coupon_code ? ` (${cart.coupon_code})` : ''}</span>
-                    <span>−${cart.summary.discount.toFixed(2)}</span>
+                    <span>−${formatPrice(cart.summary.discount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-gray-900 text-base pt-1 border-t border-gray-100">
-                  <span>Total</span><span>${cart.summary.total.toFixed(2)}</span>
+                  <span>Total</span><span>${cart.summary.formatPrice(total)}</span>
                 </div>
               </div>
             </div>

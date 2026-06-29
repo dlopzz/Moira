@@ -31,7 +31,7 @@
         <p>¡Tu pedido fue recibido y está siendo procesado!</p>
     </div>
     <div class="body">
-        <p>Hola <strong>{{ $order->customer->first_name }}</strong>, gracias por tu compra.</p>
+        <p>Hola <strong>{{ $order->customer?->first_name ?? ($order->shipping_address['label'] ?? 'cliente') }}</strong>, gracias por tu compra.</p>
 
         <div class="order-box">
             <div class="label">Número de pedido</div>

@@ -3,11 +3,18 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\OrderResource;
+use App\Mail\OrderConfirmationMail;
+use App\Models\Order;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Quote;
 use App\Models\ShippingMethod;
 use App\Services\Shipping\AndreaniProvider;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class GuestCheckoutController extends Controller
 {
@@ -118,6 +125,111 @@ class GuestCheckoutController extends Controller
         ]);
 
         return response()->json(['message' => 'Método de envío seleccionado.']);
+    }
+
+    public function simulatePayment(Request $request): JsonResponse
+    {
+        abort_unless(! app()->isProduction(), 404);
+
+        $request->validate(['result' => ['required', 'in:success,fail']]);
+
+        if ($request->result === 'fail') {
+            return response()->json(['message' => 'Pago rechazado (simulación).'], 422);
+        }
+
+        $quote = $this->resolveGuestQuote($request);
+        $quote->load('items.product', 'items.variant');
+
+        if ($quote->items->isEmpty()) {
+            return response()->json(['message' => 'El carrito está vacío.'], 422);
+        }
+
+        if (! $quote->shipping_zip_code) {
+            return response()->json(['message' => 'Ingresá una dirección de envío.'], 422);
+        }
+
+        if (! $quote->shipping_method_code) {
+            return response()->json(['message' => 'Seleccioná un método de envío.'], 422);
+        }
+
+        $subtotal     = $quote->getSubtotal();
+        $shippingCost = (float) $quote->shipping_cost;
+        $discount     = (float) $quote->discount_amount;
+        $total        = $quote->getTotal();
+
+        try {
+            $order = DB::transaction(function () use ($quote, $subtotal, $shippingCost, $discount, $total): Order {
+                $locked = Quote::lockForUpdate()->find($quote->id);
+                if (! $locked || $locked->status !== Quote::STATUS_ACTIVE) {
+                    throw new \RuntimeException('Este pedido ya fue procesado.');
+                }
+
+                // Re-fetch items inside the transaction from the locked row
+                $locked->load('items.product', 'items.variant');
+
+                $order = Order::create([
+                    'customer_id'           => null,
+                    'status'                => 'paid',
+                    'shipping_address'      => [
+                        'label'          => trim($locked->shipping_firstname . ' ' . $locked->shipping_lastname),
+                        'street'         => $locked->shipping_street,
+                        'address_line_2' => null,
+                        'city'           => $locked->shipping_city,
+                        'state'          => $locked->shipping_state,
+                        'zip_code'       => $locked->shipping_zip_code,
+                        'country'        => $locked->shipping_country,
+                        'telephone'      => $locked->shipping_telephone,
+                    ],
+                    'subtotal'              => $subtotal,
+                    'shipping_cost'         => $shippingCost,
+                    'shipping_method_label' => $locked->shipping_method_label,
+                    'discount'              => $discount,
+                    'coupon_code'           => $locked->coupon_code,
+                    'total'                 => $total,
+                    'notes'                 => json_encode(['simulated' => true, 'guest_email' => $locked->guest_email]),
+                ]);
+
+                foreach ($locked->items as $item) {
+                    $order->items()->create([
+                        'product_id'    => $item->product_id,
+                        'variant_id'    => $item->variant_id,
+                        'variant_label' => $item->variant_label,
+                        'product_name'  => $item->product_name,
+                        'unit_price'    => $item->unit_price,
+                        'quantity'      => $item->quantity,
+                        'subtotal'      => $item->subtotal,
+                    ]);
+
+                    if ($item->variant_id) {
+                        $decremented = ProductVariant::where('id', $item->variant_id)
+                            ->where('stock', '>=', $item->quantity)
+                            ->decrement('stock', $item->quantity);
+                    } else {
+                        $decremented = Product::where('id', $item->product_id)
+                            ->where('stock', '>=', $item->quantity)
+                            ->decrement('stock', $item->quantity);
+                    }
+
+                    if (! $decremented) {
+                        throw new \RuntimeException("Stock insuficiente para '{$item->product_name}'.");
+                    }
+                }
+
+                $locked->update(['status' => Quote::STATUS_CONVERTED]);
+
+                return $order;
+            });
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        $order->load('items');
+
+        if ($quote->guest_email) {
+            Mail::to($quote->guest_email)->queue(new OrderConfirmationMail($order));
+        }
+
+        return response()->json(['data' => new OrderResource($order)], 201);
     }
 
     public function show(Request $request): JsonResponse

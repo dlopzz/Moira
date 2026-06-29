@@ -19,15 +19,67 @@ class CartController extends Controller
 {
     private function resolveQuote(Request $request): Quote
     {
-        if ($request->user()) {
-            return Quote::getActiveForCustomer($request->user());
-        }
-
+        // Cart routes are outside auth:sanctum middleware, so try both guards.
+        $customer   = $request->user() ?? \Illuminate\Support\Facades\Auth::guard('sanctum')->user();
         $guestToken = $request->header('X-Guest-Token', '');
+
+        if ($customer) {
+            $quote = Quote::getActiveForCustomer($customer);
+
+            // Merge guest cart items if the request carries a guest token
+            if ($guestToken && preg_match('/^[0-9a-f\-]{36}$/i', $guestToken)) {
+                $this->mergeGuestCart($quote, $guestToken);
+            }
+
+            return $quote;
+        }
 
         abort_if(! $guestToken || ! preg_match('/^[0-9a-f\-]{36}$/i', $guestToken), 400, 'Token de invitado requerido.');
 
         return Quote::getActiveForGuest($guestToken);
+    }
+
+    private function mergeGuestCart(Quote $customerQuote, string $guestToken): void
+    {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($customerQuote, $guestToken): void {
+            $guestQuote = Quote::where('guest_token', $guestToken)
+                ->where('status', Quote::STATUS_ACTIVE)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $guestQuote) {
+                return;
+            }
+
+            $guestQuote->load('items');
+
+            if ($guestQuote->items->isEmpty()) {
+                return;
+            }
+
+            foreach ($guestQuote->items as $guestItem) {
+                $existing = $customerQuote->items()
+                    ->where('product_id', $guestItem->product_id)
+                    ->where('variant_id', $guestItem->variant_id)
+                    ->first();
+
+                if ($existing) {
+                    $newQty = $existing->quantity + $guestItem->quantity;
+                    $existing->update([
+                        'quantity' => $newQty,
+                        'subtotal' => $existing->unit_price * $newQty,
+                    ]);
+                } else {
+                    $customerQuote->items()->create($guestItem->only([
+                        'product_id', 'product_slug', 'variant_id', 'variant_label',
+                        'product_name', 'product_sku', 'product_image',
+                        'unit_price', 'quantity', 'subtotal',
+                    ]));
+                }
+            }
+
+            $guestQuote->update(['status' => Quote::STATUS_CONVERTED]);
+        });
     }
 
     public function index(Request $request): JsonResponse

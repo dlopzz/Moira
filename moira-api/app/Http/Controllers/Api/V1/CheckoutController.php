@@ -23,16 +23,30 @@ class CheckoutController extends Controller
 {
     public function show(Request $request): JsonResponse
     {
-        $quote = Quote::getActiveForCustomer($request->user());
+        $quote      = Quote::getActiveForCustomer($request->user());
+        $guestToken = $request->header('X-Guest-Token', '');
+
+        // Merge guest cart when the customer arrives at checkout after a guest session
+        if ($guestToken && preg_match('/^[0-9a-f\-]{36}$/i', $guestToken)) {
+            $this->mergeGuestCart($quote, $guestToken);
+        }
+
         $quote->load('items');
 
-        $address = $quote->checkout_address_id
+        $shippingAddress = $quote->checkout_address_id
             ? CustomerAddress::find($quote->checkout_address_id)
             : null;
 
+        $billingAddress = $quote->billing_address_id
+            ? CustomerAddress::find($quote->billing_address_id)
+            : null;
+
         return response()->json([
-            'cart' => new CartResource($quote),
-            'checkout_address' => $address,
+            'cart'             => new CartResource($quote),
+            'checkout_address' => $shippingAddress,
+            'billing_address'  => $billingAddress,
+            'billing_same_as_shipping' => $quote->billing_address_id !== null
+                && $quote->billing_address_id === $quote->checkout_address_id,
         ]);
     }
 
@@ -51,15 +65,28 @@ class CheckoutController extends Controller
     public function setAddress(Request $request): JsonResponse
     {
         $request->validate([
-            'address_id' => ['required', 'integer'],
+            'address_id'         => ['required', 'integer'],
+            'billing_address_id' => ['nullable', 'integer'],
         ]);
 
+        $customerId = $request->user()->id;
+
         $address = CustomerAddress::where('id', $request->address_id)
-            ->where('customer_id', $request->user()->id)
+            ->where('customer_id', $customerId)
             ->firstOrFail();
 
+        // billing defaults to shipping when not provided or explicitly null
+        $billingId = $request->billing_address_id
+            ? CustomerAddress::where('id', $request->billing_address_id)
+                ->where('customer_id', $customerId)
+                ->firstOrFail()->id
+            : $address->id;
+
         $quote = Quote::getActiveForCustomer($request->user());
-        $quote->update(['checkout_address_id' => $address->id]);
+        $quote->update([
+            'checkout_address_id' => $address->id,
+            'billing_address_id'  => $billingId,
+        ]);
 
         return response()->json(['message' => 'Dirección guardada.']);
     }
@@ -163,7 +190,7 @@ class CheckoutController extends Controller
         $order->setRelation('customer', $customer);
         Mail::to($customer->email)->queue(new OrderConfirmationMail($order));
 
-        $reviews = collect();
+        $reviews = new \Illuminate\Database\Eloquent\Collection();
         foreach ($order->items as $item) {
             $product = $quote->items->firstWhere('product_id', $item->product_id)?->product;
             if (! $item->product_id || ! $product) {
@@ -184,5 +211,48 @@ class CheckoutController extends Controller
         }
 
         return response()->json(['data' => new OrderResource($order)], 201);
+    }
+
+    private function mergeGuestCart(Quote $customerQuote, string $guestToken): void
+    {
+        DB::transaction(function () use ($customerQuote, $guestToken): void {
+            $guestQuote = Quote::where('guest_token', $guestToken)
+                ->where('status', Quote::STATUS_ACTIVE)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $guestQuote) {
+                return;
+            }
+
+            $guestQuote->load('items');
+
+            if ($guestQuote->items->isEmpty()) {
+                return;
+            }
+
+            foreach ($guestQuote->items as $guestItem) {
+                $existing = $customerQuote->items()
+                    ->where('product_id', $guestItem->product_id)
+                    ->where('variant_id', $guestItem->variant_id)
+                    ->first();
+
+                if ($existing) {
+                    $newQty = $existing->quantity + $guestItem->quantity;
+                    $existing->update([
+                        'quantity' => $newQty,
+                        'subtotal' => $existing->unit_price * $newQty,
+                    ]);
+                } else {
+                    $customerQuote->items()->create($guestItem->only([
+                        'product_id', 'product_slug', 'variant_id', 'variant_label',
+                        'product_name', 'product_sku', 'product_image',
+                        'unit_price', 'quantity', 'subtotal',
+                    ]));
+                }
+            }
+
+            $guestQuote->update(['status' => Quote::STATUS_CONVERTED]);
+        });
     }
 }

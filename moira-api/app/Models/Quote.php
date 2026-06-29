@@ -34,6 +34,7 @@ class Quote extends Model
         'discount_amount',
         'expires_at',
         'checkout_address_id',
+        'billing_address_id',
         'shipping_method_code',
         'shipping_method_label',
         'shipping_cost',
@@ -42,9 +43,11 @@ class Quote extends Model
     protected function casts(): array
     {
         return [
-            'discount_amount' => 'decimal:2',
-            'shipping_cost' => 'decimal:2',
-            'expires_at' => 'datetime',
+            'discount_amount'     => 'decimal:2',
+            'shipping_cost'       => 'decimal:2',
+            'expires_at'          => 'datetime',
+            'checkout_address_id' => 'integer',
+            'billing_address_id'  => 'integer',
         ];
     }
 
@@ -56,6 +59,11 @@ class Quote extends Model
     public function checkoutAddress(): BelongsTo
     {
         return $this->belongsTo(CustomerAddress::class, 'checkout_address_id');
+    }
+
+    public function billingAddress(): BelongsTo
+    {
+        return $this->belongsTo(CustomerAddress::class, 'billing_address_id');
     }
 
     public function items(): HasMany

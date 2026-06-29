@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
-import { api, type Cart, type Address, type PaymentConfig, ApiError, formatPrice } from '@/lib/api';
+import {
+  api, type Cart, type Address, type GuestShippingAddress,
+  type PaymentConfig, ApiError, formatPrice,
+} from '@/lib/api';
 import { getToken } from '@/lib/auth';
 import Header from '@/components/Header';
 import Breadcrumb from '@/components/Breadcrumb';
-import CheckoutSteps from '@/components/CheckoutSteps';
 
 declare global {
   interface Window {
@@ -45,44 +47,41 @@ function SimulatorPanel({
   processing,
   error,
   onPay,
+  onBack,
 }: {
   total: number;
   processing: boolean;
   error: string;
   onPay: (result: 'success' | 'fail') => void;
+  onBack: () => void;
 }) {
   return (
-    <div className="bg-white rounded-xl border-2 border-dashed border-yellow-300 p-5">
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-xs font-semibold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
-          Modo simulación
-        </span>
-        <span className="text-xs text-gray-400">PayWay no configurado</span>
-      </div>
-      <p className="text-sm text-gray-500 mb-4">
-        Usá estos botones para simular un pago aprobado o rechazado durante el desarrollo.
+    <div className="co-simulator-panel">
+      <p className="co-simulator-label">Modo simulación — PayWay no configurado</p>
+      <p className="co-muted" style={{ fontSize: 13, marginBottom: '1em' }}>
+        Usá estos botones para simular un pago aprobado o rechazado.
       </p>
-
-      {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-4">
-          {error}
-        </p>
-      )}
-
-      <div className="flex gap-3">
+      {error && <p className="co-error" style={{ marginBottom: '0.75em' }}>{error}</p>}
+      <div className="co-simulator-actions">
         <button
+          type="button" className="button alt"
           onClick={() => onPay('success')}
           disabled={processing}
-          className="flex-1 bg-green-600 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors"
         >
           {processing ? 'Procesando...' : `✓ Aprobar pago $${formatPrice(total)}`}
         </button>
         <button
+          type="button" className="button"
           onClick={() => onPay('fail')}
           disabled={processing}
-          className="flex-1 bg-red-500 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-red-600 disabled:opacity-50 transition-colors"
+          style={{ background: 'var(--global-palette6)', color: '#fff' }}
         >
           ✕ Rechazar pago
+        </button>
+      </div>
+      <div className="co-actions" style={{ marginTop: '1.5em' }}>
+        <button type="button" className="co-back-link" onClick={onBack}>
+          ← Volver a envío
         </button>
       </div>
     </div>
@@ -92,55 +91,76 @@ function SimulatorPanel({
 export default function CheckoutPaymentPage() {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
+  const isAuth = !!getToken();
 
-  const [cart, setCart] = useState<Cart | null>(null);
-  const [address, setAddress] = useState<Address | null>(null);
+  const [cart, setCart]                   = useState<Cart | null>(null);
+  const [authAddress, setAuthAddress]     = useState<Address | null>(null);
+  const [guestAddress, setGuestAddress]   = useState<GuestShippingAddress | null>(null);
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [sdkReady, setSdkReady] = useState(false);
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState('');
-  const [installments, setInstallments] = useState(1);
-  const [docType, setDocType] = useState('dni');
+  const [loading, setLoading]             = useState(true);
+  const [sdkReady, setSdkReady]           = useState(false);
+  const [processing, setProcessing]       = useState(false);
+  const [error, setError]                 = useState('');
+  const [installments, setInstallments]   = useState(1);
+  const [docType, setDocType]             = useState('dni');
 
   useEffect(() => {
-    if (!getToken()) { router.push('/auth/login'); return; }
-    Promise.all([api.getCheckout(), api.getPaymentConfig()])
-      .then(([checkoutRes, configRes]) => {
-        setCart(checkoutRes.cart);
-        setAddress(checkoutRes.checkout_address);
-        setPaymentConfig(configRes.data);
-        if (!checkoutRes.checkout_address || !checkoutRes.cart.shipping?.code) {
-          router.push('/checkout/shipping');
-        }
-      })
-      .catch(() => setError('No se pudo cargar la información de pago. Recargá la página.'))
-      .finally(() => setLoading(false));
-  }, [router]);
+    if (isAuth) {
+      Promise.all([api.getCheckout(), api.getPaymentConfig()])
+        .then(([checkoutRes, configRes]) => {
+          setCart(checkoutRes.cart);
+          setAuthAddress(checkoutRes.checkout_address);
+          setPaymentConfig(configRes.data);
+          if (!checkoutRes.checkout_address || !checkoutRes.cart.shipping?.code) {
+            router.push('/checkout/shipping');
+          }
+        })
+        .catch(() => setError('No se pudo cargar la información de pago. Recargá la página.'))
+        .finally(() => setLoading(false));
+    } else {
+      Promise.all([api.getGuestCheckout(), api.getCart(), api.getPaymentConfig()])
+        .then(([guestRes, cartRes, configRes]) => {
+          setCart(cartRes.data);
+          setGuestAddress(guestRes.shipping_address);
+          setPaymentConfig(configRes.data);
+          if (!guestRes.shipping_address || !guestRes.shipping_method) {
+            router.push('/checkout/shipping');
+          }
+        })
+        .catch(() => setError('No se pudo cargar la información de pago. Recargá la página.'))
+        .finally(() => setLoading(false));
+    }
+  }, [isAuth, router]);
 
   function initSdk() {
     if (!paymentConfig || !window.Decidir) return;
     const sdk = new window.Decidir(paymentConfig.sdk_endpoint);
-    if (paymentConfig.public_key) {
-      sdk.setPublishableKey(paymentConfig.public_key);
-    }
+    if (paymentConfig.public_key) sdk.setPublishableKey(paymentConfig.public_key);
     (window as Window & { __decidir?: typeof sdk }).__decidir = sdk;
     setSdkReady(true);
+  }
+
+  async function handleSimulate(result: 'success' | 'fail') {
+    setError('');
+    setProcessing(true);
+    try {
+      const res = isAuth
+        ? await api.simulatePayment(result)
+        : await api.simulateGuestPayment(result);
+      router.push(`/checkout/success?order=${res.data.number}`);
+    } catch (err) {
+      if (err instanceof ApiError) setError(err.message);
+      setProcessing(false);
+    }
   }
 
   async function handlePay(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-
     const sdk = (window as Window & { __decidir?: ReturnType<typeof window.Decidir> }).__decidir;
-    if (!sdk) {
-      setError('El SDK de pago no está listo. Recargá la página.');
-      return;
-    }
+    if (!sdk) { setError('El SDK de pago no está listo. Recargá la página.'); return; }
     if (!formRef.current) return;
-
     setProcessing(true);
-
     sdk.createToken(formRef.current, async (status, response) => {
       if (status !== 200 && status !== 201) {
         const tokenError = (response as unknown as { error?: { type?: string }[] })?.error;
@@ -154,11 +174,9 @@ export default function CheckoutPaymentPage() {
         setProcessing(false);
         return;
       }
-
       try {
         const holderName = (formRef.current!.querySelector('[data-decidir="card_holder_name"]') as HTMLInputElement)?.value ?? '';
         const holderDoc  = (formRef.current!.querySelector('[data-decidir="card_holder_doc_number"]') as HTMLInputElement)?.value ?? '';
-
         const res = await api.processPayment({
           token: response.id,
           bin: response.bin,
@@ -178,259 +196,240 @@ export default function CheckoutPaymentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <>
         <Header />
-        <div className="max-w-3xl mx-auto px-4 py-8 text-gray-400">Cargando...</div>
-      </div>
+        <div className="woocommerce woocommerce-page">
+          <div className="site-container co-page">
+            <p className="co-loading">Cargando...</p>
+          </div>
+        </div>
+      </>
     );
   }
 
   if (!cart && error) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <>
         <Header />
-        <div className="max-w-3xl mx-auto px-4 py-8">
-          <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-3">{error}</p>
+        <div className="woocommerce woocommerce-page">
+          <div className="site-container co-page">
+            <p className="co-error">{error}</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   const sdkNotConfigured = !paymentConfig?.js_sdk_url || !paymentConfig?.public_key;
 
+  // Normalised address for display
+  const addrLabel  = authAddress?.label ?? (guestAddress ? `${guestAddress.firstname} ${guestAddress.lastname}` : null);
+  const addrStreet = authAddress?.street ?? guestAddress?.street ?? null;
+  const addrCity   = authAddress ? `${authAddress.city}, ${authAddress.state} (${authAddress.zip_code})` : guestAddress ? `${guestAddress.city}, ${guestAddress.state} (${guestAddress.zip_code})` : null;
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <Header />
 
-      {/* JS SDK — URL y public key vienen de la BD */}
-      {paymentConfig?.js_sdk_url && paymentConfig?.public_key && (
-        <Script
-          src={paymentConfig.js_sdk_url}
-          strategy="afterInteractive"
-          onLoad={initSdk}
-        />
-      )}
+      <section role="banner" className="entry-hero product-archive-hero-section entry-hero-layout-standard">
+        <div className="entry-hero-container-inner">
+          <div className="hero-section-overlay" />
+          <div className="hero-container site-container">
+            <header className="entry-header">
+              <Breadcrumb crumbs={[{ name: 'Inicio', href: '/' }, { name: 'Carrito', href: '/cart' }, { name: 'Checkout' }]} />
+              <h1 className="page-title">Checkout — Pago</h1>
+            </header>
+          </div>
+        </div>
+      </section>
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        <Breadcrumb crumbs={[{ name: 'Carrito', href: '/cart' }, { name: 'Checkout' }]} />
-        <CheckoutSteps current={2} />
+      <div className="woocommerce woocommerce-checkout woocommerce-page">
+        <div className="site-container co-page">
 
-        <div className="grid md:grid-cols-[1fr_300px] gap-6">
-          {/* Left */}
-          <div className="space-y-4">
-            {address && (
-              <div className="bg-white rounded-xl border border-gray-200 p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-gray-900 text-sm">Dirección de envío</h3>
-                  <button onClick={() => router.push('/checkout/shipping')} className="text-xs text-blue-600 hover:underline">
-                    Cambiar
-                  </button>
+          {paymentConfig?.js_sdk_url && paymentConfig?.public_key && (
+            <Script src={paymentConfig.js_sdk_url} strategy="afterInteractive" onLoad={initSdk} />
+          )}
+
+          <div className="col2-set" id="customer_details_wrap">
+            <div className="co-main-col">
+
+              {/* Dirección confirmada */}
+              {addrLabel && (
+                <div className="co-confirmed-address">
+                  <div className="co-confirmed-address-header">
+                    <span>Dirección de envío</span>
+                    <button type="button" className="co-guest-link" onClick={() => router.push('/checkout/shipping')}>
+                      Cambiar
+                    </button>
+                  </div>
+                  <p>{addrLabel}</p>
+                  {addrStreet && <p>{addrStreet}</p>}
+                  {addrCity && <p>{addrCity}</p>}
                 </div>
-                <p className="text-sm font-medium text-gray-700">{address.label}</p>
-                <p className="text-sm text-gray-500">{address.street}{address.address_line_2 ? `, ${address.address_line_2}` : ''}</p>
-                <p className="text-sm text-gray-500">{address.city}, {address.state} ({address.zip_code})</p>
-              </div>
-            )}
+              )}
 
-            {sdkNotConfigured ? (
-              <SimulatorPanel
-                total={cart?.summary.total ?? 0}
-                processing={processing}
-                error={error}
-                onPay={async (result) => {
-                  setError('');
-                  setProcessing(true);
-                  try {
-                    const res = await api.simulatePayment(result);
-                    router.push(`/checkout/success?order=${res.data.number}`);
-                  } catch (err) {
-                    if (err instanceof ApiError) setError(err.message);
-                    setProcessing(false);
-                  }
-                }}
-              />
-            ) : (
-              <div className="bg-white rounded-xl border border-gray-200 p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-900 text-sm">Datos de la tarjeta</h3>
-                  <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-                    {paymentConfig?.is_sandbox ? 'Sandbox' : 'Producción'}
-                  </span>
+              {/* Panel de pago */}
+              {sdkNotConfigured ? (
+                <SimulatorPanel
+                  total={cart?.summary.total ?? 0}
+                  processing={processing}
+                  error={error}
+                  onPay={handleSimulate}
+                  onBack={() => router.push('/checkout/shipping')}
+                />
+              ) : !isAuth ? (
+                <div className="co-simulator-panel">
+                  <p className="co-simulator-label">Iniciá sesión para pagar con tarjeta</p>
+                  <p className="co-muted" style={{ fontSize: 13, marginBottom: '1em' }}>
+                    El pago con tarjeta requiere una cuenta. Podés registrarte gratis o iniciar sesión.
+                  </p>
+                  <div className="co-simulator-actions">
+                    <button type="button" className="button alt" onClick={() => router.push('/auth/login?redirect=/checkout/payment')}>
+                      Iniciar sesión
+                    </button>
+                    <button type="button" className="button" onClick={() => router.push('/auth/register?redirect=/checkout/payment')}>
+                      Registrarse
+                    </button>
+                  </div>
+                  <div className="co-actions" style={{ marginTop: '1.5em' }}>
+                    <button type="button" className="co-back-link" onClick={() => router.push('/checkout/shipping')}>
+                      ← Volver a envío
+                    </button>
+                  </div>
                 </div>
+              ) : (
+                <div className="co-payment-form">
+                  <h3>Datos de la tarjeta</h3>
+                  <form ref={formRef} onSubmit={handlePay}>
 
-                <form ref={formRef} onSubmit={handlePay} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Número de tarjeta</label>
-                    <input
-                      type="text"
-                      data-decidir="card_number"
-                      placeholder="#### #### #### ####"
-                      maxLength={19}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
+                    <p className="co-field form-row">
+                      <label className="co-label">Número de tarjeta <abbr title="requerido">*</abbr></label>
+                      <input type="text" className="input-text" data-decidir="card_number"
+                        placeholder="#### #### #### ####" maxLength={19} required />
+                    </p>
 
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Nombre del titular</label>
-                    <input
-                      type="text"
-                      data-decidir="card_holder_name"
-                      placeholder="Como figura en la tarjeta"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
+                    <p className="co-field form-row">
+                      <label className="co-label">Nombre del titular <abbr title="requerido">*</abbr></label>
+                      <input type="text" className="input-text" data-decidir="card_holder_name"
+                        placeholder="Como figura en la tarjeta" required />
+                    </p>
 
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Mes</label>
-                      <input
-                        type="text"
-                        data-decidir="card_expiration_month"
-                        placeholder="MM"
-                        maxLength={2}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
+                    <div className="co-row-3">
+                      <p className="co-field form-row">
+                        <label className="co-label">Mes <abbr title="requerido">*</abbr></label>
+                        <input type="text" className="input-text" data-decidir="card_expiration_month"
+                          placeholder="MM" maxLength={2} required />
+                      </p>
+                      <p className="co-field form-row">
+                        <label className="co-label">Año <abbr title="requerido">*</abbr></label>
+                        <input type="text" className="input-text" data-decidir="card_expiration_year"
+                          placeholder="AA" maxLength={2} required />
+                      </p>
+                      <p className="co-field form-row">
+                        <label className="co-label">CVV <abbr title="requerido">*</abbr></label>
+                        <input type="text" className="input-text" data-decidir="security_code"
+                          placeholder="123" maxLength={4} required />
+                      </p>
                     </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Año</label>
-                      <input
-                        type="text"
-                        data-decidir="card_expiration_year"
-                        placeholder="AA"
-                        maxLength={2}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">CVV</label>
-                      <input
-                        type="text"
-                        data-decidir="security_code"
-                        placeholder="123"
-                        maxLength={4}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Tipo de documento</label>
-                      <select
-                        data-decidir="card_holder_doc_type"
-                        value={docType}
-                        onChange={(e) => setDocType(e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        {DOC_TYPES.map((d) => (
-                          <option key={d.value} value={d.value}>{d.label}</option>
+                    <div className="co-row-2">
+                      <p className="co-field form-row">
+                        <label className="co-label">Tipo de documento <abbr title="requerido">*</abbr></label>
+                        <select className="input-text addr-select" data-decidir="card_holder_doc_type"
+                          value={docType} onChange={e => setDocType(e.target.value)}>
+                          {DOC_TYPES.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+                        </select>
+                      </p>
+                      <p className="co-field form-row">
+                        <label className="co-label">Número de documento <abbr title="requerido">*</abbr></label>
+                        <input type="text" className="input-text" data-decidir="card_holder_doc_number"
+                          placeholder="12345678" required />
+                      </p>
+                    </div>
+
+                    <p className="co-field form-row">
+                      <label className="co-label">Cuotas</label>
+                      <select className="input-text addr-select" value={installments}
+                        onChange={e => setInstallments(Number(e.target.value))}>
+                        {INSTALLMENTS.map(n => (
+                          <option key={n} value={n}>{n === 1 ? '1 cuota (sin interés)' : `${n} cuotas`}</option>
                         ))}
                       </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Número de documento</label>
-                      <input
-                        type="text"
-                        data-decidir="card_holder_doc_number"
-                        placeholder="12345678"
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Cuotas</label>
-                    <select
-                      value={installments}
-                      onChange={(e) => setInstallments(Number(e.target.value))}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      {INSTALLMENTS.map((n) => (
-                        <option key={n} value={n}>
-                          {n === 1 ? '1 cuota (sin interés)' : `${n} cuotas`}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {error && (
-                    <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                      {error}
                     </p>
-                  )}
 
-                  <button
-                    type="submit"
-                    disabled={processing || !sdkReady}
-                    className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors text-sm mt-2"
-                  >
-                    {processing ? 'Procesando pago...' : `Pagar $${cart?.summary.formatPrice(total) ?? '0.00'}`}
-                  </button>
+                    {error && <p className="co-error" style={{ marginBottom: '0.75em' }}>{error}</p>}
 
-                  {!sdkReady && (
-                    <p className="text-xs text-gray-400 text-center">Cargando SDK de pago seguro...</p>
-                  )}
+                    <div className="co-actions">
+                      <button type="button" className="co-back-link" onClick={() => router.push('/checkout/shipping')}>
+                        ← Volver a envío
+                      </button>
+                      <button type="submit" className="button alt" disabled={processing || !sdkReady}>
+                        {processing ? 'Procesando pago...' : `Pagar $${formatPrice(cart?.summary.total ?? 0)}`}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
 
-                  <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-1">
-                    <span>🔒</span> Pago seguro procesado por PayWay
-                  </p>
-                </form>
+            </div>
+
+            {/* Sidebar resumen */}
+            {cart && (
+              <div className="col-2" id="order_review">
+                <div className="co-sidebar">
+                  <h3>Tu pedido</h3>
+                  <table className="shop_table woocommerce-checkout-review-order-table">
+                    <thead>
+                      <tr>
+                        <th className="product-name">Producto</th>
+                        <th className="product-total">Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cart.items.map(item => (
+                        <tr key={item.id} className="cart_item">
+                          <td className="product-name">
+                            {item.name}
+                            {item.variant_label && <span className="co-variant"> ({item.variant_label})</span>}
+                            <strong className="product-quantity"> &times; {item.quantity}</strong>
+                          </td>
+                          <td className="product-total">
+                            <span className="woocommerce-Price-amount"><bdi>${formatPrice(item.subtotal)}</bdi></span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="cart-subtotal">
+                        <th>Subtotal</th>
+                        <td><span className="woocommerce-Price-amount"><bdi>${formatPrice(cart.summary.subtotal)}</bdi></span></td>
+                      </tr>
+                      {cart.summary.discount > 0 && (
+                        <tr className="cart-discount">
+                          <th>Descuento{cart.coupon_code ? ` (${cart.coupon_code})` : ''}</th>
+                          <td><span className="woocommerce-Price-amount"><bdi>−${formatPrice(cart.summary.discount)}</bdi></span></td>
+                        </tr>
+                      )}
+                      <tr className="shipping">
+                        <th>Envío</th>
+                        <td>
+                          {cart.summary.shipping_cost === 0
+                            ? 'Gratis'
+                            : <span className="woocommerce-Price-amount"><bdi>${formatPrice(cart.summary.shipping_cost)}</bdi></span>}
+                        </td>
+                      </tr>
+                      <tr className="order-total">
+                        <th>Total</th>
+                        <td><strong><span className="woocommerce-Price-amount"><bdi>${formatPrice(cart.summary.total)}</bdi></span></strong></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
               </div>
             )}
-
-            <button onClick={() => router.push('/checkout/shipping')} className="text-sm text-gray-500 hover:text-gray-700">
-              ← Volver a envío
-            </button>
           </div>
-
-          {/* Right: order summary */}
-          {cart && (
-            <div className="bg-white rounded-xl border border-gray-200 p-4 h-fit">
-              <h3 className="font-semibold text-gray-900 text-sm mb-4">
-                Resumen ({cart.summary.items_count} artículo{cart.summary.items_count !== 1 ? 's' : ''})
-              </h3>
-              <div className="divide-y divide-gray-100">
-                {cart.items.map((item) => (
-                  <div key={item.id} className="py-2 flex justify-between text-sm gap-2">
-                    <span className="text-gray-700 truncate">
-                      {item.name}
-                      {item.variant_label && <span className="text-gray-400 block text-xs">{item.variant_label}</span>}
-                      <span className="text-gray-400"> ×{item.quantity}</span>
-                    </span>
-                    <span className="text-gray-900 font-medium flex-none">${item.subformatPrice(total)}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="border-t border-gray-100 mt-3 pt-3 space-y-1.5 text-sm">
-                <div className="flex justify-between text-gray-500">
-                  <span>Subtotal</span><span>${cart.summary.subformatPrice(total)}</span>
-                </div>
-                <div className="flex justify-between text-gray-500">
-                  <span>Envío{cart.shipping?.label ? ` (${cart.shipping.label})` : ''}</span>
-                  <span className={cart.summary.shipping_cost === 0 ? 'text-green-600' : ''}>
-                    {cart.summary.shipping_cost === 0 ? 'Gratis' : `$${formatPrice(cart.summary.shipping_cost)}`}
-                  </span>
-                </div>
-                {cart.summary.discount > 0 && (
-                  <div className="flex justify-between text-green-600">
-                    <span>Descuento{cart.coupon_code ? ` (${cart.coupon_code})` : ''}</span>
-                    <span>−${formatPrice(cart.summary.discount)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between font-bold text-gray-900 text-base pt-1 border-t border-gray-100">
-                  <span>Total</span><span>${cart.summary.formatPrice(total)}</span>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
-      </main>
-    </div>
+      </div>
+    </>
   );
 }

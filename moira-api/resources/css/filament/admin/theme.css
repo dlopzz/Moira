@@ -13,3 +13,311 @@
 .fi-sidebar-group[data-group-label=""] .fi-sidebar-group-items {
     row-gap: calc(var(--spacing) * 7);
 }
+
+/* ===== Suavizar el negro en todo el admin ===== */
+/*
+ * Filament compila Tailwind y usa color: var(--gray-950) explícito en labels,
+ * encabezados de tabla, texto de inputs, etc. Sobrescribir solo el body no alcanza
+ * porque los elementos tienen la variable hardcodeada. La solución es redefinir
+ * --gray-950 y --gray-900 a valores más suaves en :root para que TODOS los
+ * text-gray-950 / text-gray-900 rendericen en gris en lugar de negro.
+ *
+ *  --gray-950 original: oklch(0.129 0.042 264)  ≈ #0f172a (slate-950, casi negro)
+ *  --gray-900 original: oklch(0.208 0.042 265)  ≈ #1e293b (slate-900, negro oscuro)
+ *
+ *  Nuevo --gray-950 = oklch(0.372 0.044 257)    ≈ #334155 (slate-700, gris amigable)
+ *  Nuevo --gray-900 = oklch(0.446 0.043 257)    ≈ #475569 (slate-600, gris medio)
+ */
+:root {
+    --gray-950: oklch(0.372 0.044 257) !important;
+    --gray-900: oklch(0.446 0.043 257) !important;
+}
+
+/* Fallback por si hereda del html directamente */
+html.fi,
+body,
+.fi-body,
+.fi-layout,
+.fi-main,
+.fi-simple-layout {
+    color: #334155 !important;
+}
+
+/* ===== Border radius — aspecto más maduro y corporativo ===== */
+:root {
+    --radius-sm:  2px;
+    --radius:     4px;
+    --radius-md:  5px;
+    --radius-lg:  6px;
+    --radius-xl:  8px;
+    --radius-2xl: 10px;
+    --radius-3xl: 12px;
+    --radius-full: 9999px;
+}
+
+/* ===== Títulos de página — más suaves, menos chocantes ===== */
+.fi-page-header-heading,
+.fi-simple-page-header-heading,
+h1.fi-header-heading,
+.fi-header-heading {
+    color: #64748b !important;
+    font-weight: 600 !important;
+}
+
+.fi-section-header-heading {
+    color: #64748b !important;
+    font-weight: 600 !important;
+}
+
+/* Breadcrumb más suave */
+.fi-breadcrumbs-item-label {
+    color: #94a3b8 !important;
+}
+
+/* Focus ring más sutil en inputs */
+[wire\:model], input, select, textarea {
+    --tw-ring-width: 1px !important;
+}
+
+/* Botones: quitar sombra de ring visible en reposo */
+.fi-btn:not(:focus-visible) {
+    --tw-ring-shadow: none !important;
+    --tw-ring-offset-shadow: none !important;
+}
+
+/* Badges menos pill-shaped */
+.fi-badge {
+    border-radius: var(--radius-md) !important;
+    padding-inline: 0.5rem !important;
+}
+
+/* ===== Sidebar — Slate Pro (Linear / Vercel style) ===== */
+
+/* Main sidebar rail */
+.fi-sidebar {
+    background-color: #111827 !important;
+    border-inline-end-color: #1f2937 !important;
+}
+
+/* Logo / brand header */
+.fi-sidebar-header {
+    background-color: #0d1117 !important;
+    --tw-shadow: none !important;
+    --tw-ring-color: #1f2937 !important;
+}
+
+/* ---- Group labels & button row (expanded) ---- */
+
+.fi-sidebar-group-label {
+    color: #4b5563 !important;
+    font-size: 0.65rem !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    font-weight: 600 !important;
+}
+
+.fi-sidebar-group-btn {
+    color: #6b7280 !important;
+}
+
+.fi-sidebar-group-btn .fi-icon {
+    color: #6b7280 !important;
+}
+
+.fi-sidebar-group-collapse-btn,
+.fi-sidebar-group-collapse-btn .fi-icon {
+    color: #6b7280 !important;
+}
+
+/* ---- Items (expanded) ---- */
+
+.fi-sidebar-item-btn {
+    color: #9ca3af !important;
+    border-radius: var(--radius-md) !important;
+}
+
+.fi-sidebar-item-icon {
+    color: #6b7280 !important;
+}
+
+.fi-sidebar-item-label {
+    color: #9ca3af !important;
+}
+
+/* Connector dots */
+.fi-sidebar-item-grouped-border-part,
+.fi-sidebar-item-grouped-border-part-not-first,
+.fi-sidebar-item-grouped-border-part-not-last {
+    background-color: #1f2937 !important;
+}
+
+/* Hover */
+.fi-sidebar-item-btn:hover {
+    background-color: #1f2937 !important;
+}
+
+.fi-sidebar-item-btn:hover .fi-icon {
+    color: #d1d5db !important;
+}
+
+.fi-sidebar-item-btn:hover .fi-sidebar-item-label {
+    color: #f3f4f6 !important;
+}
+
+/* Active item */
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn {
+    background-color: #312e81 !important;
+}
+
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon {
+    color: #a5b4fc !important;
+}
+
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-label {
+    color: #e0e7ff !important;
+}
+
+.fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-grouped-border > .fi-sidebar-item-grouped-border-part {
+    background-color: #6366f1 !important;
+}
+
+/* ---- Collapsed rail ---- */
+
+.fi-sidebar-group-dropdown-trigger-btn {
+    flex-direction: column !important;
+    gap: 0.2rem !important;
+    padding: 0.6rem 0.25rem !important;
+    width: 100% !important;
+    background-color: transparent !important;
+    color: #9ca3af !important;
+}
+
+.fi-sidebar-group-dropdown-trigger-btn:hover,
+.fi-sidebar-group-dropdown-trigger-btn:focus-visible {
+    background-color: #1f2937 !important;
+    color: #d1d5db !important;
+}
+
+.fi-sidebar-group.fi-active .fi-sidebar-group-dropdown-trigger-btn {
+    background-color: #312e81 !important;
+    color: #a5b4fc !important;
+}
+
+/* Label debajo del ícono en rail colapsado */
+.fi-sidebar-group-dropdown-trigger-label {
+    display: block;
+    font-size: 0.58rem;
+    line-height: 1.1;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: center;
+    max-width: 4.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fi-sidebar-group-dropdown-trigger-btn:hover .fi-sidebar-group-dropdown-trigger-label,
+.fi-sidebar-group-dropdown-trigger-btn:focus-visible .fi-sidebar-group-dropdown-trigger-label {
+    color: #d1d5db;
+}
+
+.fi-sidebar-group.fi-active .fi-sidebar-group-dropdown-trigger-label {
+    color: #a5b4fc;
+}
+
+/* Botón expandir cuando rail está colapsado */
+.fi-sidebar-open-collapse-sidebar-btn .fi-icon {
+    color: #4b5563 !important;
+}
+
+/* ---- Flyout panel (rail colapsado → hover grupo) ---- */
+
+.fi-sidebar .fi-dropdown-panel {
+    background-color: #1f2937 !important;
+    border-radius: 0 var(--radius-lg) var(--radius-lg) 0 !important;
+    --tw-ring-color: #374151 !important;
+    border: 1px solid #374151 !important;
+    min-width: 200px !important;
+    overflow: hidden;
+}
+
+.fi-sidebar .fi-dropdown-header {
+    background-color: #253347 !important;
+    border-bottom: 1px solid #374151 !important;
+    border-left: 3px solid #6366f1 !important;
+    padding: 0.625rem 0.875rem !important;
+}
+
+.fi-sidebar .fi-dropdown-header span {
+    color: #e2e8f0 !important;
+    font-weight: 600 !important;
+    font-size: 0.8rem !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+}
+
+.fi-sidebar .fi-dropdown-list {
+    background-color: #1f2937 !important;
+    padding: 0.25rem !important;
+}
+
+.fi-sidebar .fi-dropdown-list-item {
+    color: #d1d5db !important;
+    border-radius: var(--radius) !important;
+}
+
+.fi-sidebar .fi-dropdown-list-item > .fi-icon {
+    color: #6b7280 !important;
+}
+
+.fi-sidebar .fi-dropdown-list-item-label {
+    color: #d1d5db !important;
+}
+
+.fi-sidebar .fi-dropdown-list-item:not(.fi-disabled):not([disabled]):hover,
+.fi-sidebar .fi-dropdown-list-item:not(.fi-disabled):not([disabled]):focus-visible {
+    background-color: #374151 !important;
+    color: #f9fafb !important;
+}
+
+.fi-sidebar .fi-dropdown-list-item:not(.fi-disabled):not([disabled]):hover > .fi-icon,
+.fi-sidebar .fi-dropdown-list-item:not(.fi-disabled):not([disabled]):focus-visible > .fi-icon {
+    color: #a5b4fc !important;
+}
+
+.fi-sidebar .fi-dropdown-list-item:not(.fi-disabled):not([disabled]):hover .fi-dropdown-list-item-label,
+.fi-sidebar .fi-dropdown-list-item:not(.fi-disabled):not([disabled]):focus-visible .fi-dropdown-list-item-label {
+    color: #f9fafb !important;
+}
+
+/* Ítem activo en flyout */
+.fi-sidebar .fi-dropdown-list-item.fi-color-primary {
+    color: #818cf8 !important;
+    background-color: #312e81 !important;
+}
+
+.fi-sidebar .fi-dropdown-list-item.fi-color-primary > .fi-icon {
+    color: #818cf8 !important;
+}
+
+.fi-sidebar .fi-dropdown-list-item.fi-color-primary .fi-dropdown-list-item-label {
+    color: #818cf8 !important;
+}
+
+/* Scrollbar */
+.fi-sidebar-nav-groups-ctn {
+    scrollbar-color: #374151 transparent;
+    scrollbar-width: thin;
+}
+
+/* User menu trigger */
+.fi-user-menu-trigger-btn {
+    color: #6b7280 !important;
+}
+
+.fi-user-menu-trigger-btn:hover {
+    background-color: #1f2937 !important;
+}

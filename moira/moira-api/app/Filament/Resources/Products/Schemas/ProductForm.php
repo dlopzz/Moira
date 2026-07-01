@@ -127,12 +127,15 @@ class ProductForm
                     ->visibility('public')
                     ->directory('products')
                     ->imageResizeMode('cover')
-                    ->imageCropAspectRatio('1:1')
-                    ->imageResizeTargetWidth(800)
-                    ->imageResizeTargetHeight(800)
-                    ->saveUploadedFileUsing(WebpConverter::saveAs('products'))
+                    ->imageCropAspectRatio('3:4')
+                    ->imageResizeTargetWidth(750)
+                    ->imageResizeTargetHeight(1000)
+                    ->saveUploadedFileUsing(WebpConverter::saveAs('products', variants: [
+                        'thumb'  => [171, 171],
+                        'medium' => [275, 367],
+                    ]))
                     ->columnSpanFull()
-                    ->helperText('Máximo 5 imágenes. La primera es la imagen principal.'),
+                    ->helperText('Proporción 3:4 portrait (750×1000px). El recorte es automático. La primera es la imagen principal.'),
 
                 Toggle::make('is_active')
                     ->label('Activo')

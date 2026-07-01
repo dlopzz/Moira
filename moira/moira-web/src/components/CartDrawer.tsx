@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { imageUrl, formatPrice } from '@/lib/api';
+import { imageThumbUrl, formatPrice } from '@/lib/api';
 import { useCart } from '@/lib/cart-context';
 
 export default function CartDrawer() {
@@ -68,7 +68,7 @@ export default function CartDrawer() {
             <>
               <ul className="woocommerce-mini-cart cart_list product_list_widget">
                 {items.map((item) => {
-                  const img = imageUrl(item.image);
+                  const img = imageThumbUrl(item.image) ?? item.image;
                   const href = item.product_slug
                     ? `/products/${item.product_slug}`
                     : `/products/${item.product_id}`;
@@ -91,6 +91,8 @@ export default function CartDrawer() {
                             src={img}
                             alt={item.name}
                             width={80}
+                            height={107}
+                            style={{ objectFit: 'cover', height: '107px', flexShrink: 0 }}
                           />
                         )}
                         {item.name}

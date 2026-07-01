@@ -387,7 +387,7 @@ export default function CategoryPageClient({ slug }: { slug: string }) {
                 <ul className="products content-wrap product-archive products-list-view woo-archive-btn-button woocommerce-product-list">
                   {products.map((p) => (
                     <li key={p.id} className="product loop-entry content-bg">
-                      <ProductCard product={p} view="list" />
+                      <ProductCard product={p} view="list" showSaleBadge={false} />
                     </li>
                   ))}
                 </ul>
@@ -395,7 +395,7 @@ export default function CategoryPageClient({ slug }: { slug: string }) {
                 <ul className="products content-wrap product-archive grid-cols grid-ss-col-2 grid-sm-col-3 grid-lg-col-4 woo-archive-action-on-hover woo-archive-btn-button woo-archive-image-hover-slide align-buttons-bottom">
                   {products.map((p) => (
                     <li key={p.id} className="entry content-bg loop-entry product">
-                      <ProductCard product={p} />
+                      <ProductCard product={p} showSaleBadge={false} />
                     </li>
                   ))}
                 </ul>

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { api, type Product, type ProductVariant, ApiError, imageUrl, formatPrice } from '@/lib/api';
+import { api, type Product, type ProductVariant, ApiError, imageUrl, imageThumbUrl, formatPrice } from '@/lib/api';
 import type { WishlistItem } from '@/lib/wishlist-context';
 import { useCart } from '@/lib/cart-context';
 import Header from '@/components/Header';
@@ -219,10 +219,10 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                               aria-label={`Ver imagen ${i + 1}`}
                             >
                               <Image
-                                src={imageUrl(img)!}
+                                src={imageThumbUrl(img) ?? imageUrl(img)!}
                                 alt=""
-                                width={300}
-                                height={400}
+                                width={171}
+                                height={171}
                                 style={{ objectFit: 'cover', width: '100%', height: '100%', display: 'block' }}
                               />
                             </li>

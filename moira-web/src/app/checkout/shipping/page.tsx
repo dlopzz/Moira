@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   api, type Address, type AddressPayload, type Cart, type ShippingRate,
-  type GuestShippingAddress, ApiError, formatPrice, imageUrl,
+  type GuestShippingAddress, ApiError, formatPrice, imageThumbUrl,
 } from '@/lib/api';
 import { getToken, saveToken } from '@/lib/auth';
 import Header from '@/components/Header';
@@ -70,9 +70,9 @@ function OrderSidebar({
             <tr key={item.id} className="cart_item">
               <td className="product-name">
                 <span className="checkout-review-product-image">
-                  {item.image && imageUrl(item.image) && (
+                  {item.image && imageThumbUrl(item.image) && (
                     <Image
-                      src={imageUrl(item.image)!}
+                      src={imageThumbUrl(item.image)!}
                       alt={item.name}
                       width={48}
                       height={64}
@@ -568,36 +568,51 @@ function AuthCheckout({ cart, onCartUpdate, onRateSelect }: {
   onRateSelect: (r: ShippingRate | null) => void;
 }) {
   const router = useRouter();
-  const [loading, setLoading]           = useState(true);
-  const [addresses, setAddresses]       = useState<Address[]>([]);
-  const [selected, setSelected]         = useState<number | null>(null);
-  const [saving, setSaving]             = useState(false);
-  const [showNewForm, setShowNewForm]   = useState(false);
-  const [newForm, setNewForm]           = useState<AddressPayload>(EMPTY_ADDR);
-  const [newErrors, setNewErrors]       = useState<Record<string, string>>({});
-  const [formSaving, setFormSaving]     = useState(false);
-  const [zipLoading, setZipLoading]     = useState(false);
-  const [notes, setNotes]               = useState('');
-  const [rates, setRates]               = useState<ShippingRate[]>([]);
-  const [selectedRate, setSelectedRate] = useState<ShippingRate | null>(null);
-  const [loadingRates, setLoadingRates] = useState(false);
-  const [ratesError, setRatesError]     = useState('');
-  const [addrConfirmed, setAddrConfirmed] = useState(false);
-  const [confirming, setConfirming]     = useState(false);
+  const [loading, setLoading]                       = useState(true);
+  const [addresses, setAddresses]                   = useState<Address[]>([]);
+  const [selected, setSelected]                     = useState<number | null>(null);
+  const [saving, setSaving]                         = useState(false);
+  const [showNewForm, setShowNewForm]               = useState(false);
+  const [newForm, setNewForm]                       = useState<AddressPayload>(EMPTY_ADDR);
+  const [newErrors, setNewErrors]                   = useState<Record<string, string>>({});
+  const [formSaving, setFormSaving]                 = useState(false);
+  const [zipLoading, setZipLoading]                 = useState(false);
+  const [notes, setNotes]                           = useState('');
+  const [rates, setRates]                           = useState<ShippingRate[]>([]);
+  const [selectedRate, setSelectedRate]             = useState<ShippingRate | null>(null);
+  const [loadingRates, setLoadingRates]             = useState(false);
+  const [ratesError, setRatesError]                 = useState('');
+  const [addrConfirmed, setAddrConfirmed]           = useState(false);
+  const [confirming, setConfirming]                 = useState(false);
+  // Billing address
+  const [billingSame, setBillingSame]               = useState(true);
+  const [selectedBilling, setSelectedBilling]       = useState<number | null>(null);
 
   useEffect(() => {
     Promise.all([api.getAddresses(), api.getCheckout()])
       .then(([addrRes, checkoutRes]) => {
         setAddresses(addrRes.data);
-        if (checkoutRes.checkout_address) {
-          setSelected(checkoutRes.checkout_address.id);
-        } else {
-          const def = addrRes.data.find(a => a.is_default_shipping) ?? addrRes.data[0];
-          if (def) setSelected(def.id);
+        onCartUpdate(checkoutRes.cart);
+        // Pre-select shipping address
+        const shippingId = checkoutRes.checkout_address?.id
+          ?? addrRes.data.find(a => a.is_default_shipping)?.id
+          ?? addrRes.data[0]?.id
+          ?? null;
+        setSelected(shippingId);
+        // Pre-select billing state
+        const billingId = checkoutRes.billing_address?.id ?? null;
+        const sameAsShipping = checkoutRes.billing_same_as_shipping ?? true;
+        setBillingSame(sameAsShipping);
+        setSelectedBilling(billingId && !sameAsShipping ? billingId : null);
+        // If address was already confirmed (shipping method set), show rates section
+        if (checkoutRes.checkout_address && checkoutRes.cart.shipping?.code) {
+          setAddrConfirmed(true);
+          loadRates();
         }
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function selectRate(rate: ShippingRate) {
@@ -623,7 +638,8 @@ function AuthCheckout({ cart, onCartUpdate, onRateSelect }: {
     if (!selected) return;
     setSaving(true);
     try {
-      await api.setCheckoutAddress(selected);
+      const billingId = billingSame ? null : (selectedBilling ?? selected);
+      await api.setCheckoutAddress(selected, billingId);
       setAddrConfirmed(true);
       await loadRates();
     } finally {
@@ -697,6 +713,10 @@ function AuthCheckout({ cart, onCartUpdate, onRateSelect }: {
                   <span>{addr.street}{addr.address_line_2 ? `, ${addr.address_line_2}` : ''}</span>
                   <span>{addr.city}, {addr.state} ({addr.zip_code})</span>
                   <span>{addr.telephone}</span>
+                  <div className="co-addr-badges">
+                    {addr.is_default_shipping && <span className="co-badge co-badge--shipping">Envío predeterminado</span>}
+                    {addr.is_default_billing  && <span className="co-badge co-badge--billing">Facturación predeterminada</span>}
+                  </div>
                 </div>
               </label>
             ))}
@@ -759,6 +779,46 @@ function AuthCheckout({ cart, onCartUpdate, onRateSelect }: {
           </div>
         </div>
       </div>
+
+      {/* ── Dirección de facturación ── solo si hay una dirección de envío seleccionada */}
+      {selected && <div className="woocommerce-billing-fields co-billing-section">
+        <h3>Dirección de facturación</h3>
+        <label className="co-checkbox-label">
+          <input
+            type="checkbox"
+            checked={billingSame}
+            onChange={e => {
+              setBillingSame(e.target.checked);
+              if (e.target.checked) setSelectedBilling(null);
+              else {
+                // Pre-select default billing or the same as shipping
+                const defBilling = addresses.find(a => a.is_default_billing) ?? addresses.find(a => a.id === selected);
+                setSelectedBilling(defBilling?.id ?? null);
+              }
+              setAddrConfirmed(false);
+            }}
+          />
+          Mi dirección de facturación es la misma que la de envío
+        </label>
+
+        {!billingSame && (
+          <div className="co-billing-picker">
+            {addresses.map(addr => (
+              <label key={addr.id} className={`co-addr-card co-addr-card--sm ${selectedBilling === addr.id ? 'co-addr-card--selected' : ''}`}>
+                <input type="radio" name="billing_address" value={addr.id}
+                  checked={selectedBilling === addr.id}
+                  onChange={() => { setSelectedBilling(addr.id); setAddrConfirmed(false); }} />
+                <div className="co-addr-card-body">
+                  <strong>{addr.label}</strong>
+                  <span>{addr.street}</span>
+                  <span>{addr.city}, {addr.state}</span>
+                  {addr.is_default_billing && <span className="co-badge co-badge--billing">Predeterminada</span>}
+                </div>
+              </label>
+            ))}
+          </div>
+        )}
+      </div>}
 
       {/* ── Método de envío ── */}
       {addrConfirmed && (
@@ -838,8 +898,12 @@ export default function CheckoutShippingPage() {
   const [selectedRate, setSelectedRate] = useState<ShippingRate | null>(null);
 
   useEffect(() => {
-    setIsAuth(!!getToken());
-    api.getCart().then(res => setCart(res.data)).catch(() => {});
+    const auth = !!getToken();
+    setIsAuth(auth);
+    // Auth users get cart from AuthCheckout via onCartUpdate; guests load directly
+    if (!auth) {
+      api.getCart().then(res => setCart(res.data)).catch(() => {});
+    }
   }, []);
 
   // Listen for rate selection changes from children

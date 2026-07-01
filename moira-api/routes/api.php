@@ -1,10 +1,13 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AddressController;
+use App\Http\Controllers\Api\V1\ContactMessageController;
+use App\Http\Controllers\Api\V1\NewsletterController;
 use App\Http\Controllers\Api\V1\GuestCheckoutController;
 use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\ShippingController;
 use App\Http\Controllers\Api\V1\CmsPageController;
+use App\Http\Controllers\Api\V1\HomeController;
 use App\Http\Controllers\Api\V1\SiteSettingsController;
 use App\Http\Controllers\Api\V1\ReviewController;
 use App\Http\Controllers\Api\V1\Auth\ForgotPasswordController;
@@ -33,10 +36,17 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::get('products', [ProductController::class,  'index'])->name('products.index');
     Route::get('products/{slug}', [ProductController::class,  'show'])->name('products.show');
 
+    Route::get('home', [HomeController::class, 'index'])->name('home.index');
+
     Route::get('settings', [SiteSettingsController::class, 'show']);
 
     Route::get('pages/footer', [CmsPageController::class, 'footer']);
     Route::get('pages/{slug}', [CmsPageController::class, 'show']);
+
+    Route::post('contact', [ContactMessageController::class, 'store']);
+
+    Route::post('newsletter/subscribe', [NewsletterController::class, 'store']);
+    Route::get('newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe']);
 
     Route::get('reviews/{token}', [ReviewController::class, 'show']);
     Route::post('reviews/{token}', [ReviewController::class, 'submit']);
@@ -57,6 +67,8 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::post('guest-checkout/address', [GuestCheckoutController::class, 'saveAddress']);
     Route::get('guest-checkout/shipping-rates', [GuestCheckoutController::class, 'shippingRates']);
     Route::post('guest-checkout/shipping', [GuestCheckoutController::class, 'selectShipping']);
+    Route::post('guest-checkout/pay', [GuestCheckoutController::class, 'pay']);
+    Route::post('guest-checkout/simulate-pay', [GuestCheckoutController::class, 'simulatePayment']);
 
     // Cart: accessible by guests (X-Guest-Token) or authenticated users
     Route::get('cart', [CartController::class, 'index']);

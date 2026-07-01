@@ -12,6 +12,22 @@ export function imageUrl(path: string | null | undefined): string | null {
   return `${STORAGE_ORIGIN}${path}`;
 }
 
+function variantUrl(path: string | null | undefined, suffix: string): string | null {
+  if (!path) return null;
+  const variantPath = path.replace(/(\.[a-z]+)$/, `_${suffix}$1`);
+  return imageUrl(variantPath);
+}
+
+/** 171×171 square crop — cart, checkout, PDP thumbnails, emails */
+export function imageThumbUrl(path: string | null | undefined): string | null {
+  return variantUrl(path, 'thumb');
+}
+
+/** 275×367 portrait — product grid, list view, home tabs */
+export function imageMediumUrl(path: string | null | undefined): string | null {
+  return variantUrl(path, 'medium');
+}
+
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('token');
@@ -77,7 +93,7 @@ export class ApiError extends Error {
 
 // Auth
 export const api = {
-  register: (data: { first_name: string; last_name: string; email: string; date_of_birth: string; password: string; password_confirmation: string }) =>
+  register: (data: { first_name: string; last_name: string; email: string; date_of_birth: string; password: string; password_confirmation: string; recaptcha_token?: string }) =>
     request<{ data: Customer; token: string }>('/auth/register', { method: 'POST', body: data }),
 
   checkEmail: (email: string) =>
@@ -106,6 +122,10 @@ export const api = {
 
   updatePassword: (data: { current_password: string; password: string; password_confirmation: string }) =>
     request<{ message: string }>('/password', { method: 'PUT', body: data }),
+
+  // Home
+  getHome: () =>
+    request<{ data: HomeSection[] }>('/home', { token: null }),
 
   // Catalog
   getCategories: () =>
@@ -192,15 +212,21 @@ export const api = {
   processPayment: (data: PaymentTokenData) =>
     request<{ data: Order }>('/checkout/pay', { method: 'POST', body: data }),
 
+  processGuestPayment: (data: PaymentTokenData) =>
+    request<{ data: Order }>('/guest-checkout/pay', { method: 'POST', body: data, guestToken: getGuestToken() }),
+
   simulatePayment: (result: 'success' | 'fail') =>
     request<{ data: Order }>('/checkout/simulate-pay', { method: 'POST', body: { result } }),
 
+  simulateGuestPayment: (result: 'success' | 'fail') =>
+    request<{ data: Order }>('/guest-checkout/simulate-pay', { method: 'POST', body: { result }, guestToken: getGuestToken() }),
+
   // Checkout
   getCheckout: () =>
-    request<{ cart: Cart; checkout_address: Address | null }>('/checkout'),
+    request<{ cart: Cart; checkout_address: Address | null; billing_address: Address | null; billing_same_as_shipping: boolean }>('/checkout', { guestToken: getGuestToken() }),
 
-  setCheckoutAddress: (address_id: number) =>
-    request<{ message: string }>('/checkout/address', { method: 'POST', body: { address_id } }),
+  setCheckoutAddress: (address_id: number, billing_address_id?: number | null) =>
+    request<{ message: string }>('/checkout/address', { method: 'POST', body: { address_id, billing_address_id } }),
 
   saveCheckoutNotes: (order_notes: string) =>
     request<{ message: string }>('/checkout/notes', { method: 'POST', body: { order_notes } }),
@@ -268,6 +294,12 @@ export const api = {
 
   setDefaultAddress: (id: number, type: 'billing' | 'shipping') =>
     request<{ data: Address }>(`/addresses/${id}/default/${type}`, { method: 'PUT' }),
+
+  submitContact: (data: { name: string; last_name: string; email: string; message: string; recaptcha_token: string }) =>
+    request<void>('/contact', { method: 'POST', body: data, token: null }),
+
+  subscribeNewsletter: (email: string) =>
+    request<{ message: string }>('/newsletter/subscribe', { method: 'POST', body: { email }, token: null }),
 };
 
 export type Customer = {
@@ -468,6 +500,9 @@ export type SiteInfo = {
   zip_code: string;
   phone: string;
   email: string;
+  recaptcha_enabled: boolean;
+  cookie_notice_enabled: boolean;
+  cookie_notice_text: string;
 };
 
 export type CmsPage = {
@@ -504,4 +539,56 @@ export type PaymentTokenData = {
   card_holder_name: string;
   card_holder_doc_type: string;
   card_holder_doc_number: string;
+  device_unique_identifier?: string;
 };
+
+// ── Home sections ─────────────────────────────────────────────────────────────
+
+export type HeroSlide = {
+  image: string | null;
+  title: string | null;
+  subtitle: string | null;
+  button_text: string | null;
+  button_link: string | null;
+  transition?: 'fade' | 'slide' | 'zoom' | 'vertical' | 'flip' | 'blur' | 'wipe';
+};
+
+export type ProductTab = {
+  label: string;
+  type: 'latest' | 'on_sale' | 'best_sellers' | 'by_category' | 'custom';
+  category_slug?: string;
+  product_ids?: number[];
+  products: Product[];
+};
+
+export type HomeSectionHeroSlider = {
+  id: number;
+  type: 'hero_slider';
+  title: null;
+  sort_order: number;
+  settings: { slides: HeroSlide[] };
+};
+
+export type HomeSectionProductTabs = {
+  id: number;
+  type: 'product_tabs';
+  title: string | null;
+  sort_order: number;
+  settings: { per_tab: number; tabs: ProductTab[] };
+};
+
+export type HomeSectionBanner = {
+  id: number;
+  type: 'banner';
+  title: string | null;
+  sort_order: number;
+  settings: {
+    image: string | null;
+    title: string | null;
+    subtitle: string | null;
+    button_text: string | null;
+    button_link: string | null;
+  };
+};
+
+export type HomeSection = HomeSectionHeroSlider | HomeSectionProductTabs | HomeSectionBanner;

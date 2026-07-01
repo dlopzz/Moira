@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Product } from '@/lib/api';
-import { imageUrl, formatPrice } from '@/lib/api';
+import { imageUrl, imageMediumUrl, formatPrice } from '@/lib/api';
 import type { WishlistItem } from '@/lib/wishlist-context';
 import { useCart } from '@/lib/cart-context';
 import WishlistButton from '@/components/WishlistButton';
@@ -22,8 +22,8 @@ export default function ProductCard({
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
 
-  const image = imageUrl(product.images[0]);
-  const hoverImage = imageUrl(product.images[1]);
+  const image = imageMediumUrl(product.images[0]) ?? imageUrl(product.images[0]);
+  const hoverImage = imageMediumUrl(product.images[1]) ?? imageUrl(product.images[1]);
   const wishlistItem: WishlistItem = {
     id: product.id,
     name: product.name,

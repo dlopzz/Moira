@@ -66,20 +66,7 @@
             x-show="! $store.sidebar.isOpen"
         >
             <x-slot name="trigger">
-                <button
-                    x-data="{ tooltip: false }"
-                    x-effect="
-                        tooltip = $store.sidebar.isOpen
-                            ? false
-                            : {
-                                  content: @js($label),
-                                  placement: document.dir === 'rtl' ? 'left' : 'right',
-                                  theme: $store.theme,
-                              }
-                    "
-                    x-tooltip.html="false"
-                    class="fi-sidebar-group-dropdown-trigger-btn"
-                >
+                <button class="fi-sidebar-group-dropdown-trigger-btn">
                     {{ \Filament\Support\generate_icon_html($icon, size: \Filament\Support\Enums\IconSize::Large) }}
                     <span class="fi-sidebar-group-dropdown-trigger-label">{{ $label }}</span>
                 </button>

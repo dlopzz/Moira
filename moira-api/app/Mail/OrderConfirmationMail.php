@@ -14,12 +14,18 @@ class OrderConfirmationMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Order $order) {}
+    public function __construct(public Order $order)
+    {
+        // Ensure relations needed by the template are loaded
+        $order->loadMissing('items', 'customer');
+    }
 
     public function envelope(): Envelope
     {
+        $number = str_pad((string) $this->order->id, 8, '0', STR_PAD_LEFT);
+
         return new Envelope(
-            subject: '¡Tu pedido fue confirmado! #' . str_pad((string) $this->order->id, 8, '0', STR_PAD_LEFT),
+            subject: '¡Pedido confirmado! #' . $number . ' — ' . (config('app.name', 'Moira')),
         );
     }
 

@@ -9,6 +9,7 @@ use App\Mail\ReviewRequestMail;
 use App\Models\CustomerAddress;
 use App\Models\Order;
 use App\Models\PaymentMethod;
+use App\Models\PaymentTransaction;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Quote;
@@ -58,13 +59,22 @@ class PaymentController extends Controller
             'payment_method_id'      => ['required', 'integer'],
             'installments'           => ['required', 'integer', 'min:1', 'max:36'],
             'card_holder_name'       => ['required', 'string'],
-            'card_holder_doc_type'   => ['required', 'string', 'in:dni,le,lc,ci,pasaporte'],
-            'card_holder_doc_number' => ['required', 'string'],
+            'card_holder_doc_type'        => ['required', 'string', 'in:dni,le,lc,ci,pasaporte'],
+            'card_holder_doc_number'      => ['required', 'string'],
+            'device_unique_identifier'    => ['nullable', 'string'],
         ]);
 
         $customer = $request->user();
         $quote    = Quote::getActiveForCustomer($customer);
         $quote->load('items.product', 'items.variant');
+
+        \Log::debug('[Pay] quote check', [
+            'quote_id'            => $quote?->id,
+            'quote_status'        => $quote?->status,
+            'items_count'         => $quote?->items->count(),
+            'checkout_address_id' => $quote?->checkout_address_id,
+            'shipping_method'     => $quote?->shipping_method_code,
+        ]);
 
         if ($quote->items->isEmpty()) {
             return response()->json(['message' => 'El carrito está vacío.'], 422);
@@ -101,6 +111,16 @@ class PaymentController extends Controller
             return response()->json(['message' => 'El método de pago no está disponible.'], 422);
         }
 
+        // Atomic ACTIVE → PROCESSING transition: prevents concurrent duplicate charges.
+        // Only one request can win this UPDATE; the second gets $reserved = 0 and bails out.
+        $reserved = Quote::where('id', $quote->id)
+            ->where('status', Quote::STATUS_ACTIVE)
+            ->update(['status' => Quote::STATUS_PROCESSING]);
+
+        if (! $reserved) {
+            return response()->json(['message' => 'Tu pago ya está siendo procesado. Si el problema persiste, intentá nuevamente en unos minutos.'], 422);
+        }
+
         $total       = $quote->getTotal();
         $amountCents = (int) round($total * 100);
 
@@ -112,10 +132,16 @@ class PaymentController extends Controller
                 'token', 'bin', 'payment_method_id',
                 'installments', 'card_holder_name',
                 'card_holder_doc_type', 'card_holder_doc_number',
+                'device_unique_identifier',
             ]),
         );
 
-        if (! $result->approved) {
+        if (! $result->approved && ! $result->pending) {
+            // Charge failed — restore quote to ACTIVE so the customer can retry.
+            Quote::where('id', $quote->id)
+                ->where('status', Quote::STATUS_PROCESSING)
+                ->update(['status' => Quote::STATUS_ACTIVE]);
+
             $message = match ($result->status) {
                 'rejected'  => 'El pago fue rechazado por el banco. Verificá los datos de tu tarjeta.',
                 'error'     => 'Ocurrió un error al procesar el pago. Intentá nuevamente.',
@@ -126,6 +152,8 @@ class PaymentController extends Controller
             return response()->json(['message' => $message, 'status' => $result->status], 422);
         }
 
+        $orderStatus = $result->approved ? 'paid' : 'pending';
+
         $address      = CustomerAddress::findOrFail($quote->checkout_address_id);
         $subtotal     = $quote->getSubtotal();
         $shippingCost = (float) $quote->shipping_cost;
@@ -133,18 +161,19 @@ class PaymentController extends Controller
 
         try {
             $order = DB::transaction(function () use (
-                $customer, $quote, $address, $subtotal, $shippingCost, $discount, $total, $result, $method
+                $customer, $quote, $address, $subtotal, $shippingCost, $discount, $total,
+                $result, $method, $request, $orderStatus, $amountCents
             ): Order {
                 /* Lock the quote row to prevent double-submit races */
                 $locked = Quote::lockForUpdate()->find($quote->id);
-                if (! $locked || $locked->status !== Quote::STATUS_ACTIVE) {
+                if (! $locked || $locked->status !== Quote::STATUS_PROCESSING) {
                     throw new \RuntimeException('Este pedido ya fue procesado.');
                 }
 
                 $order = Order::create([
                     'customer_id'           => $customer->id,
                     'payment_method_id'     => $method->id,
-                    'status'                => 'paid',
+                    'status'                => $orderStatus,
                     'shipping_address'      => [
                         'label'          => $address->label,
                         'street'         => $address->street,
@@ -161,11 +190,20 @@ class PaymentController extends Controller
                     'discount'              => $discount,
                     'coupon_code'           => $quote->coupon_code,
                     'total'                 => $total,
-                    'notes'                 => json_encode([
-                        'payway_transaction_id' => $result->transactionId,
-                        'payway_auth_code'      => $result->authCode,
-                        'payway_status'         => $result->status,
-                    ]),
+                ]);
+
+                PaymentTransaction::create([
+                    'order_id'               => $order->id,
+                    'payment_method_id'      => $method->id,
+                    'gateway_transaction_id' => $result->transactionId,
+                    'site_transaction_id'    => $result->siteTransactionId,
+                    'card_authorization_code'=> $result->authCode,
+                    'status'                 => $result->status,
+                    'amount_cents'           => $amountCents,
+                    'installments'           => $request->installments,
+                    'bin'                    => $request->bin,
+                    'card_brand'             => $result->raw['payment_method_id'] ?? null,
+                    'response_raw'           => $result->raw,
                 ]);
 
                 foreach ($quote->items as $item) {
@@ -216,26 +254,29 @@ class PaymentController extends Controller
 
         $order->load('items');
         $order->setRelation('customer', $customer);
-        Mail::to($customer->email)->queue(new OrderConfirmationMail($order));
 
-        $reviews = collect();
-        foreach ($order->items as $item) {
-            $product = $quote->items->firstWhere('product_id', $item->product_id)?->product;
-            if (! $item->product_id || ! $product) {
-                continue;
+        if ($result->approved) {
+            Mail::to($customer->email)->queue(new OrderConfirmationMail($order));
+
+            $reviews = new \Illuminate\Database\Eloquent\Collection();
+            foreach ($order->items as $item) {
+                $product = $quote->items->firstWhere('product_id', $item->product_id)?->product;
+                if (! $item->product_id || ! $product) {
+                    continue;
+                }
+                $review = Review::create([
+                    'product_id'  => $item->product_id,
+                    'customer_id' => $customer->id,
+                    'order_id'    => $order->id,
+                    'token'       => Str::uuid()->toString(),
+                ]);
+                $review->setRelation('product', $product);
+                $reviews->push($review);
             }
-            $review = Review::create([
-                'product_id'  => $item->product_id,
-                'customer_id' => $customer->id,
-                'order_id'    => $order->id,
-                'token'       => Str::uuid()->toString(),
-            ]);
-            $review->setRelation('product', $product);
-            $reviews->push($review);
-        }
 
-        if ($reviews->isNotEmpty()) {
-            Mail::to($customer->email)->queue(new ReviewRequestMail($order, $reviews));
+            if ($reviews->isNotEmpty()) {
+                Mail::to($customer->email)->queue(new ReviewRequestMail($order, $reviews));
+            }
         }
 
         return response()->json(['data' => new OrderResource($order)], 201);
@@ -348,7 +389,7 @@ class PaymentController extends Controller
         $order->setRelation('customer', $customer);
         Mail::to($customer->email)->queue(new OrderConfirmationMail($order));
 
-        $reviews = collect();
+        $reviews = new \Illuminate\Database\Eloquent\Collection();
         foreach ($order->items as $item) {
             $product = $quote->items->firstWhere('product_id', $item->product_id)?->product;
             if (! $item->product_id || ! $product) {

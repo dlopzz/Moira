@@ -1,15 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import dynamic from 'next/dynamic';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api, ApiError } from '@/lib/api';
 import { FormField } from '@/components/FormField';
 
+const ReCAPTCHA = dynamic(() => import('react-google-recaptcha'), { ssr: false });
+
 const API = process.env.NEXT_PUBLIC_API_URL!;
 
 export default function RegisterPage() {
   const router = useRouter();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recaptchaRef = useRef<any>(null);
+  const [recaptchaEnabled, setRecaptchaEnabled] = useState(false);
   const [form, setForm] = useState({
     first_name: '',
     last_name: '',
@@ -23,13 +29,29 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
 
+  useEffect(() => {
+    api.getSiteSettings()
+      .then((r) => setRecaptchaEnabled(r.data.recaptcha_enabled))
+      .catch(() => {});
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrors({});
     setMessage('');
+
+    let recaptchaToken: string | undefined;
+    if (recaptchaEnabled) {
+      recaptchaToken = recaptchaRef.current?.getValue() ?? '';
+      if (!recaptchaToken) {
+        setErrors({ recaptcha_token: 'Por favor, completá la verificación.' });
+        return;
+      }
+    }
+
     setLoading(true);
     try {
-      await api.register(form);
+      await api.register({ ...form, recaptcha_token: recaptchaToken });
       setRegistered(true);
     } catch (err) {
       if (err instanceof ApiError) {
@@ -40,6 +62,7 @@ export default function RegisterPage() {
           setErrors(flat);
         }
       }
+      recaptchaRef.current?.reset();
     } finally {
       setLoading(false);
     }
@@ -132,6 +155,19 @@ export default function RegisterPage() {
             error={errors.password_confirmation}
             required
           />
+
+          {recaptchaEnabled && (
+            <div>
+              <ReCAPTCHA
+                ref={recaptchaRef}
+                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+              />
+              {errors.recaptcha_token && (
+                <span className="text-red-500 text-xs mt-1 block">{errors.recaptcha_token}</span>
+              )}
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading}

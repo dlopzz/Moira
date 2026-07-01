@@ -64,12 +64,12 @@ export default function Footer() {
                     <div className="footer-widget-area-inner site-info-inner">
                       <h2 className="widget-title">INFORMATION</h2>
                       <ul className="wp-block-list">
+                        <li><a href="/contacto">Contactanos</a></li>
                         {pages.length > 0
                           ? pages.map(p => (
                               <li key={p.id}><a href={`/pages/${p.slug}`}>{p.title}</a></li>
                             ))
                           : <>
-                              <li><a href="/pages/contacto">Contact Us</a></li>
                               <li><a href="/pages/nosotros">About Us</a></li>
                             </>
                         }

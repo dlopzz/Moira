@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import ProductCard from '@/components/ProductCard';
@@ -34,7 +34,7 @@ function parseAttributesFromParams(sp: URLSearchParams): Record<string, string> 
   return attrs;
 }
 
-export default function SearchPage() {
+function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -430,5 +430,13 @@ export default function SearchPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense>
+      <SearchContent />
+    </Suspense>
   );
 }

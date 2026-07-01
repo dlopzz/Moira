@@ -14,11 +14,14 @@ class SiteSettingsController extends Controller
 
         return response()->json([
             'data' => [
-                'name'    => $settings->name,
-                'address' => $settings->address,
-                'zip_code'=> $settings->zip_code,
-                'phone'   => $settings->phone,
-                'email'   => $settings->email,
+                'name'               => $settings->name,
+                'address'            => $settings->address,
+                'zip_code'           => $settings->zip_code,
+                'phone'              => $settings->phone,
+                'email'              => $settings->email,
+                'recaptcha_enabled'     => (bool) $settings->recaptcha_enabled,
+                'cookie_notice_enabled' => (bool) $settings->cookie_notice_enabled,
+                'cookie_notice_text'    => $settings->cookie_notice_text ?? '',
             ],
         ]);
     }

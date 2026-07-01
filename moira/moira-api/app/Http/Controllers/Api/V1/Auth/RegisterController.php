@@ -7,13 +7,31 @@ use App\Http\Requests\Api\Auth\RegisterRequest;
 use App\Http\Resources\Api\CustomerResource;
 use App\Mail\CustomerVerifyEmail;
 use App\Models\Customer;
+use App\Models\SiteSetting;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 
 class RegisterController extends Controller
 {
     public function store(RegisterRequest $request): JsonResponse
     {
+        if (SiteSetting::instance()->recaptcha_enabled) {
+            $token = $request->input('recaptcha_token', '');
+            $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+                'secret'   => config('services.recaptcha.secret'),
+                'response' => $token,
+                'remoteip' => $request->ip(),
+            ]);
+
+            if (! ($response->json('success') ?? false)) {
+                return response()->json([
+                    'message' => 'Verificación de reCAPTCHA fallida.',
+                    'errors'  => ['recaptcha_token' => ['Por favor, completá la verificación.']],
+                ], 422);
+            }
+        }
+
         $customer = Customer::create([
             'first_name'    => $request->first_name,
             'last_name'     => $request->last_name,

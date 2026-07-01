@@ -5,8 +5,33 @@ import { useRouter } from 'next/navigation';
 import Script from 'next/script';
 import {
   api, type Cart, type Address, type GuestShippingAddress,
-  type PaymentConfig, ApiError, formatPrice,
+  type PaymentConfig, type PaymentTokenData, ApiError, formatPrice,
 } from '@/lib/api';
+
+// Maps BIN prefix → PayWay payment_method_id.
+// Used as fallback when the JS SDK doesn't return the field.
+function detectPaymentMethodIdFromBin(bin: string): number | undefined {
+  const b = bin.replace(/\s/g, '');
+  const n = parseInt(b.substring(0, 4), 10);
+  if (b[0] === '4') return 1;               // Visa crédito/débito
+  if (b.startsWith('34') || b.startsWith('37')) return 65; // Amex
+  if (b.startsWith('36')) return 8;          // Diners
+  if (b.startsWith('589562')) return 24;     // Naranja
+  if (n >= 2221 && n <= 2720) return 15;    // Mastercard (rango nuevo)
+  if (b[0] === '5') return 15;              // Mastercard
+  return undefined;
+}
+
+function saveGuestPrefill(addr: GuestShippingAddress) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('guest_checkout_prefill', JSON.stringify({
+      email:     addr.email,
+      firstName: addr.firstname,
+      lastName:  addr.lastname,
+    }));
+  } catch { /* ignore */ }
+}
 import { getToken } from '@/lib/auth';
 import Header from '@/components/Header';
 import Breadcrumb from '@/components/Breadcrumb';
@@ -15,6 +40,7 @@ declare global {
   interface Window {
     Decidir: new (endpoint: string, live?: boolean) => {
       setPublishableKey: (key: string) => void;
+      device_unique_identifier?: string;
       createToken: (
         form: HTMLFormElement,
         callback: (status: number, response: DecidirTokenResponse) => void,
@@ -26,7 +52,9 @@ declare global {
 type DecidirTokenResponse = {
   id: string;
   bin: string;
-  payment_method_id: number;
+  // v1 SDK: flat field. v2 SDK: nested under payment_method
+  payment_method_id?: number;
+  payment_method?: { id: number; name: string; payment_type?: string };
   last_four_digits: string;
   expiration_month: string;
   expiration_year: string;
@@ -136,6 +164,9 @@ export default function CheckoutPaymentPage() {
     if (!paymentConfig || !window.Decidir) return;
     const sdk = new window.Decidir(paymentConfig.sdk_endpoint);
     if (paymentConfig.public_key) sdk.setPublishableKey(paymentConfig.public_key);
+    // Disable ThreatMetrix fraud detection so token is created without device fingerprint,
+    // matching server-side tokenization behavior (avoids PayWay Scala None error on charge).
+    (sdk as typeof sdk & { dontUseFraudPrevention?: boolean }).dontUseFraudPrevention = true;
     (window as Window & { __decidir?: typeof sdk }).__decidir = sdk;
     setSdkReady(true);
   }
@@ -147,6 +178,7 @@ export default function CheckoutPaymentPage() {
       const res = isAuth
         ? await api.simulatePayment(result)
         : await api.simulateGuestPayment(result);
+      if (!isAuth && guestAddress) saveGuestPrefill(guestAddress);
       router.push(`/checkout/success?order=${res.data.number}`);
     } catch (err) {
       if (err instanceof ApiError) setError(err.message);
@@ -157,11 +189,12 @@ export default function CheckoutPaymentPage() {
   async function handlePay(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    const sdk = (window as Window & { __decidir?: ReturnType<typeof window.Decidir> }).__decidir;
+    const sdk = (window as Window & { __decidir?: InstanceType<typeof window.Decidir> }).__decidir;
     if (!sdk) { setError('El SDK de pago no está listo. Recargá la página.'); return; }
     if (!formRef.current) return;
     setProcessing(true);
     sdk.createToken(formRef.current, async (status, response) => {
+      console.debug('[PayWay] createToken status:', status, 'response:', JSON.stringify(response));
       if (status !== 200 && status !== 201) {
         const tokenError = (response as unknown as { error?: { type?: string }[] })?.error;
         if (status === 422 && tokenError?.length) {
@@ -177,18 +210,43 @@ export default function CheckoutPaymentPage() {
       try {
         const holderName = (formRef.current!.querySelector('[data-decidir="card_holder_name"]') as HTMLInputElement)?.value ?? '';
         const holderDoc  = (formRef.current!.querySelector('[data-decidir="card_holder_doc_number"]') as HTMLInputElement)?.value ?? '';
-        const res = await api.processPayment({
+        // v1 SDK: flat `payment_method_id`. v2 SDK: nested under `payment_method.id`.
+        // Final fallback: detect from BIN prefix.
+        const paymentMethodId =
+          response.payment_method_id ??
+          response.payment_method?.id ??
+          detectPaymentMethodIdFromBin(response.bin ?? '');
+        if (!paymentMethodId) {
+          setError('No se pudo identificar el tipo de tarjeta. Verificá el número ingresado.');
+          setProcessing(false);
+          return;
+        }
+        const deviceUid = sdk.device_unique_identifier ?? undefined;
+        const payload: PaymentTokenData = {
           token: response.id,
           bin: response.bin,
-          payment_method_id: response.payment_method_id,
+          payment_method_id: paymentMethodId,
           installments,
           card_holder_name: holderName,
           card_holder_doc_type: docType,
           card_holder_doc_number: holderDoc,
-        });
+          device_unique_identifier: deviceUid,
+        };
+        const res = isAuth
+          ? await api.processPayment(payload)
+          : await api.processGuestPayment(payload);
+        if (!isAuth && guestAddress) saveGuestPrefill(guestAddress);
         router.push(`/checkout/success?order=${res.data.number}`);
       } catch (err) {
-        if (err instanceof ApiError) setError(err.message);
+        if (err instanceof ApiError) {
+          // Validation errors (missing fields) have `errors` object → show inline.
+          // PayWay rejections/errors have only `message` → send to fail page.
+          if (!err.errors) {
+            router.push('/checkout/fail');
+            return;
+          }
+          setError(err.message);
+        }
         setProcessing(false);
       }
     });
@@ -277,26 +335,6 @@ export default function CheckoutPaymentPage() {
                   onPay={handleSimulate}
                   onBack={() => router.push('/checkout/shipping')}
                 />
-              ) : !isAuth ? (
-                <div className="co-simulator-panel">
-                  <p className="co-simulator-label">Iniciá sesión para pagar con tarjeta</p>
-                  <p className="co-muted" style={{ fontSize: 13, marginBottom: '1em' }}>
-                    El pago con tarjeta requiere una cuenta. Podés registrarte gratis o iniciar sesión.
-                  </p>
-                  <div className="co-simulator-actions">
-                    <button type="button" className="button alt" onClick={() => router.push('/auth/login?redirect=/checkout/payment')}>
-                      Iniciar sesión
-                    </button>
-                    <button type="button" className="button" onClick={() => router.push('/auth/register?redirect=/checkout/payment')}>
-                      Registrarse
-                    </button>
-                  </div>
-                  <div className="co-actions" style={{ marginTop: '1.5em' }}>
-                    <button type="button" className="co-back-link" onClick={() => router.push('/checkout/shipping')}>
-                      ← Volver a envío
-                    </button>
-                  </div>
-                </div>
               ) : (
                 <div className="co-payment-form">
                   <h3>Datos de la tarjeta</h3>

@@ -8,11 +8,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Quote extends Model
 {
-    const STATUS_ACTIVE = 'active';
-
-    const STATUS_EXPIRED = 'expired';
-
-    const STATUS_CONVERTED = 'converted';
+    const STATUS_ACTIVE     = 'active';
+    const STATUS_PROCESSING = 'processing';
+    const STATUS_EXPIRED    = 'expired';
+    const STATUS_CONVERTED  = 'converted';
 
     protected $fillable = [
         'customer_id',

@@ -41,4 +41,8 @@ return [
         'redirect'      => env('APP_URL') . '/api/v1/auth/google/callback',
     ],
 
+    'recaptcha' => [
+        'secret' => env('RECAPTCHA_SECRET_KEY'),
+    ],
+
 ];

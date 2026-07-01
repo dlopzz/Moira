@@ -5,6 +5,8 @@ import { WishlistProvider } from "@/lib/wishlist-context";
 import Footer from "@/components/Footer";
 import WishlistPopup from "@/components/WishlistPopup";
 import CartDrawer from "@/components/CartDrawer";
+import NewsletterPopup from "@/components/NewsletterPopup";
+import CookieNotice from "@/components/CookieNotice";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -32,6 +34,8 @@ export default function RootLayout({
             <Footer />
             <WishlistPopup />
             <CartDrawer />
+            <NewsletterPopup />
+            <CookieNotice />
           </WishlistProvider>
         </CartProvider>
       </body>

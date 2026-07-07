@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# playwright mcp session artifacts (screenshots, console logs)
+/.playwright-mcp/
+
 # production
 /build
 

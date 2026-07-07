@@ -15,12 +15,15 @@ RUN composer dump-autoload --optimize --classmap-authoritative \
     && composer run-script post-autoload-dump || true
 
 # ---- Stage 2: Frontend assets for the Filament admin theme (Vite) ----
+# Needs vendor/ from the previous stage: the Tailwind plugin resolves
+# vendor/filament/filament/dist/theme.css while building.
 FROM node:20-alpine AS assets
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY resources ./resources
 COPY vite.config.js ./
+COPY --from=vendor /app/vendor ./vendor
 RUN npm run build
 
 # ---- Stage 3: Runtime ----

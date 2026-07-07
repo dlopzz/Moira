@@ -25,3 +25,8 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Artefactos de herramientas que no deberían aparecer acá (proyecto Laravel,
+# no Next.js), pero por las dudas si algún comando se corre parado mal:
+/.next/
+/.playwright-mcp/

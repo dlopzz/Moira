@@ -1,0 +1,3 @@
+# Artefactos de herramientas que pueden aparecer acá según desde dónde se
+# invoquen (no son específicos de moira-api ni moira-web).
+/.playwright-mcp/

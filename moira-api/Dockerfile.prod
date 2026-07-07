@@ -35,6 +35,10 @@ USER root
 # what the base image ships by default (no-op if already installed).
 RUN install-php-extensions pdo_pgsql gd intl bcmath zip
 
+# psql client: `artisan migrate` loads database/schema/pgsql-schema.sql (the
+# squashed schema dump) via the native postgres client on a fresh database.
+RUN apk add --no-cache postgresql18-client
+
 WORKDIR /var/www/html
 
 COPY --from=vendor /app /var/www/html
@@ -43,6 +47,6 @@ COPY --from=assets /app/public/build /var/www/html/public/build
 COPY docker/api/entrypoint.prod.sh /etc/entrypoint.d/99-app-init.sh
 COPY docker/api/entrypoint.queue.sh /usr/local/bin/entrypoint-queue.sh
 RUN chmod +x /etc/entrypoint.d/99-app-init.sh /usr/local/bin/entrypoint-queue.sh \
-    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
 
 USER www-data

@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - moira_pgsql_data:/var/lib/postgresql/data
+      - moira_pgsql_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "${DB_USERNAME}", "-d", "${DB_DATABASE}"]
       interval: 5s

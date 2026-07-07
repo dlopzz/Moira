@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import { CartProvider } from "@/lib/cart-context";
 import { WishlistProvider } from "@/lib/wishlist-context";
+import { SiteInfoProvider } from "@/lib/site-info-context";
+import { CategoriesProvider } from "@/lib/categories-context";
 import Footer from "@/components/Footer";
 import WishlistPopup from "@/components/WishlistPopup";
 import CartDrawer from "@/components/CartDrawer";
@@ -28,16 +30,20 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${montserrat.variable} h-full`}>
       <body className="min-h-full flex flex-col">
-        <CartProvider>
-          <WishlistProvider>
-            {children}
-            <Footer />
-            <WishlistPopup />
-            <CartDrawer />
-            <NewsletterPopup />
-            <CookieNotice />
-          </WishlistProvider>
-        </CartProvider>
+        <SiteInfoProvider>
+          <CategoriesProvider>
+            <CartProvider>
+              <WishlistProvider>
+                {children}
+                <Footer />
+                <WishlistPopup />
+                <CartDrawer />
+                <NewsletterPopup />
+                <CookieNotice />
+              </WishlistProvider>
+            </CartProvider>
+          </CategoriesProvider>
+        </SiteInfoProvider>
       </body>
     </html>
   );

@@ -29,15 +29,15 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->path('admin')
+            ->path('c4v14r')
             ->login(Login::class)
             ->passwordReset()
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->colors([
                 'primary' => Color::Indigo,
-                'gray'    => Color::Slate,
+                'gray' => Color::Slate,
                 'success' => Color::Slate,
-                'info'    => Color::Sky,
+                'info' => Color::Sky,
                 'warning' => Color::Amber,
             ])
             ->maxContentWidth('fi-width-full')

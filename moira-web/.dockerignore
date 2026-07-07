@@ -1,0 +1,12 @@
+node_modules
+.next
+.env
+.env.*
+!.env.production.example
+.git
+*.png
+test-payment.js
+.idea
+.vscode
+Dockerfile.prod
+docker-compose*.yml

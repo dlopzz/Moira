@@ -56,32 +56,50 @@ export default function HeroSlider({ slides }: Props) {
 
   return (
     <div className="hero-slider">
-      {slides.map((slide, i) => (
-        <div key={i} className={getClassName(i)} aria-hidden={i !== current}>
-          {imageUrl(slide.image) && (
-            <Image
-              src={imageUrl(slide.image)!}
-              alt={slide.title ?? ''}
-              fill
-              className="hero-slider__img"
-              sizes="100vw"
-              priority={i === 0}
-            />
-          )}
-          <div className="hero-slider__overlay" />
-          {(slide.title || slide.subtitle || slide.button_text) && (
-            <div className="hero-slider__content site-container">
-              {slide.title && <h2 className="hero-slider__title">{slide.title}</h2>}
-              {slide.subtitle && <p className="hero-slider__subtitle">{slide.subtitle}</p>}
-              {slide.button_text && slide.button_link && (
-                <Link href={slide.button_link} className="button alt hero-slider__btn">
-                  {slide.button_text}
-                </Link>
-              )}
-            </div>
-          )}
-        </div>
-      ))}
+      {slides.map((slide, i) => {
+        const align = slide.text_align ?? 'center';
+        const valign = slide.text_valign ?? 'center';
+        const hasContent = slide.title || slide.subtitle;
+        const alignItems = align === 'left' ? 'flex-start' : align === 'right' ? 'flex-end' : 'center';
+        const justifyContent = valign === 'top' ? 'flex-start' : valign === 'bottom' ? 'flex-end' : 'center';
+
+        return (
+          <div key={i} className={getClassName(i)} aria-hidden={i !== current}>
+            {imageUrl(slide.image) && (
+              <Image
+                src={imageUrl(slide.image)!}
+                alt={slide.title ?? ''}
+                fill
+                className="hero-slider__img"
+                sizes="100vw"
+                priority={i === 0}
+              />
+            )}
+
+            <div className="hero-slider__overlay" />
+
+            {/* Link overlay cubre toda la imagen, por debajo de flechas y dots */}
+            {slide.link && (
+              <Link
+                href={slide.link}
+                className="hero-slider__link"
+                tabIndex={i !== current ? -1 : 0}
+                aria-label={slide.title ?? 'Ver más'}
+              />
+            )}
+
+            {hasContent && (
+              <div
+                className="hero-slider__content site-container"
+                style={{ textAlign: align, alignItems, justifyContent }}
+              >
+                {slide.title && <h2 className="hero-slider__title">{slide.title}</h2>}
+                {slide.subtitle && <p className="hero-slider__subtitle">{slide.subtitle}</p>}
+              </div>
+            )}
+          </div>
+        );
+      })}
 
       {slides.length > 1 && (
         <>

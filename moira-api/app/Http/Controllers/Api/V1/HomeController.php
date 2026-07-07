@@ -33,6 +33,9 @@ class HomeController extends Controller
                 if (! empty($slide['image']) && ! str_starts_with($slide['image'], 'http')) {
                     $slide['image'] = Storage::url($slide['image']);
                 }
+                // 'link' reemplazó a 'button_link'; slides guardados antes de ese cambio
+                // solo tienen la clave vieja.
+                $slide['link'] = $slide['link'] ?? $slide['button_link'] ?? null;
                 return $slide;
             }, $settings['slides'] ?? []);
         }
@@ -51,6 +54,7 @@ class HomeController extends Controller
             if (! empty($settings['image']) && ! str_starts_with($settings['image'], 'http')) {
                 $settings['image'] = Storage::url($settings['image']);
             }
+            $settings['link'] = $settings['link'] ?? $settings['button_link'] ?? null;
         }
 
         return [

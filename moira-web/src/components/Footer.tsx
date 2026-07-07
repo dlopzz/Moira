@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { api, type CmsPage, type SiteInfo, type Category } from '@/lib/api';
+import { useEffect, useMemo, useState } from 'react';
+import { api, imageUrl, type CmsPage } from '@/lib/api';
+import { useSiteInfo } from '@/lib/site-info-context';
+import { useCategories } from '@/lib/categories-context';
 
 const IconPin = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -21,13 +23,12 @@ const IconEmail = () => (
 
 export default function Footer() {
   const [pages, setPages]           = useState<CmsPage[]>([]);
-  const [info, setInfo]             = useState<SiteInfo | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const info = useSiteInfo();
+  const rawCategories = useCategories();
+  const categories = useMemo(() => (rawCategories ?? []).slice(0, 5), [rawCategories]);
 
   useEffect(() => {
     api.getFooterPages().then(r  => setPages(r.data)).catch(() => {});
-    api.getSiteSettings().then(r => setInfo(r.data)).catch(() => {});
-    api.getCategories().then(r   => setCategories(r.data.slice(0, 5))).catch(() => {});
   }, []);
 
   const year = new Date().getFullYear();
@@ -48,10 +49,19 @@ export default function Footer() {
                     <div className="footer-widget-area-inner site-info-inner">
                       <div className="wp-widget-group__inner-blocks">
                         <figure className="wp-block-image size-full footer-brand-logo">
-                          <img src="/logo.svg" alt="Moira Bikinis" width={156} height={35} />
+                          {info === undefined ? (
+                            <div style={{ width: 156, height: 35 }} />
+                          ) : (
+                            <img
+                              src={imageUrl(info?.logo) ?? '/logo.svg'}
+                              alt={info?.name ?? 'Logo'}
+                              width={156}
+                              height={35}
+                            />
+                          )}
                         </figure>
                         <p className="footer-brand-description">
-                          {info?.description || 'Lorem Ipsum has been the industry\'s standard text ever since the 1500s, when an unknown printer took a galley of it to make.'}
+                          Lorem Ipsum has been the industry&apos;s standard text ever since the 1500s, when an unknown printer took a galley of it to make.
                         </p>
                       </div>
                     </div>

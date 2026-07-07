@@ -13,6 +13,7 @@ class ProductVariant extends Model
         'price',
         'stock',
         'attributes',
+        'image',
         'sort_order',
         'is_active',
     ];
@@ -20,11 +21,11 @@ class ProductVariant extends Model
     protected function casts(): array
     {
         return [
-            'price'      => 'decimal:2',
-            'stock'      => 'integer',
+            'price' => 'decimal:2',
+            'stock' => 'integer',
             'attributes' => 'array',
             'sort_order' => 'integer',
-            'is_active'  => 'boolean',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -43,7 +44,7 @@ class ProductVariant extends Model
     public function label(): string
     {
         return collect($this->getAttribute('attributes') ?? [])
-            ->map(fn ($value, $key) => ucfirst($key) . ': ' . $value)
+            ->map(fn ($value, $key) => ucfirst($key).': '.$value)
             ->join(' / ');
     }
 }

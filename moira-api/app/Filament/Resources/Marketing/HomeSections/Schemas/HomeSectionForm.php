@@ -25,9 +25,9 @@ class HomeSectionForm
                 Select::make('type')
                     ->label('Tipo de sección')
                     ->options([
-                        'hero_slider'  => '🖼 Galería / Slider',
+                        'hero_slider' => '🖼 Galería / Slider',
                         'product_tabs' => '🏷 Tabs de productos',
-                        'banner'       => '📢 Banner promocional',
+                        'banner' => '📢 Banner promocional',
                     ])
                     ->required()
                     ->live()
@@ -90,27 +90,42 @@ class HomeSectionForm
                                 ->placeholder('Ej: Envío gratis en pedidos +$50.000')
                                 ->nullable(),
 
-                            TextInput::make('button_text')
-                                ->label('Texto del botón')
-                                ->placeholder('Ej: Ver colección')
+                            Select::make('text_align')
+                                ->label('Alineación horizontal')
+                                ->options([
+                                    'left' => 'Izquierda',
+                                    'center' => 'Centro',
+                                    'right' => 'Derecha',
+                                ])
+                                ->default('center')
                                 ->nullable(),
 
-                            TextInput::make('button_link')
-                                ->label('Link del botón')
-                                ->placeholder('Ej: /categories/bikinis')
-                                ->url()
+                            Select::make('text_valign')
+                                ->label('Posición vertical')
+                                ->options([
+                                    'top' => 'Arriba',
+                                    'center' => 'Centro',
+                                    'bottom' => 'Abajo',
+                                ])
+                                ->default('center')
                                 ->nullable(),
+
+                            TextInput::make('link')
+                                ->label('Link de la imagen')
+                                ->placeholder('Ej: /categories/bikinis  o  https://...')
+                                ->nullable()
+                                ->helperText('Al hacer clic en la imagen, el usuario va a esta URL. Dejá vacío si no redirige.'),
 
                             Select::make('transition')
                                 ->label('Efecto de transición')
                                 ->options([
-                                    'fade'     => 'Fade — desvanecimiento',
-                                    'slide'    => 'Slide — deslizamiento horizontal',
-                                    'zoom'     => 'Zoom — acercamiento',
+                                    'fade' => 'Fade — desvanecimiento',
+                                    'slide' => 'Slide — deslizamiento horizontal',
+                                    'zoom' => 'Zoom — acercamiento',
                                     'vertical' => 'Vertical — deslizamiento arriba/abajo',
-                                    'flip'     => 'Flip — giro 3D',
-                                    'blur'     => 'Blur — desenfoque',
-                                    'wipe'     => 'Wipe — revelado lateral',
+                                    'flip' => 'Flip — giro 3D',
+                                    'blur' => 'Blur — desenfoque',
+                                    'wipe' => 'Wipe — revelado lateral',
                                 ])
                                 ->default('fade')
                                 ->nullable()
@@ -148,11 +163,11 @@ class HomeSectionForm
                             Select::make('type')
                                 ->label('Fuente de productos')
                                 ->options([
-                                    'latest'       => 'Más recientes',
-                                    'on_sale'      => 'En oferta (con precio rebajado)',
+                                    'latest' => 'Más recientes',
+                                    'on_sale' => 'En oferta (con precio rebajado)',
                                     'best_sellers' => 'Más vendidos',
-                                    'by_category'  => 'Por categoría',
-                                    'custom'       => 'Personalizado (elegir productos)',
+                                    'by_category' => 'Por categoría',
+                                    'custom' => 'Personalizado (elegir productos)',
                                 ])
                                 ->required()
                                 ->live(),
@@ -169,15 +184,13 @@ class HomeSectionForm
                                 ->label('Productos')
                                 ->multiple()
                                 ->searchable()
-                                ->getSearchResultsUsing(fn (string $search) =>
-                                    Product::where('name', 'like', "%{$search}%")
-                                        ->where('is_active', true)
-                                        ->limit(20)
-                                        ->pluck('name', 'id')
-                                        ->toArray()
+                                ->getSearchResultsUsing(fn (string $search) => Product::where('name', 'like', "%{$search}%")
+                                    ->where('is_active', true)
+                                    ->limit(20)
+                                    ->pluck('name', 'id')
+                                    ->toArray()
                                 )
-                                ->getOptionLabelsUsing(fn (array $values) =>
-                                    Product::whereIn('id', $values)->pluck('name', 'id')->toArray()
+                                ->getOptionLabelsUsing(fn (array $values) => Product::whereIn('id', $values)->pluck('name', 'id')->toArray()
                                 )
                                 ->hidden(fn (Get $get) => $get('type') !== 'custom')
                                 ->columnSpanFull(),
@@ -187,7 +200,7 @@ class HomeSectionForm
 
             // ─── BANNER ─────────────────────────────────────────────────
             Section::make('Banner')
-                ->description('Imagen con texto superpuesto y botón opcional.')
+                ->description('Imagen con texto superpuesto. La imagen completa es el link, no hay botón.')
                 ->visible(fn (Get $get) => $get('type') === 'banner')
                 ->columns(2)
                 ->components([
@@ -217,15 +230,32 @@ class HomeSectionForm
                         ->placeholder('Ej: Hasta 50% off en toda la colección')
                         ->nullable(),
 
-                    TextInput::make('banner_button_text')
-                        ->label('Texto del botón')
-                        ->placeholder('Ej: Ver ofertas')
+                    Select::make('banner_text_align')
+                        ->label('Alineación horizontal')
+                        ->options([
+                            'left' => 'Izquierda',
+                            'center' => 'Centro',
+                            'right' => 'Derecha',
+                        ])
+                        ->default('center')
                         ->nullable(),
 
-                    TextInput::make('banner_button_link')
-                        ->label('Link del botón')
-                        ->placeholder('Ej: /categories/ofertas')
+                    Select::make('banner_text_valign')
+                        ->label('Posición vertical')
+                        ->options([
+                            'top' => 'Arriba',
+                            'center' => 'Centro',
+                            'bottom' => 'Abajo',
+                        ])
+                        ->default('center')
                         ->nullable(),
+
+                    TextInput::make('banner_link')
+                        ->label('Link de la imagen')
+                        ->placeholder('Ej: /categories/ofertas  o  https://...')
+                        ->nullable()
+                        ->helperText('Al hacer clic en la imagen, el usuario va a esta URL. Dejá vacío si no redirige.')
+                        ->columnSpanFull(),
 
                 ]),
 

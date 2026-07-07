@@ -22,11 +22,11 @@ class UserResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
-    protected static ?string $navigationLabel = 'Administradores';
+    protected static ?string $navigationLabel = 'Usuarios';
 
-    protected static ?string $modelLabel = 'Administrador';
+    protected static ?string $modelLabel = 'Usuario';
 
-    protected static ?string $pluralModelLabel = 'Administradores';
+    protected static ?string $pluralModelLabel = 'Usuarios';
 
     public static function canViewAny(): bool
     {
@@ -57,9 +57,9 @@ class UserResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => ListUsers::route('/'),
+            'index' => ListUsers::route('/'),
             'create' => CreateUser::route('/create'),
-            'edit'   => EditUser::route('/{record}/edit'),
+            'edit' => EditUser::route('/{record}/edit'),
         ];
     }
 }

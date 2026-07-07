@@ -1,0 +1,103 @@
+name: moira-prod
+
+services:
+  pgsql:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - moira_pgsql_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${DB_USERNAME}", "-d", "${DB_DATABASE}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - moira_internal
+
+  api:
+    build:
+      context: ./moira-api
+      dockerfile: Dockerfile.prod
+    restart: unless-stopped
+    env_file:
+      - ./moira-api/.env
+    depends_on:
+      pgsql:
+        condition: service_healthy
+    volumes:
+      - moira_storage:/var/www/html/storage/app/public
+    networks:
+      - moira_internal
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.moira-api.rule=Host(`${API_DOMAIN}`)
+      - traefik.http.routers.moira-api.entrypoints=websecure
+      - traefik.http.routers.moira-api.tls.certresolver=letsencrypt
+      - traefik.http.services.moira-api.loadbalancer.server.port=80
+
+  queue:
+    build:
+      context: ./moira-api
+      dockerfile: Dockerfile.prod
+    restart: unless-stopped
+    env_file:
+      - ./moira-api/.env
+    entrypoint: ["/usr/local/bin/entrypoint-queue.sh"]
+    depends_on:
+      pgsql:
+        condition: service_healthy
+      api:
+        condition: service_started
+    networks:
+      - moira_internal
+
+  web:
+    build:
+      context: ./moira-web
+      dockerfile: Dockerfile.prod
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+    restart: unless-stopped
+    environment:
+      # Gate de QA (ver src/proxy.ts): si tiene valor, todo el sitio pide login
+      # antes de mostrar cualquier página. Dejar vacío/sin definir para que el
+      # sitio quede público (lanzamiento).
+      QA_AUTH_SECRET: ${QA_AUTH_SECRET:-}
+    networks:
+      - moira_internal
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.moira-web.rule=Host(`${WEB_DOMAIN}`) || Host(`${WEB_DOMAIN_ALT}`) || Host(`www.${WEB_DOMAIN_ALT}`)
+      - traefik.http.routers.moira-web.entrypoints=websecure
+      - traefik.http.routers.moira-web.tls.certresolver=letsencrypt
+      - traefik.http.services.moira-web.loadbalancer.server.port=3000
+      # Mientras se reconstruye/reinicia el contenedor, Traefik sirve la página de
+      # mantenimiento del servicio "maintenance" en vez de un 502/503/504 crudo.
+      - traefik.http.middlewares.moira-web-maintenance.errors.status=502-504
+      - traefik.http.middlewares.moira-web-maintenance.errors.service=moira-maintenance
+      - traefik.http.middlewares.moira-web-maintenance.errors.query=/index.html
+      - traefik.http.routers.moira-web.middlewares=moira-web-maintenance
+
+  maintenance:
+    image: nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - ./deploy/maintenance:/usr/share/nginx/html:ro
+    networks:
+      - moira_internal
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.moira-maintenance.loadbalancer.server.port=80
+
+networks:
+  moira_internal:
+    driver: bridge
+
+volumes:
+  moira_pgsql_data:
+  moira_storage:

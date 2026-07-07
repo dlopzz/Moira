@@ -17,7 +17,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
         'first_name',
@@ -37,8 +37,8 @@ class User extends Authenticatable implements FilamentUser
     {
         return [
             'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'role'              => Role::class,
+            'password' => 'hashed',
+            'role' => Role::class,
         ];
     }
 
@@ -62,5 +62,11 @@ class User extends Authenticatable implements FilamentUser
     public function isEditor(): bool
     {
         return in_array($this->role, [Role::SuperAdmin, Role::Admin, Role::Editor]);
+    }
+
+    /** Busca por username o email, el mismo criterio usado para iniciar sesión en el panel */
+    public static function findByLogin(string $value): ?self
+    {
+        return self::where('username', $value)->orWhere('email', $value)->first();
     }
 }

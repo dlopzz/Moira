@@ -47,6 +47,10 @@ services:
     env_file:
       - ./moira-api/.env
     entrypoint: ["/usr/local/bin/entrypoint-queue.sh"]
+    # The base image's built-in healthcheck expects nginx+php-fpm, which this
+    # container doesn't run (it's just `artisan queue:work`) — disable it.
+    healthcheck:
+      disable: true
     depends_on:
       pgsql:
         condition: service_healthy

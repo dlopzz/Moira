@@ -13,7 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health:   '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Traefik terminates TLS and forwards plain HTTP inside the Docker
+        // network; without this, Laravel treats every request as insecure
+        // and generates http:// asset/URL links, tripping mixed-content
+        // blocks in the browser.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

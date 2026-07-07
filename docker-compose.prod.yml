@@ -37,7 +37,7 @@ services:
       - traefik.http.routers.moira-api.rule=Host(`${API_DOMAIN}`)
       - traefik.http.routers.moira-api.entrypoints=websecure
       - traefik.http.routers.moira-api.tls.certresolver=letsencrypt
-      - traefik.http.services.moira-api.loadbalancer.server.port=80
+      - traefik.http.services.moira-api.loadbalancer.server.port=8080
 
   queue:
     build:

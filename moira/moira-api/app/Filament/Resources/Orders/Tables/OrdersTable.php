@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\Orders\Tables;
 
+use App\Models\Order;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -27,26 +27,8 @@ class OrdersTable
                 TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
-                    ->color(fn (string $state) => match($state) {
-                        'pending'    => 'warning',
-                        'paid'       => 'info',
-                        'processing' => 'info',
-                        'shipped'    => 'primary',
-                        'delivered'  => 'success',
-                        'cancelled'  => 'danger',
-                        'refunded'   => 'danger',
-                        default      => 'gray',
-                    })
-                    ->formatStateUsing(fn (string $state) => match($state) {
-                        'pending'    => 'Pendiente',
-                        'paid'       => 'Pagado',
-                        'processing' => 'En proceso',
-                        'shipped'    => 'Enviado',
-                        'delivered'  => 'Entregado',
-                        'cancelled'  => 'Cancelado',
-                        'refunded'   => 'Reembolsado',
-                        default      => $state,
-                    }),
+                    ->color(fn (string $state) => Order::STATUS_COLORS[$state] ?? 'gray')
+                    ->formatStateUsing(fn (string $state) => Order::STATUS_LABELS[$state] ?? $state),
 
                 TextColumn::make('paymentMethod.name')
                     ->label('Pago')
@@ -70,20 +52,11 @@ class OrdersTable
             ->filters([
                 SelectFilter::make('status')
                     ->label('Estado')
-                    ->options([
-                        'pending'    => 'Pendiente',
-                        'paid'       => 'Pagado',
-                        'processing' => 'En proceso',
-                        'shipped'    => 'Enviado',
-                        'delivered'  => 'Entregado',
-                        'cancelled'  => 'Cancelado',
-                        'refunded'   => 'Reembolsado',
-                    ]),
+                    ->options(Order::STATUS_LABELS),
                 TrashedFilter::make(),
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([DeleteBulkAction::make()]),

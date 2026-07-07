@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { api, type Order, type PaginationMeta, formatPrice } from '@/lib/api';
 import { getToken } from '@/lib/auth';
 
@@ -164,6 +165,17 @@ export default function OrdersPage() {
                           <p className="text-sm text-gray-500">
                             {detail.shipping_address.city}, {detail.shipping_address.state} {detail.shipping_address.zip_code}
                           </p>
+                        </div>
+                      )}
+
+                      {order.return_eligible && (
+                        <div className="mt-3 pt-3 border-t border-gray-100">
+                          <Link
+                            href={`/profile/orders/${order.id}/return`}
+                            className="inline-block text-sm font-medium text-blue-600 hover:underline"
+                          >
+                            Solicitar devolución
+                          </Link>
                         </div>
                       )}
                     </>

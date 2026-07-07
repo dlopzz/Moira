@@ -23,6 +23,10 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
   const [selectedAttrs, setSelectedAttrs] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<'description' | 'reviews'>('description');
   const [activeImage, setActiveImage] = useState(0);
+  // Por defecto la imagen sigue a la variante activa, pero un click en la
+  // galería debe poder mostrar otra foto hasta que la variante cambie de
+  // nuevo — userClearedVariantImage guarda esa preferencia manual.
+  const [userClearedVariantImage, setUserClearedVariantImage] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -71,6 +75,16 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
     if (!allSelected) return null;
     return variants.find((v) => attributeKeys.every((k) => v.attributes[k] === selectedAttrs[k])) ?? null;
   }, [isConfigurable, attributeKeys, selectedAttrs, variants]);
+
+  // Reinicia la preferencia manual cuando cambia la variante activa. Se hace
+  // durante el render (no en un efecto) para que no haya un frame intermedio
+  // mostrando la imagen vieja antes de corregirse.
+  const [prevVariant, setPrevVariant] = useState(activeVariant);
+  if (activeVariant !== prevVariant) {
+    setPrevVariant(activeVariant);
+    setUserClearedVariantImage(false);
+  }
+  const variantImage = userClearedVariantImage ? null : imageUrl(activeVariant?.image);
 
   const allAttrsSelected = isConfigurable ? attributeKeys.every((k) => selectedAttrs[k]) : true;
 
@@ -185,12 +199,12 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
               <div className={`woocommerce-product-gallery woocommerce-product-gallery--with-images${hasThumbs ? ' gallery-has-thumbnails' : ''}`}>
                 <div className="product_image">
 
-                  {/* Main image */}
+                  {/* Main image — variant image overrides gallery selection */}
                   <div className="base-product-gallery-main">
                     <div className="product-main-image-inner">
-                      {images[activeImage] ? (
+                      {(variantImage ?? imageUrl(images[activeImage])) ? (
                         <Image
-                          src={imageUrl(images[activeImage])!}
+                          src={variantImage ?? imageUrl(images[activeImage])!}
                           alt={product.name}
                           fill
                           style={{ objectFit: 'cover' }}
@@ -212,8 +226,10 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                             <li
                               key={i}
                               className={`bt-woo-gallery-thumbnail splide__slide${i === activeImage ? ' is-active' : ''}`}
-                              onClick={() => setActiveImage(i)}
-                              onKeyDown={(e) => e.key === 'Enter' && setActiveImage(i)}
+                              onClick={() => { setActiveImage(i); setUserClearedVariantImage(true); }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') { setActiveImage(i); setUserClearedVariantImage(true); }
+                              }}
                               role="button"
                               tabIndex={0}
                               aria-label={`Ver imagen ${i + 1}`}

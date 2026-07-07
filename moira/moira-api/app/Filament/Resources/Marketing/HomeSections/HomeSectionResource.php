@@ -44,9 +44,9 @@ class HomeSectionResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => ListHomeSections::route('/'),
+            'index' => ListHomeSections::route('/'),
             'create' => CreateHomeSection::route('/create'),
-            'edit'   => EditHomeSection::route('/{record}/edit'),
+            'edit' => EditHomeSection::route('/{record}/edit'),
         ];
     }
 
@@ -58,14 +58,22 @@ class HomeSectionResource extends Resource
     {
         $s = $data['settings'] ?? [];
 
-        $data['slides']             = $s['slides'] ?? [];
-        $data['per_tab']            = $s['per_tab'] ?? 8;
-        $data['tabs']               = $s['tabs'] ?? [];
-        $data['banner_image']       = $s['image'] ?? null;
-        $data['banner_title']       = $s['title'] ?? null;
-        $data['banner_subtitle']    = $s['subtitle'] ?? null;
-        $data['banner_button_text'] = $s['button_text'] ?? null;
-        $data['banner_button_link'] = $s['button_link'] ?? null;
+        // 'link' reemplazó a 'button_link' (y 'button_text' quedó sin reemplazo); las
+        // secciones guardadas antes de ese cambio solo tienen la clave vieja.
+        $data['slides'] = collect($s['slides'] ?? [])
+            ->map(fn (array $slide) => [
+                ...$slide,
+                'link' => $slide['link'] ?? $slide['button_link'] ?? null,
+            ])
+            ->all();
+        $data['per_tab'] = $s['per_tab'] ?? 8;
+        $data['tabs'] = $s['tabs'] ?? [];
+        $data['banner_image'] = $s['image'] ?? null;
+        $data['banner_title'] = $s['title'] ?? null;
+        $data['banner_subtitle'] = $s['subtitle'] ?? null;
+        $data['banner_text_align'] = $s['text_align'] ?? 'center';
+        $data['banner_text_valign'] = $s['text_valign'] ?? 'center';
+        $data['banner_link'] = $s['link'] ?? $s['button_link'] ?? null;
 
         unset($data['settings']);
 
@@ -86,14 +94,15 @@ class HomeSectionResource extends Resource
             ],
             'product_tabs' => [
                 'per_tab' => (int) ($data['per_tab'] ?? 8),
-                'tabs'    => $data['tabs'] ?? [],
+                'tabs' => $data['tabs'] ?? [],
             ],
             'banner' => [
-                'image'       => $data['banner_image'] ?? null,
-                'title'       => $data['banner_title'] ?? null,
-                'subtitle'    => $data['banner_subtitle'] ?? null,
-                'button_text' => $data['banner_button_text'] ?? null,
-                'button_link' => $data['banner_button_link'] ?? null,
+                'image' => $data['banner_image'] ?? null,
+                'title' => $data['banner_title'] ?? null,
+                'subtitle' => $data['banner_subtitle'] ?? null,
+                'text_align' => $data['banner_text_align'] ?? 'center',
+                'text_valign' => $data['banner_text_valign'] ?? 'center',
+                'link' => $data['banner_link'] ?? null,
             ],
             default => [],
         };
@@ -105,8 +114,9 @@ class HomeSectionResource extends Resource
             $data['banner_image'],
             $data['banner_title'],
             $data['banner_subtitle'],
-            $data['banner_button_text'],
-            $data['banner_button_link'],
+            $data['banner_text_align'],
+            $data['banner_text_valign'],
+            $data['banner_link'],
         );
 
         return $data;

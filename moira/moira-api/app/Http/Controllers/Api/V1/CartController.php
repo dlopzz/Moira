@@ -14,13 +14,21 @@ use App\Models\Quote;
 use App\Models\QuoteItem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
 {
     private function resolveQuote(Request $request): Quote
     {
-        // Cart routes are outside auth:sanctum middleware, so try both guards.
-        $customer   = $request->user() ?? \Illuminate\Support\Facades\Auth::guard('sanctum')->user();
+        // Cart routes carry no auth middleware (guests are welcome), so resolve
+        // manually against the 'customer' guard specifically — not the generic
+        // 'sanctum' guard, which has no provider restriction and would accept a
+        // token from any HasApiTokens model (e.g. an admin User), crashing
+        // Quote::getActiveForCustomer()'s strict Customer type-hint below. There's
+        // no default-guard middleware on these routes, so $request->user() alone
+        // is never populated — resolve directly against 'customer'.
+        $customer = Auth::guard('customer')->user();
         $guestToken = $request->header('X-Guest-Token', '');
 
         if ($customer) {
@@ -41,7 +49,7 @@ class CartController extends Controller
 
     private function mergeGuestCart(Quote $customerQuote, string $guestToken): void
     {
-        \Illuminate\Support\Facades\DB::transaction(function () use ($customerQuote, $guestToken): void {
+        DB::transaction(function () use ($customerQuote, $guestToken): void {
             $guestQuote = Quote::where('guest_token', $guestToken)
                 ->where('status', Quote::STATUS_ACTIVE)
                 ->lockForUpdate()
@@ -137,16 +145,18 @@ class CartController extends Controller
             ]);
         } else {
             $quote->items()->create([
-                'product_id'    => $product->id,
-                'product_slug'  => $product->slug,
-                'variant_id'    => $variantId,
+                'product_id' => $product->id,
+                'product_slug' => $product->slug,
+                'variant_id' => $variantId,
                 'variant_label' => $variantLabel,
-                'product_name'  => $product->name,
-                'product_sku'   => $variantId ? ($variant->sku ?? $product->sku) : $product->sku,
-                'product_image' => $product->images[0] ?? null,
-                'unit_price'    => $price,
-                'quantity'      => $request->quantity,
-                'subtotal'      => $price * $request->quantity,
+                'product_name' => $product->name,
+                'product_sku' => $variantId ? ($variant->sku ?? $product->sku) : $product->sku,
+                'product_image' => isset($variant) && $variant->image
+                    ? $variant->image
+                    : ($product->images[0] ?? null),
+                'unit_price' => $price,
+                'quantity' => $request->quantity,
+                'subtotal' => $price * $request->quantity,
             ]);
         }
 

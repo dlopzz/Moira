@@ -31,8 +31,7 @@ class ProductForm
                     ->maxLength(255)
                     ->columnSpanFull()
                     ->live(onBlur: true)
-                    ->afterStateUpdated(fn (string $operation, $state, callable $set) =>
-                        $operation === 'create' ? $set('slug', Str::slug($state)) : null
+                    ->afterStateUpdated(fn (string $operation, $state, callable $set) => $operation === 'create' ? $set('slug', Str::slug($state)) : null
                     ),
 
                 TextInput::make('slug')
@@ -131,7 +130,7 @@ class ProductForm
                     ->imageResizeTargetWidth(750)
                     ->imageResizeTargetHeight(1000)
                     ->saveUploadedFileUsing(WebpConverter::saveAs('products', variants: [
-                        'thumb'  => [171, 171],
+                        'thumb' => [171, 171],
                         'medium' => [275, 367],
                     ]))
                     ->columnSpanFull()
@@ -190,6 +189,20 @@ class ProductForm
                                     ->valueLabel('Valor (ej: Rojo)')
                                     ->required()
                                     ->helperText('Definí los atributos que identifican esta variante.'),
+
+                                FileUpload::make('image')
+                                    ->label('Imagen de la variante')
+                                    ->image()
+                                    ->disk('public')
+                                    ->visibility('public')
+                                    ->directory('products')
+                                    ->nullable()
+                                    ->columnSpanFull()
+                                    ->saveUploadedFileUsing(WebpConverter::saveAs('products', variants: [
+                                        'thumb' => [171, 171],
+                                        'medium' => [275, 367],
+                                    ]))
+                                    ->helperText('Opcional. Si se sube, se mostrará cuando el cliente seleccione esta combinación de atributos.'),
 
                                 TextInput::make('sku')
                                     ->label('SKU')

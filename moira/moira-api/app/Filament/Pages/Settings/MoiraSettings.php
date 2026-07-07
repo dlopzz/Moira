@@ -5,6 +5,7 @@ namespace App\Filament\Pages\Settings;
 use App\Models\SiteSetting;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -35,6 +36,8 @@ class MoiraSettings extends Page
 
         $this->form->fill([
             'name' => $settings->name,
+            'logo' => $settings->logo ? [$settings->logo] : [],
+            'promo_text' => $settings->promo_text,
             'url' => $settings->url,
             'address' => $settings->address,
             'zip_code' => $settings->zip_code,
@@ -51,6 +54,24 @@ class MoiraSettings extends Page
                     ->label('Nombre del sitio')
                     ->required()
                     ->maxLength(255),
+
+                FileUpload::make('logo')
+                    ->label('Logo del sitio')
+                    ->image()
+                    ->disk('public')
+                    ->visibility('public')
+                    ->directory('logos')
+                    ->nullable()
+                    ->columnSpanFull()
+                    ->helperText('Imagen que aparece en el header y footer. Formatos admitidos: PNG, JPG, WebP. Proporción recomendada: horizontal (ej: 312×70 px).'),
+
+                TextInput::make('promo_text')
+                    ->label('Texto promocional del header')
+                    ->nullable()
+                    ->maxLength(200)
+                    ->columnSpanFull()
+                    ->placeholder('NEW OFFER THIS WEEKEND ONLY! HURRY SHOP NOW!')
+                    ->helperText('Aparece en la barra superior del header. Dejalo vacío para ocultarla.'),
 
                 TextInput::make('url')
                     ->label('URL del sitio')
@@ -70,7 +91,9 @@ class MoiraSettings extends Page
                 TextInput::make('phone')
                     ->label('Teléfono')
                     ->tel()
-                    ->maxLength(30),
+                    ->required()
+                    ->maxLength(30)
+                    ->helperText('Se muestra en el header del sitio. Requerido para que aparezca ese bloque de contacto.'),
 
                 TextInput::make('email')
                     ->label('Email de contacto')
@@ -93,6 +116,16 @@ class MoiraSettings extends Page
     public function save(): void
     {
         $data = $this->form->getState();
+
+        // FileUpload returns an array; flatten to a single path or null
+        if (isset($data['logo'])) {
+            $data['logo'] = is_array($data['logo']) ? (array_values($data['logo'])[0] ?? null) : $data['logo'];
+        }
+
+        // These columns are NOT NULL in the DB — coerce nulls to empty string
+        foreach (['address', 'zip_code', 'phone', 'email'] as $field) {
+            $data[$field] = $data[$field] ?? '';
+        }
 
         SiteSetting::updateOrCreate([], $data);
 

@@ -7,6 +7,7 @@ use App\Http\Resources\Api\OrderResource;
 use App\Models\Order;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class OrderController extends Controller
 {
@@ -29,7 +30,7 @@ class OrderController extends Controller
 
     public function show(Request $request, Order $order): JsonResponse
     {
-        abort_if($order->customer_id !== $request->user()->id, 403);
+        Gate::authorize('view-order', $order);
 
         $order->load('items');
 

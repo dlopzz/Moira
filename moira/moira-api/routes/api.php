@@ -1,15 +1,6 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AddressController;
-use App\Http\Controllers\Api\V1\ContactMessageController;
-use App\Http\Controllers\Api\V1\NewsletterController;
-use App\Http\Controllers\Api\V1\GuestCheckoutController;
-use App\Http\Controllers\Api\V1\PaymentController;
-use App\Http\Controllers\Api\V1\ShippingController;
-use App\Http\Controllers\Api\V1\CmsPageController;
-use App\Http\Controllers\Api\V1\HomeController;
-use App\Http\Controllers\Api\V1\SiteSettingsController;
-use App\Http\Controllers\Api\V1\ReviewController;
 use App\Http\Controllers\Api\V1\Auth\ForgotPasswordController;
 use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
@@ -20,10 +11,21 @@ use App\Http\Controllers\Api\V1\Auth\VerifyEmailController;
 use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\CheckoutController;
+use App\Http\Controllers\Api\V1\CmsPageController;
+use App\Http\Controllers\Api\V1\ContactMessageController;
+use App\Http\Controllers\Api\V1\GuestCheckoutController;
+use App\Http\Controllers\Api\V1\HomeController;
+use App\Http\Controllers\Api\V1\NewsletterController;
 use App\Http\Controllers\Api\V1\OrderController;
+use App\Http\Controllers\Api\V1\OrderReturnController;
 use App\Http\Controllers\Api\V1\PasswordController;
+use App\Http\Controllers\Api\V1\PaymentController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\ProfileController;
+use App\Http\Controllers\Api\V1\QaAccessController;
+use App\Http\Controllers\Api\V1\ReviewController;
+use App\Http\Controllers\Api\V1\ShippingController;
+use App\Http\Controllers\Api\V1\SiteSettingsController;
 use App\Http\Controllers\Api\V1\WishlistController;
 use Illuminate\Support\Facades\Route;
 
@@ -53,13 +55,20 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
 
     Route::get('checkout/payment-config', [PaymentController::class, 'config']);
 
-    Route::post('auth/register',     [RegisterController::class, 'store'])->name('auth.register');
-    Route::post('auth/login',        [LoginController::class,   'store'])->name('auth.login');
-    Route::post('auth/check-email',  [LoginController::class,   'checkEmail'])->name('auth.check-email');
+    // Throttle generoso: en QA todas las requests llegan con la misma IP del
+    // servidor de moira-web (server-to-server), así que el límite se comparte
+    // entre todos los testers, no es por persona.
+    Route::post('qa-access/verify', [QaAccessController::class, 'verify'])
+        ->middleware('throttle:20,1')
+        ->name('qa-access.verify');
+
+    Route::post('auth/register', [RegisterController::class, 'store'])->name('auth.register');
+    Route::post('auth/login', [LoginController::class,   'store'])->name('auth.login');
+    Route::post('auth/check-email', [LoginController::class,   'checkEmail'])->name('auth.check-email');
     Route::post('auth/forgot-password', [ForgotPasswordController::class, 'store'])->name('auth.forgot-password');
     Route::post('auth/reset-password', [ResetPasswordController::class,  'store'])->name('auth.reset-password');
     Route::get('auth/verify-email/{id}/{hash}', [VerifyEmailController::class, 'verify'])->name('auth.verify-email');
-    Route::get('auth/google',          [SocialAuthController::class, 'redirect'])->name('auth.google');
+    Route::get('auth/google', [SocialAuthController::class, 'redirect'])->name('auth.google');
     Route::get('auth/google/callback', [SocialAuthController::class, 'callback'])->name('auth.google.callback');
 
     // Guest checkout: accessible via X-Guest-Token (no auth required)
@@ -78,8 +87,12 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::post('cart/coupon', [CartController::class, 'applyCoupon']);
     Route::delete('cart/coupon', [CartController::class, 'removeCoupon']);
 
-    Route::middleware('auth:sanctum')->group(function (): void {
-        Route::post('auth/logout',         [LogoutController::class,     'store'])->name('auth.logout');
+    // Guard dedicado (no el genérico 'sanctum'): así Sanctum rechaza a nivel de
+    // middleware cualquier token que no pertenezca a un Customer (ver provider
+    // 'customers' en config/auth.php), en vez de depender de que cada gate/policy
+    // de esta sección recuerde chequear el tipo de usuario por su cuenta.
+    Route::middleware('auth:customer')->group(function (): void {
+        Route::post('auth/logout', [LogoutController::class,     'store'])->name('auth.logout');
         Route::post('auth/verify-email/resend', [VerifyEmailController::class, 'resend'])->name('auth.verify-email.resend');
 
         Route::get('profile', [ProfileController::class, 'show'])->name('profile.show');
@@ -94,6 +107,8 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
 
         Route::get('orders', [OrderController::class, 'index']);
         Route::get('orders/{order}', [OrderController::class, 'show']);
+        Route::get('orders/{order}/returns/eligible-items', [OrderReturnController::class, 'eligibleItems']);
+        Route::post('orders/{order}/returns', [OrderReturnController::class, 'store']);
 
         Route::get('wishlist', [WishlistController::class, 'index']);
         Route::get('wishlist/ids', [WishlistController::class, 'ids']);

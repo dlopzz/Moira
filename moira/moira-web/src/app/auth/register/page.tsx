@@ -1,21 +1,19 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api, ApiError } from '@/lib/api';
 import { FormField } from '@/components/FormField';
-
-const ReCAPTCHA = dynamic(() => import('react-google-recaptcha'), { ssr: false });
+import { RecaptchaField } from '@/components/RecaptchaField';
+import { getRecaptchaToken, resetRecaptcha, useRecaptchaEnabled, type ReCAPTCHAType } from '@/lib/use-recaptcha';
 
 const API = process.env.NEXT_PUBLIC_API_URL!;
 
 export default function RegisterPage() {
   const router = useRouter();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recaptchaRef = useRef<any>(null);
-  const [recaptchaEnabled, setRecaptchaEnabled] = useState(false);
+  const recaptchaRef = useRef<ReCAPTCHAType>(null);
+  const recaptchaEnabled = useRecaptchaEnabled();
   const [form, setForm] = useState({
     first_name: '',
     last_name: '',
@@ -29,24 +27,15 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
 
-  useEffect(() => {
-    api.getSiteSettings()
-      .then((r) => setRecaptchaEnabled(r.data.recaptcha_enabled))
-      .catch(() => {});
-  }, []);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrors({});
     setMessage('');
 
-    let recaptchaToken: string | undefined;
-    if (recaptchaEnabled) {
-      recaptchaToken = recaptchaRef.current?.getValue() ?? '';
-      if (!recaptchaToken) {
-        setErrors({ recaptcha_token: 'Por favor, completá la verificación.' });
-        return;
-      }
+    const { token: recaptchaToken, error: recaptchaError } = getRecaptchaToken(recaptchaRef, recaptchaEnabled);
+    if (recaptchaError) {
+      setErrors({ recaptcha_token: recaptchaError });
+      return;
     }
 
     setLoading(true);
@@ -62,7 +51,7 @@ export default function RegisterPage() {
           setErrors(flat);
         }
       }
-      recaptchaRef.current?.reset();
+      resetRecaptcha(recaptchaRef);
     } finally {
       setLoading(false);
     }
@@ -156,17 +145,11 @@ export default function RegisterPage() {
             required
           />
 
-          {recaptchaEnabled && (
-            <div>
-              <ReCAPTCHA
-                ref={recaptchaRef}
-                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-              />
-              {errors.recaptcha_token && (
-                <span className="text-red-500 text-xs mt-1 block">{errors.recaptcha_token}</span>
-              )}
-            </div>
-          )}
+          <RecaptchaField
+            recaptchaRef={recaptchaRef}
+            visible={recaptchaEnabled}
+            error={errors.recaptcha_token}
+          />
 
           <button
             type="submit"

@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { api, type Category } from '@/lib/api';
+import { useEffect, useMemo, useState } from 'react';
+import { imageUrl, type Category } from '@/lib/api';
 import { getToken } from '@/lib/auth';
 import { useCart } from '@/lib/cart-context';
+import { useSiteInfo } from '@/lib/site-info-context';
+import { useCategories } from '@/lib/categories-context';
 import LoginDrawer from '@/components/LoginDrawer';
 
 const ArrowDown = () => (
@@ -14,6 +16,12 @@ const ArrowDown = () => (
       </svg>
     </span>
   </span>
+);
+
+const IconEmail = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="contact-icon-image">
+    <path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+  </svg>
 );
 
 const ChevronSvg = () => (
@@ -63,7 +71,12 @@ function MobileNavItem({
 export default function Header() {
   const { cart, toggleCart } = useCart();
   const cartCount = cart?.summary.items_count ?? 0;
-  const [categories, setCategories] = useState<Category[]>([]);
+  const rawCategories = useCategories();
+  const categories = useMemo(
+    () => rawCategories?.[0]?.children ?? rawCategories ?? [],
+    [rawCategories]
+  );
+  const siteInfo = useSiteInfo();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [drawerOpen, setDrawerOpen]     = useState(false);
   const [expanded, setExpanded]         = useState<Set<number>>(new Set());
@@ -72,10 +85,6 @@ export default function Header() {
   const [loginDrawerOpen, setLoginDrawerOpen]       = useState(false);
 
   useEffect(() => {
-    api.getCategories().then(r => {
-      const root = r.data[0];
-      setCategories(root?.children ?? r.data);
-    }).catch(() => {});
     setIsLoggedIn(!!getToken());
   }, []);
 
@@ -185,15 +194,17 @@ export default function Header() {
                         </div>
 
                         {/* Right: promo text */}
-                        <div className="site-header-top-section-right site-header-section site-header-section-right">
-                          <div className="site-header-item site-header-focus-item">
-                            <div className="header-html inner-link-style-normal">
-                              <div className="header-html-inner">
-                                <p>NEW OFFER THIS WEEKEND ONLY! HURRY SHOP NOW!</p>
+                        {siteInfo?.promo_text && (
+                          <div className="site-header-top-section-right site-header-section site-header-section-right">
+                            <div className="site-header-item site-header-focus-item">
+                              <div className="header-html inner-link-style-normal">
+                                <div className="header-html-inner">
+                                  <p>{siteInfo.promo_text}</p>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
+                        )}
 
                       </div>
                     </div>
@@ -211,7 +222,16 @@ export default function Header() {
                           <div className="site-header-item site-header-focus-item" data-section="title_tagline">
                             <div className="site-branding branding-layout-standard site-brand-logo-only">
                               <a className="brand" href="/" rel="home">
-                                <img width="156" height="35" src="/logo.svg" className="logo" alt="Moira Bikinis" />
+                                {siteInfo === undefined ? (
+                                  <div style={{ width: 156, height: 35 }} />
+                                ) : (
+                                  <img
+                                    src={imageUrl(siteInfo?.logo) ?? '/logo.svg'}
+                                    className="logo"
+                                    alt={siteInfo?.name ?? 'Logo'}
+                                    style={{ height: '35px', width: 'auto' }}
+                                  />
+                                )}
                               </a>
                             </div>
                           </div>
@@ -317,19 +337,28 @@ export default function Header() {
                   <div className="site-bottom-header-inner-wrap site-header-row site-header-row-has-sides site-header-row-no-center">
                     <div className="site-header-bottom-section-left site-header-section site-header-section-left" />
                     <div className="site-header-bottom-section-right site-header-section site-header-section-right">
-                      <div className="site-header-item site-header-focus-item">
-                        <div className="header-contact-wrap">
-                          <div className="header-contact-inner-wrap element-contact-inner-wrap inner-link-style-plain">
-                            <span className="contact-button header-contact-item has-custom-image">
-                              <img src="/phone.png" alt="" className="contact-icon-image" />
-                              <div className="contact-content">
-                                <span className="contact-title">CUSTOMER CARE : </span>
-                                <span className="contact-label">&nbsp;(+00) 12 3456 890</span>
-                              </div>
-                            </span>
+                      {(siteInfo?.phone || siteInfo?.email) && (
+                        <div className="site-header-item site-header-focus-item">
+                          <div className="header-contact-wrap">
+                            <div className="header-contact-inner-wrap element-contact-inner-wrap inner-link-style-plain">
+                              <a
+                                className="contact-button header-contact-item has-custom-image"
+                                href={siteInfo?.phone ? `tel:${siteInfo.phone}` : `mailto:${siteInfo?.email}`}
+                              >
+                                {siteInfo?.phone ? (
+                                  <img src="/phone.png" alt="" className="contact-icon-image" />
+                                ) : (
+                                  <IconEmail />
+                                )}
+                                <div className="contact-content">
+                                  <span className="contact-title">ATENCIÓN AL CLIENTE : </span>
+                                  <span className="contact-label">&nbsp;{siteInfo?.phone || siteInfo?.email}</span>
+                                </div>
+                              </a>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )}
                       <div className="site-header-item site-header-focus-item">
                         <div className="header-search-advanced header-item-search-advanced">
                           <form role="search" method="get" action="/search" className="search-form">
@@ -362,6 +391,7 @@ export default function Header() {
               <div className="site-header-upper-inner-wrap">
 
                 {/* Mobile top bar: centered promo text */}
+                {siteInfo?.promo_text && (
                 <div className="site-top-header-wrap site-header-row-container site-header-focus-item site-header-row-layout-fullwidth">
                   <div className="site-header-row-container-inner">
                     <div className="site-container">
@@ -369,7 +399,7 @@ export default function Header() {
                         <div className="site-header-top-section-center site-header-section site-header-section-center">
                           <div className="site-header-item site-header-focus-item">
                             <div className="mobile-html">
-                              <div className="mobile-html-inner">NEW OFFER THIS WEEKEND! SHOP NOW!</div>
+                              <div className="mobile-html-inner">{siteInfo.promo_text}</div>
                             </div>
                           </div>
                         </div>
@@ -377,6 +407,7 @@ export default function Header() {
                     </div>
                   </div>
                 </div>
+                )}
 
                 {/* Mobile main bar: hamburger + logo | search + account + cart */}
                 <div className="site-main-header-wrap site-header-row-container site-header-focus-item site-header-row-layout-fullwidth">
@@ -408,7 +439,16 @@ export default function Header() {
                           <div className="site-header-item site-header-focus-item">
                             <div className="site-branding mobile-site-branding branding-layout-standard site-brand-logo-only">
                               <a className="brand" href="/" rel="home">
-                                <img width="156" height="35" src="/logo.svg" className="logo" alt="Moira Bikinis" />
+                                {siteInfo === undefined ? (
+                                  <div style={{ width: 156, height: 35 }} />
+                                ) : (
+                                  <img
+                                    src={imageUrl(siteInfo?.logo) ?? '/logo.svg'}
+                                    className="logo"
+                                    alt={siteInfo?.name ?? 'Logo'}
+                                    style={{ height: '35px', width: 'auto' }}
+                                  />
+                                )}
                               </a>
                             </div>
                           </div>

@@ -3,8 +3,8 @@
 namespace App\Filament\Pages\Auth;
 
 use App\Models\User;
-use Filament\Forms\Components\TextInput;
 use Filament\Auth\Pages\Login as BaseLogin;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class Login extends BaseLogin
@@ -26,12 +26,10 @@ class Login extends BaseLogin
 
     protected function getCredentialsFromFormData(array $data): array
     {
-        $user = User::where('username', $data['email'])
-            ->orWhere('email', $data['email'])
-            ->first();
+        $user = User::findByLogin($data['email']);
 
         return [
-            'email'    => $user?->email ?? $data['email'],
+            'email' => $user?->email ?? $data['email'],
             'password' => $data['password'],
         ];
     }

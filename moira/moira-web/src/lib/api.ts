@@ -196,6 +196,12 @@ export const api = {
   getOrder: (id: number) =>
     request<{ data: Order }>(`/orders/${id}`),
 
+  getReturnableItems: (orderId: number) =>
+    request<{ data: ReturnableItem[]; reasons: string[] }>(`/orders/${orderId}/returns/eligible-items`),
+
+  submitOrderReturn: (orderId: number, data: { reason: string; description?: string; telephone: string; items: { order_item_id: number; quantity: number }[] }) =>
+    request<{ message: string }>(`/orders/${orderId}/returns`, { method: 'POST', body: data }),
+
   // Wishlist
   getWishlistIds: () =>
     request<{ product_ids: number[] }>('/wishlist/ids'),
@@ -295,11 +301,15 @@ export const api = {
   setDefaultAddress: (id: number, type: 'billing' | 'shipping') =>
     request<{ data: Address }>(`/addresses/${id}/default/${type}`, { method: 'PUT' }),
 
-  submitContact: (data: { name: string; last_name: string; email: string; message: string; recaptcha_token: string }) =>
+  submitContact: (data: { name: string; last_name: string; email: string; message: string; recaptcha_token?: string }) =>
     request<void>('/contact', { method: 'POST', body: data, token: null }),
 
   subscribeNewsletter: (email: string) =>
     request<{ message: string }>('/newsletter/subscribe', { method: 'POST', body: { email }, token: null }),
+
+  // QA gate — ver src/proxy.ts
+  qaVerify: (data: { username: string; password: string }) =>
+    request<{ ok: boolean }>('/qa-access/verify', { method: 'POST', body: data, token: null }),
 };
 
 export type Customer = {
@@ -349,6 +359,7 @@ export type ProductVariant = {
   price: number | null;
   stock: number;
   attributes: Record<string, string>;
+  image: string | null;
   label: string;
   sort_order: number;
 };
@@ -476,6 +487,7 @@ export type Order = {
   id: number;
   number: string;
   status: string;
+  return_eligible: boolean;
   shipping_address: {
     label: string;
     street: string;
@@ -494,8 +506,18 @@ export type Order = {
   items?: OrderItem[];
 };
 
+export type ReturnableItem = {
+  order_item_id: number;
+  product_name: string;
+  variant_label: string | null;
+  quantity: number;
+  remaining_quantity: number;
+};
+
 export type SiteInfo = {
   name: string;
+  logo: string | null;
+  promo_text: string | null;
   address: string;
   zip_code: string;
   phone: string;
@@ -548,8 +570,9 @@ export type HeroSlide = {
   image: string | null;
   title: string | null;
   subtitle: string | null;
-  button_text: string | null;
-  button_link: string | null;
+  text_align: 'left' | 'center' | 'right' | null;
+  text_valign: 'top' | 'center' | 'bottom' | null;
+  link: string | null;
   transition?: 'fade' | 'slide' | 'zoom' | 'vertical' | 'flip' | 'blur' | 'wipe';
 };
 
@@ -586,8 +609,9 @@ export type HomeSectionBanner = {
     image: string | null;
     title: string | null;
     subtitle: string | null;
-    button_text: string | null;
-    button_link: string | null;
+    text_align: 'left' | 'center' | 'right' | null;
+    text_valign: 'top' | 'center' | 'bottom' | null;
+    link: string | null;
   };
 };
 

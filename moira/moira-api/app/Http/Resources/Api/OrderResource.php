@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api;
 
+use App\Models\OrderReturn;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -14,6 +15,7 @@ class OrderResource extends JsonResource
             'id' => $this->id,
             'number' => str_pad((string) $this->id, 8, '0', STR_PAD_LEFT),
             'status' => $this->status,
+            'return_eligible' => OrderReturn::isOrderReturnable($this->resource),
             'shipping_address' => $this->shipping_address,
             'subtotal' => (float) $this->subtotal,
             'shipping_cost' => (float) $this->shipping_cost,

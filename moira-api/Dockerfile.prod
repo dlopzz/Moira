@@ -1,7 +1,12 @@
 # syntax=docker/dockerfile:1
 
 # ---- Stage 1: PHP dependencies (composer) ----
-FROM composer:2 AS vendor
+# Same PHP version + extensions as the runtime stage, so composer's
+# post-autoload-dump scripts (artisan package:discover, filament:upgrade)
+# can actually boot the framework instead of just satisfying platform checks.
+FROM serversideup/php:8.3-cli-alpine AS vendor
+USER root
+RUN install-php-extensions pdo_pgsql gd intl bcmath zip
 WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist

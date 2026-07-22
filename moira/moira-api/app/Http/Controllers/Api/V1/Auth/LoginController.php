@@ -11,13 +11,6 @@ use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
 {
-    public function checkEmail(\Illuminate\Http\Request $request): JsonResponse
-    {
-        $request->validate(['email' => ['required', 'email']]);
-        $exists = Customer::where('email', $request->email)->exists();
-        return response()->json(['exists' => $exists]);
-    }
-
     public function store(LoginRequest $request): JsonResponse
     {
         $customer = Customer::where('email', $request->email)->first();

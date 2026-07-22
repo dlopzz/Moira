@@ -43,6 +43,9 @@ class MoiraSettings extends Page
             'zip_code' => $settings->zip_code,
             'phone' => $settings->phone,
             'email' => $settings->email,
+            'social_facebook' => $settings->social_facebook,
+            'social_instagram' => $settings->social_instagram,
+            'social_whatsapp' => $settings->social_whatsapp,
         ]);
     }
 
@@ -99,6 +102,30 @@ class MoiraSettings extends Page
                     ->label('Email de contacto')
                     ->email()
                     ->maxLength(255),
+
+                TextInput::make('social_facebook')
+                    ->label('Facebook')
+                    ->url()
+                    ->nullable()
+                    ->maxLength(255)
+                    ->placeholder('https://facebook.com/mitienda')
+                    ->helperText('Link del ícono de Facebook en el header. Vacío = se oculta.'),
+
+                TextInput::make('social_instagram')
+                    ->label('Instagram')
+                    ->url()
+                    ->nullable()
+                    ->maxLength(255)
+                    ->placeholder('https://instagram.com/mitienda')
+                    ->helperText('Link del ícono de Instagram en el header. Vacío = se oculta.'),
+
+                TextInput::make('social_whatsapp')
+                    ->label('WhatsApp')
+                    ->url()
+                    ->nullable()
+                    ->maxLength(255)
+                    ->placeholder('https://wa.me/54911...')
+                    ->helperText('Link del ícono de WhatsApp en el header. Vacío = se oculta.'),
             ])
             ->columns(2)
             ->statePath('data');

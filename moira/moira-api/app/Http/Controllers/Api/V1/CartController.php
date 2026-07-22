@@ -114,18 +114,14 @@ class CartController extends Controller
                 ->where('is_active', true)
                 ->firstOrFail();
 
-            if ($variant->stock < $request->quantity) {
-                return response()->json(['message' => "Stock insuficiente. Disponible: {$variant->stock}."], 422);
-            }
+            $available = $variant->stock;
 
             $variant->loadMissing('product');
             $price = $variant->effectivePrice();
             $variantId = $variant->id;
             $variantLabel = $variant->label();
         } else {
-            if ($product->stock < $request->quantity) {
-                return response()->json(['message' => "Stock insuficiente. Disponible: {$product->stock}."], 422);
-            }
+            $available = $product->stock;
 
             $price = (float) ($product->sale_price ?? $product->price);
         }
@@ -136,6 +132,12 @@ class CartController extends Controller
             ->where('product_id', $product->id)
             ->where('variant_id', $variantId)
             ->first();
+
+        // La cantidad final (sumando lo que ya está en el carrito) no puede superar el stock.
+        $targetQty = ($item->quantity ?? 0) + $request->quantity;
+        if ($available < $targetQty) {
+            return response()->json(['message' => "Stock insuficiente. Disponible: {$available}."], 422);
+        }
 
         if ($item) {
             $newQty = $item->quantity + $request->quantity;
@@ -176,6 +178,14 @@ class CartController extends Controller
     {
         $quote = $this->resolveQuote($request);
         abort_if($item->quote_id !== $quote->id, 403);
+
+        $available = $item->variant_id
+            ? (ProductVariant::whereKey($item->variant_id)->value('stock') ?? 0)
+            : (Product::whereKey($item->product_id)->value('stock') ?? 0);
+
+        if ($available < $request->quantity) {
+            return response()->json(['message' => "Stock insuficiente. Disponible: {$available}."], 422);
+        }
 
         $price = (float) $item->unit_price;
         $newQty = $request->quantity;

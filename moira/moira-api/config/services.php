@@ -14,6 +14,14 @@ return [
     |
     */
 
+    // Clave compartida con moira-web: sus lecturas server-to-server (SSR) llegan
+    // con la IP del contenedor, así que el rate limiter de catálogo las exime
+    // cuando presentan este header en vez de contarlas contra un balde por-IP
+    // compartido entre todos los usuarios. No se expone al navegador.
+    'internal' => [
+        'key' => env('INTERNAL_API_KEY'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

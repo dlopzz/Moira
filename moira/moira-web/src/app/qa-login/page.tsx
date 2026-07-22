@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 
 function QaLoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const rawNext = searchParams.get("next") || "/";
   // Solo permitir rutas relativas del propio sitio — nunca una URL externa ni
@@ -37,8 +36,11 @@ function QaLoginForm() {
         return;
       }
 
-      router.push(next);
-      router.refresh();
+      // Navegación dura (no router.push): garantiza que el navegador ya aplicó
+      // la cookie Set-Cookie del POST antes de volver a pasar por el gate del
+      // proxy. Con router.push la navegación soft/prefetch puede dispararse
+      // antes de que la cookie se comprometa y el proxy rebota de nuevo a login.
+      window.location.assign(next);
     } catch {
       setError("Ocurrió un error. Intentá de nuevo.");
       setLoading(false);

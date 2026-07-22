@@ -62,6 +62,12 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   if (opts.guestToken) {
     headers['X-Guest-Token'] = opts.guestToken;
   }
+  // Solo server-side: identifica el tráfico SSR ante la API para que lo exima del
+  // rate limit de catálogo (todas las requests SSR comparten la IP del contenedor).
+  // La clave es server-only, nunca llega al bundle del navegador.
+  if (typeof window === 'undefined' && process.env.INTERNAL_API_KEY) {
+    headers['X-Internal-Key'] = process.env.INTERNAL_API_KEY;
+  }
 
   const res = await fetch(`${BASE}${path}`, {
     method: opts.method ?? 'GET',
@@ -95,9 +101,6 @@ export class ApiError extends Error {
 export const api = {
   register: (data: { first_name: string; last_name: string; email: string; date_of_birth: string; password: string; password_confirmation: string; recaptcha_token?: string }) =>
     request<{ data: Customer; token: string }>('/auth/register', { method: 'POST', body: data }),
-
-  checkEmail: (email: string) =>
-    request<{ exists: boolean }>('/auth/check-email', { method: 'POST', body: { email } }),
 
   login: (data: { email: string; password: string }) =>
     request<{ data: Customer; token: string }>('/auth/login', { method: 'POST', body: data }),
@@ -160,7 +163,7 @@ export const api = {
     if (params.q) q.set('q', params.q);
     return request<{ data: Record<string, string[]> }>(`/products/filters?${q}`, { token: null });
   },
-
+  
   getProduct: (slug: string) =>
     request<{ data: Product }>(`/products/${slug}`, { token: null }),
 
@@ -522,6 +525,9 @@ export type SiteInfo = {
   zip_code: string;
   phone: string;
   email: string;
+  social_facebook: string | null;
+  social_instagram: string | null;
+  social_whatsapp: string | null;
   recaptcha_enabled: boolean;
   cookie_notice_enabled: boolean;
   cookie_notice_text: string;

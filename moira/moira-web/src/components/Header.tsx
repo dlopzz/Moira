@@ -168,26 +168,27 @@ export default function Header() {
                           <div className="site-header-item site-header-focus-item">
                             <div className="header-social-wrap">
                               <div className="header-social-inner-wrap element-social-inner-wrap social-show-label-false social-style-outline">
-                                <a href="" aria-label="Facebook" target="_blank" rel="noopener noreferrer" className="social-button header-social-item social-link-facebook">
-                                  <span className="base-svg-iconset">
-                                    <svg className="base-svg-icon base-facebook-alt2-svg" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="28" viewBox="0 0 16 28"><title>Facebook</title><path d="M14.984 0.187v4.125h-2.453c-1.922 0-2.281 0.922-2.281 2.25v2.953h4.578l-0.609 4.625h-3.969v11.859h-4.781v-11.859h-3.984v-4.625h3.984v-3.406c0-3.953 2.422-6.109 5.953-6.109 1.687 0 3.141 0.125 3.563 0.187z"/></svg>
-                                  </span>
-                                </a>
-                                <a href="" aria-label="Twitter" target="_blank" rel="noopener noreferrer" className="social-button header-social-item social-link-twitter">
-                                  <span className="social-icon-custom-svg social-icon-twitter">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500.08 511.77"><path fill="currentColor" d="M10.22,512.77c11.62-13.7,23.17-27.46,34.88-41.08q78.33-91.1,156.74-182.15c1.08-1.25,2.09-2.57,3.31-4.08L9.92,1.42c1.92-.14,3.15-.31,4.38-.31q70.2,0,140.42-.1c3.33,0,5,1.24,6.76,3.8Q223,94.6,284.75,184.27c1,1.48,2.09,2.92,3.46,4.83l25.3-29.35Q379.81,82.68,446,5.54A11.69,11.69,0,0,1,456.22,1c12.25.27,24.52.09,37.95.09L307.77,217.76l29,42.16Q422,384,507.25,508.1c1,1.48,1.84,3.11,2.75,4.67H361.07c-.67-1.14-1.28-2.32-2-3.41q-65.88-95.82-131.8-191.62c-.72-1.05-1.61-2-2.61-3.2-1.78,2-3.35,3.71-4.86,5.46q-52.6,61.13-105.19,122.25Q84.34,477.47,54.2,512.77Z" transform="translate(-9.92 -1)"/></svg>
-                                  </span>
-                                </a>
-                                <a href="" aria-label="YouTube" target="_blank" rel="noopener noreferrer" className="social-button header-social-item social-link-youtube">
-                                  <span className="base-svg-iconset">
-                                    <svg className="base-svg-icon base-youtube-svg" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><title>YouTube</title><path d="M11.109 17.625l7.562-3.906-7.562-3.953v7.859zM14 4.156c5.891 0 9.797 0.281 9.797 0.281 0.547 0.063 1.75 0.063 2.812 1.188 0 0 0.859 0.844 1.109 2.781 0.297 2.266 0.281 4.531 0.281 4.531v2.125s0.016 2.266-0.281 4.531c-0.25 1.922-1.109 2.781-1.109 2.781-1.062 1.109-2.266 1.109-2.812 1.172 0 0-3.906 0.297-9.797 0.297v0c-7.281-0.063-9.516-0.281-9.516-0.281-0.625-0.109-2.031-0.078-3.094-1.188 0 0-0.859-0.859-1.109-2.781-0.297-2.266-0.281-4.531-0.281-4.531v-2.125s-0.016-2.266 0.281-4.531c0.25-1.937 1.109-2.781 1.109-2.781 1.062-1.125 2.266-1.125 2.812-1.188 0 0 3.906-0.281 9.797-0.281v0z"/></svg>
-                                  </span>
-                                </a>
-                                <a href="" aria-label="Pinterest" target="_blank" rel="noopener noreferrer" className="social-button header-social-item social-link-pinterest">
-                                  <span className="base-svg-iconset">
-                                    <svg className="base-svg-icon base-pinterest-svg" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="28" viewBox="0 0 24 28"><title>Pinterest</title><path d="M19.5 2c2.484 0 4.5 2.016 4.5 4.5v15c0 2.484-2.016 4.5-4.5 4.5h-11.328c0.516-0.734 1.359-2 1.687-3.281 0 0 0.141-0.531 0.828-3.266 0.422 0.797 1.625 1.484 2.906 1.484 3.813 0 6.406-3.484 6.406-8.141 0-3.516-2.984-6.797-7.516-6.797-5.641 0-8.484 4.047-8.484 7.422 0 2.031 0.781 3.844 2.438 4.531 0.266 0.109 0.516 0 0.594-0.297 0.047-0.203 0.172-0.734 0.234-0.953 0.078-0.297 0.047-0.406-0.172-0.656-0.469-0.578-0.781-1.297-0.781-2.344 0-3 2.25-5.672 5.844-5.672 3.187 0 4.937 1.937 4.937 4.547 0 3.422-1.516 6.312-3.766 6.312-1.234 0-2.172-1.031-1.875-2.297 0.359-1.5 1.047-3.125 1.047-4.203 0-0.969-0.516-1.781-1.594-1.781-1.266 0-2.281 1.313-2.281 3.063 0 0 0 1.125 0.375 1.891-1.297 5.5-1.531 6.469-1.531 6.469-0.344 1.437-0.203 3.109-0.109 3.969h-2.859c-2.484 0-4.5-2.016-4.5-4.5v-15c0-2.484 2.016-4.5 4.5-4.5h15z"/></svg>
-                                  </span>
-                                </a>
+                                {siteInfo?.social_facebook && (
+                                  <a href={siteInfo.social_facebook} aria-label="Facebook" target="_blank" rel="noopener noreferrer" className="social-button header-social-item social-link-facebook">
+                                    <span className="base-svg-iconset">
+                                      <svg className="base-svg-icon base-facebook-alt2-svg" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" width="16" height="28" viewBox="0 0 16 28"><title>Facebook</title><path d="M14.984 0.187v4.125h-2.453c-1.922 0-2.281 0.922-2.281 2.25v2.953h4.578l-0.609 4.625h-3.969v11.859h-4.781v-11.859h-3.984v-4.625h3.984v-3.406c0-3.953 2.422-6.109 5.953-6.109 1.687 0 3.141 0.125 3.563 0.187z"/></svg>
+                                    </span>
+                                  </a>
+                                )}
+                                {siteInfo?.social_instagram && (
+                                  <a href={siteInfo.social_instagram} aria-label="Instagram" target="_blank" rel="noopener noreferrer" className="social-button header-social-item social-link-instagram">
+                                    <span className="base-svg-iconset">
+                                      <svg className="base-svg-icon base-instagram-svg" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><title>Instagram</title><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                                    </span>
+                                  </a>
+                                )}
+                                {siteInfo?.social_whatsapp && (
+                                  <a href={siteInfo.social_whatsapp} aria-label="WhatsApp" target="_blank" rel="noopener noreferrer" className="social-button header-social-item social-link-whatsapp">
+                                    <span className="base-svg-iconset">
+                                      <svg className="base-svg-icon base-whatsapp-svg" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><title>WhatsApp</title><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.71.306 1.263.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                                    </span>
+                                  </a>
+                                )}
                               </div>
                             </div>
                           </div>

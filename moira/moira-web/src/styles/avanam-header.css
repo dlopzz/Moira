@@ -48,10 +48,10 @@ button, .button, .wp-block-button__link, input[type="button"], input[type="reset
 .header-menu-container ul.menu > li.base-menu-mega-enabled > ul.sub-menu > li > a { display: block; font-weight: 500; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--global-palette3); padding-bottom: 10px; margin-bottom: 4px; border-bottom: 1px solid var(--global-gray-400); width: 100%; }
 .header-menu-container ul.menu > li.base-menu-mega-enabled > ul.sub-menu > li > a:hover { color: var(--global-palette1); }
 /* Image column — hidden by default so it never bleeds into page flow */
-.mega-menu-image-col { align-self: flex-start; overflow: hidden; border-radius: 2px; max-height: 0; }
+.mega-menu-image-col { align-self: flex-start; overflow: hidden; border-radius: 2px; max-height: 0; width: 320px; flex: 0 0 320px; margin-left: auto; }
 .header-menu-container ul.menu > li.base-menu-mega-enabled:hover .mega-menu-image-col,
 .header-menu-container ul.menu > li.base-menu-mega-enabled.menu-item--toggled-on .mega-menu-image-col { max-height: none; }
-.mega-menu-image { width: 100%; aspect-ratio: 431 / 272; object-fit: cover; display: block; border-radius: 2px; }
+.mega-menu-image { width: 320px; max-width: 100%; aspect-ratio: 431 / 272; object-fit: cover; display: block; border-radius: 2px; }
 .header-navigation .header-menu-container ul ul li.menu-item > a { width: 240px; padding-top: 0.3em; padding-bottom: 0.3em; color: var(--global-palette4); font-weight: 400; font-size: 14px; line-height: 1.6; text-transform: capitalize; }
 .header-navigation .header-menu-container ul ul li.menu-item > a:hover { color: var(--global-palette-highlight); }
 .header-navigation .header-menu-container ul ul li.menu-item.current-menu-item > a { color: var(--global-palette-highlight); }

@@ -100,17 +100,34 @@ class Quote extends Model
     {
         $expirationDays = (int) SiteSetting::getValue('cart_expiration_days', '30');
 
-        $quote = static::where('guest_token', $guestToken)
-            ->where('status', self::STATUS_ACTIVE)
-            ->first();
+        // guest_token tiene un índice único (sin scope de status). Por eso no se
+        // puede SELECT-solo-activos y luego INSERT: si ya existe una fila con ese
+        // token en otro estado (expired/converted/processing) el insert viola el
+        // unique. Se reutiliza siempre la misma fila.
+        $quote = static::where('guest_token', $guestToken)->first();
 
         if ($quote) {
-            if ($quote->expires_at && $quote->expires_at->isPast()) {
-                $quote->update(['status' => self::STATUS_EXPIRED]);
-                $quote = null;
-            } else {
+            $stillActive = $quote->status === self::STATUS_ACTIVE
+                && (! $quote->expires_at || ! $quote->expires_at->isPast());
+
+            if ($stillActive) {
                 return $quote;
             }
+
+            // Si venía de una orden ya generada o de un checkout en curso, se
+            // arranca un carrito vacío; si solo expiró, se conservan los ítems.
+            if (in_array($quote->status, [self::STATUS_CONVERTED, self::STATUS_PROCESSING], true)) {
+                $quote->items()->delete();
+            }
+
+            $quote->update([
+                'status' => self::STATUS_ACTIVE,
+                'expires_at' => now()->addDays($expirationDays),
+            ]);
+            $quote->load('items.product');
+            $quote->refreshPrices();
+
+            return $quote;
         }
 
         return static::create([

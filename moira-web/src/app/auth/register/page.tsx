@@ -27,6 +27,12 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
 
+  const maxBirthDate = (() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 16);
+    return d.toISOString().split('T')[0];
+  })();
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrors({});
@@ -122,6 +128,7 @@ export default function RegisterPage() {
             value={form.date_of_birth}
             onChange={(e) => setForm({ ...form, date_of_birth: e.target.value })}
             error={errors.date_of_birth}
+            max={maxBirthDate}
             required
           />
           <div>

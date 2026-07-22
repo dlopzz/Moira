@@ -83,6 +83,9 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
   if (activeVariant !== prevVariant) {
     setPrevVariant(activeVariant);
     setUserClearedVariantImage(false);
+    // Ajusta la cantidad al stock de la nueva variante para no exceder el tope.
+    const newStock = activeVariant ? activeVariant.stock : (!isConfigurable ? (product?.stock ?? 0) : 0);
+    if (qty > newStock) setQty(Math.max(1, newStock));
   }
   const variantImage = userClearedVariantImage ? null : imageUrl(activeVariant?.image);
 
@@ -342,13 +345,15 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
                     className="input-text qty text"
                     value={qty}
                     min={1}
-                    onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
+                    max={stock}
+                    onChange={(e) => setQty(Math.min(Math.max(stock, 1), Math.max(1, parseInt(e.target.value) || 1)))}
                     aria-label="Cantidad"
                   />
                   <button
                     type="button"
                     className="quantity-btn plus"
-                    onClick={() => setQty((q) => q + 1)}
+                    onClick={() => setQty((q) => Math.min(stock, q + 1))}
+                    disabled={qty >= stock}
                     aria-label="Aumentar cantidad"
                   >+</button>
                 </div>

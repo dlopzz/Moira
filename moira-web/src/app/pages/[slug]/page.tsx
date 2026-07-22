@@ -8,6 +8,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pages/${slug}`, {
       next: { revalidate: 300 },
+      headers: process.env.INTERNAL_API_KEY ? { 'X-Internal-Key': process.env.INTERNAL_API_KEY } : undefined,
     });
     if (!res.ok) return {};
     const { data } = await res.json();

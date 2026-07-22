@@ -133,4 +133,5 @@ class ProductController extends Controller
             'data' => new ProductResource($product),
         ]);
     }
+
 }

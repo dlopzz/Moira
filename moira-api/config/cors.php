@@ -19,7 +19,15 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    // Solo los orígenes del front (moira-web). Se define por env con
+    // CORS_ALLOWED_ORIGINS (lista separada por comas); cae a FRONTEND_URL si no
+    // está seteada. Auth es por Bearer token, no cookies, así que no hace falta
+    // supports_credentials. Esto no frena curl/scrapers (CORS es del navegador),
+    // pero impide que otro sitio use la API desde el browser de un tercero.
+    'allowed_origins' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('CORS_ALLOWED_ORIGINS', (string) env('FRONTEND_URL', '')))
+    ))),
 
     'allowed_origins_patterns' => [],
 

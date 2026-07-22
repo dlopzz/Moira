@@ -36,10 +36,10 @@ class Order extends Model
     /** cancelled/refunded son terminales: una vez ahí, ya se restockeó y no hay vuelta atrás. */
     private const ALLOWED_TRANSITIONS = [
         'pending' => ['paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
-        'paid' => ['processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
-        'processing' => ['shipped', 'delivered', 'cancelled', 'refunded'],
-        'shipped' => ['delivered', 'cancelled', 'refunded'],
-        'delivered' => ['cancelled', 'refunded'],
+        'paid' => ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
+        'processing' => ['pending', 'paid', 'shipped', 'delivered', 'cancelled', 'refunded'],
+        'shipped' => ['pending', 'paid', 'processing', 'delivered', 'cancelled', 'refunded'],
+        'delivered' => ['pending', 'paid', 'processing', 'shipped', 'cancelled', 'refunded'],
         'cancelled' => [],
         'refunded' => [],
     ];

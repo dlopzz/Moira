@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -239,14 +239,12 @@ function GuestCheckout({ cart, onCartUpdate, onRateSelect }: {
   const [saving, setSaving]     = useState(false);
   const [zipLoading, setZipLoading] = useState(false);
 
-  // Email check / login panel
-  const [emailChecking, setEmailChecking]     = useState(false);
-  const [emailExists, setEmailExists]         = useState<boolean | null>(null);
-  const [continueAsGuest, setContinueAsGuest] = useState(false);
+  // Login panel (manual — sin detección de existencia de email)
+  const [showLogin, setShowLogin]             = useState(false);
+  const [loginEmail, setLoginEmail]           = useState('');
   const [loginPassword, setLoginPassword]     = useState('');
   const [loginError, setLoginError]           = useState('');
   const [loginLoading, setLoginLoading]       = useState(false);
-  const checkedEmailRef = useRef(''); // last email value that was checked
 
   // Shipping method
   const [addrSaved, setAddrSaved]       = useState(false);
@@ -302,33 +300,11 @@ function GuestCheckout({ cart, onCartUpdate, onRateSelect }: {
     }
   }
 
-  async function handleEmailBlur(e: React.FocusEvent<HTMLInputElement>) {
-    const email = e.target.value.trim();
-    // If the field is empty on blur, reset the panel
-    if (!email) {
-      checkedEmailRef.current = '';
-      setEmailExists(null);
-      setContinueAsGuest(false);
-      setLoginError('');
-      return;
-    }
-    if (!/\S+@\S+\.\S+/.test(email)) return;
-    if (email === checkedEmailRef.current) return; // same email, skip
-    checkedEmailRef.current = email;
-    setEmailChecking(true);
-    try {
-      const res = await api.checkEmail(email);
-      setEmailExists(res.exists);
-    } catch { /* ignore */ } finally {
-      setEmailChecking(false);
-    }
-  }
-
   async function handleLogin() {
     setLoginError('');
     setLoginLoading(true);
     try {
-      const res = await api.login({ email: form.email, password: loginPassword });
+      const res = await api.login({ email: loginEmail, password: loginPassword });
       saveToken(res.token);
       window.location.reload();
     } catch (err) {
@@ -368,10 +344,9 @@ function GuestCheckout({ cart, onCartUpdate, onRateSelect }: {
     }
   }
 
-  // email exists and user hasn't explicitly chosen to continue as guest
-  const showLoginPanel = emailExists === true && !continueAsGuest;
-  // show the address fields when email is OK (no account or user chose guest)
-  const showAddressFields = emailExists === false || continueAsGuest || emailExists === null;
+  // El usuario abre el login manualmente; por defecto se ve el form de invitado.
+  const showLoginPanel = showLogin;
+  const showAddressFields = !showLogin;
 
   if (loading) return <p className="co-loading">Cargando...</p>;
 
@@ -384,23 +359,30 @@ function GuestCheckout({ cart, onCartUpdate, onRateSelect }: {
             <h3>Detalles de envío</h3>
             <div className="woocommerce-billing-fields__field-wrapper">
 
-              {/* ── Email primero ── */}
-              <Field label="Correo electrónico" required error={errors.email}>
-                <input
-                  type="email" className="input-text" required value={form.email}
-                  autoComplete="email"
-                  onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                  onBlur={handleEmailBlur}
-                />
-                {emailChecking && <span className="co-muted" style={{ fontSize: 12 }}>Verificando...</span>}
-              </Field>
+              {/* ── ¿Ya tenés cuenta? Login manual (sin detección de email) ── */}
+              {!showLogin && (
+                <p className="co-guest-login-hint" style={{ marginBottom: '1em' }}>
+                  ¿Ya tenés cuenta?{' '}
+                  <button
+                    type="button" className="co-guest-link"
+                    onClick={() => { setShowLogin(true); setLoginError(''); }}
+                  >
+                    Iniciá sesión
+                  </button>
+                </p>
+              )}
 
-              {/* ── Panel de login si el email ya tiene cuenta ── */}
+              {/* ── Panel de login (self-contained) ── */}
               {showLoginPanel && (
                 <div className="co-login-panel">
-                  <p className="co-login-panel-msg">
-                    Ya tenés una cuenta con este email.
-                    Iniciá sesión o continuá como invitado.
+                  <p className="co-login-panel-msg">Iniciá sesión con tu cuenta.</p>
+                  <p className="co-field form-row">
+                    <label className="co-label">Correo electrónico <abbr title="requerido">*</abbr></label>
+                    <input
+                      type="email" className="input-text" value={loginEmail}
+                      autoComplete="email"
+                      onChange={e => setLoginEmail(e.target.value)}
+                    />
                   </p>
                   <p className="co-field form-row">
                     <label className="co-label">Contraseña <abbr title="requerido">*</abbr></label>
@@ -415,24 +397,32 @@ function GuestCheckout({ cart, onCartUpdate, onRateSelect }: {
                   <div className="co-login-actions">
                     <button
                       type="button" className="button alt"
-                      disabled={loginLoading || !loginPassword}
+                      disabled={loginLoading || !loginEmail || !loginPassword}
                       onClick={handleLogin}
                     >
                       {loginLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
                     </button>
                     <button
                       type="button" className="co-guest-link"
-                      onClick={() => setContinueAsGuest(true)}
+                      onClick={() => setShowLogin(false)}
                     >
-                      Continuar como invitado
+                      Seguir como invitado
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* ── Resto del formulario ── */}
+              {/* ── Formulario de invitado ── */}
               {showAddressFields && (
                 <>
+                  <Field label="Correo electrónico" required error={errors.email}>
+                    <input
+                      type="email" className="input-text" required value={form.email}
+                      autoComplete="email"
+                      onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                    />
+                  </Field>
+
                   <div className="co-row-2">
                     <Field label="Nombre" required error={errors.firstname}>
                       <input type="text" className="input-text" required value={form.firstname}

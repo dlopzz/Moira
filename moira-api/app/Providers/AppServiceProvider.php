@@ -6,7 +6,10 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\SiteSetting;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -35,6 +38,22 @@ class AppServiceProvider extends ServiceProvider
         // se reutiliza alguna vez desde otro contexto.
         Gate::define('view-order', function (mixed $user, Order $order): bool {
             return $user instanceof Customer && $order->customer_id === $user->id;
+        });
+
+        // Rate limiter del catálogo público. El tráfico SSR de moira-web presenta
+        // X-Internal-Key (server-only) y queda exento: sus requests llegan todas
+        // con la IP del contenedor, así que un límite por-IP las agruparía en un
+        // único balde compartido y tumbaría el sitio bajo carga. Todo lo demás
+        // —navegador del cliente final o un scraper que pega directo a la API— se
+        // limita por IP real.
+        RateLimiter::for('catalog', function (Request $request): Limit {
+            $key = (string) config('services.internal.key');
+
+            if ($key !== '' && hash_equals($key, (string) $request->header('X-Internal-Key'))) {
+                return Limit::none();
+            }
+
+            return Limit::perMinute(60)->by($request->ip());
         });
     }
 }

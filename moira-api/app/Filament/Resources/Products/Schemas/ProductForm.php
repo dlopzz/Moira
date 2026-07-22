@@ -37,13 +37,13 @@ class ProductForm
                 TextInput::make('slug')
                     ->label('Slug')
                     ->required()
-                    ->unique(Product::class, 'slug', ignoreRecord: true)
+                    ->unique(Product::class, 'slug', ignoreRecord: true, modifyRuleUsing: fn ($rule) => $rule->whereNull('deleted_at'))
                     ->maxLength(255)
                     ->columnSpanFull(),
 
                 TextInput::make('sku')
                     ->label('SKU')
-                    ->unique(Product::class, 'sku', ignoreRecord: true)
+                    ->unique(Product::class, 'sku', ignoreRecord: true, modifyRuleUsing: fn ($rule) => $rule->whereNull('deleted_at'))
                     ->nullable()
                     ->maxLength(100)
                     ->placeholder('Ej: CAM-001-NEG')

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class SiteSetting extends Model
 {
-    protected $fillable = ['name', 'logo', 'promo_text', 'url', 'address', 'zip_code', 'phone', 'email', 'cart_expiration_days', 'recaptcha_enabled', 'cookie_notice_enabled', 'cookie_notice_text'];
+    protected $fillable = ['name', 'logo', 'promo_text', 'url', 'address', 'zip_code', 'phone', 'email', 'social_facebook', 'social_instagram', 'social_whatsapp', 'cart_expiration_days', 'recaptcha_enabled', 'cookie_notice_enabled', 'cookie_notice_text'];
 
     protected $casts = [
         'recaptcha_enabled' => 'boolean',

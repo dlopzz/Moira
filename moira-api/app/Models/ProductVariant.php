@@ -12,6 +12,10 @@ class ProductVariant extends Model
         'sku',
         'price',
         'stock',
+        'weight',
+        'length',
+        'width',
+        'height',
         'attributes',
         'image',
         'sort_order',
@@ -23,6 +27,10 @@ class ProductVariant extends Model
         return [
             'price' => 'decimal:2',
             'stock' => 'integer',
+            'weight' => 'integer',
+            'length' => 'integer',
+            'width' => 'integer',
+            'height' => 'integer',
             'attributes' => 'array',
             'sort_order' => 'integer',
             'is_active' => 'boolean',
@@ -38,6 +46,26 @@ class ProductVariant extends Model
     public function effectivePrice(): float
     {
         return (float) ($this->price ?? $this->product->sale_price ?? $this->product->price);
+    }
+
+    /** Effective weight (grams): own if set, otherwise parent product weight. */
+    public function effectiveWeight(): ?int
+    {
+        return $this->weight ?? $this->product->weight;
+    }
+
+    /**
+     * Effective dimensions (cm): own if set, otherwise parent product's.
+     *
+     * @return array{length: int|null, width: int|null, height: int|null}
+     */
+    public function effectiveDimensions(): array
+    {
+        return [
+            'length' => $this->length ?? $this->product->length,
+            'width'  => $this->width ?? $this->product->width,
+            'height' => $this->height ?? $this->product->height,
+        ];
     }
 
     /** Human-readable label derived from attributes: "Color: Rojo / Talle: M" */

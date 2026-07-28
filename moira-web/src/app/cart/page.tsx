@@ -1,46 +1,31 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { api, type Cart, ApiError, imageUrl, formatPrice } from '@/lib/api';
+import { api, ApiError, imageUrl, formatPrice } from '@/lib/api';
+import { useCart } from '@/lib/cart-context';
 import Header from '@/components/Header';
 import Breadcrumb from '@/components/Breadcrumb';
+import QtyEditor from '@/components/QtyEditor';
 
 const crumbs = [{ name: 'Inicio', href: '/' }, { name: 'Carrito' }];
 
 export default function CartPage() {
-  const [cart, setCart] = useState<Cart | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { cart, updateItem, removeItem, refreshCart } = useCart();
   const [couponInput, setCouponInput] = useState('');
   const [couponError, setCouponError] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
 
-  useEffect(() => {
-    api.getCart()
-      .then((res) => setCart(res.data))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  async function updateQty(itemId: number, qty: number) {
-    if (qty < 1) return;
-    const res = await api.updateCartItem(itemId, qty);
-    setCart(res.data);
-  }
-
-  async function removeItem(itemId: number) {
-    const res = await api.removeCartItem(itemId);
-    setCart(res.data);
-  }
+  const loading = cart === null;
 
   async function applyCoupon() {
     if (!couponInput.trim() || couponLoading) return;
     setCouponError('');
     setCouponLoading(true);
     try {
-      const res = await api.applyCoupon(couponInput.trim());
-      setCart(res.data);
+      await api.applyCoupon(couponInput.trim());
+      await refreshCart();
       setCouponInput('');
     } catch (err) {
       if (err instanceof ApiError) setCouponError(err.message);
@@ -50,8 +35,8 @@ export default function CartPage() {
   }
 
   async function removeCoupon() {
-    const res = await api.removeCoupon();
-    setCart(res.data);
+    await api.removeCoupon();
+    await refreshCart();
   }
 
   const isEmpty = !cart || cart.items.length === 0;
@@ -151,28 +136,11 @@ export default function CartPage() {
                             </span>
                           </td>
                           <td className="product-quantity" data-title="Cantidad">
-                            <div className="quantity spinners-added">
-                              <button
-                                type="button"
-                                className="quantity-btn minus"
-                                onClick={() => updateQty(item.id, item.quantity - 1)}
-                                aria-label="Reducir cantidad"
-                              >−</button>
-                              <input
-                                type="number"
-                                className="input-text qty text"
-                                value={item.quantity}
-                                min={1}
-                                onChange={(e) => updateQty(item.id, parseInt(e.target.value) || 1)}
-                                aria-label="Cantidad"
-                              />
-                              <button
-                                type="button"
-                                className="quantity-btn plus"
-                                onClick={() => updateQty(item.id, item.quantity + 1)}
-                                aria-label="Aumentar cantidad"
-                              >+</button>
-                            </div>
+                            <QtyEditor
+                              quantity={item.quantity}
+                              onChange={(q) => updateItem(item.id, q)}
+                              variant="page"
+                            />
                           </td>
                           <td className="product-subtotal" data-title="Subtotal">
                             <span className="woocommerce-Price-amount amount">

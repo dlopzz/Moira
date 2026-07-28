@@ -154,17 +154,32 @@ export default function OrdersPage() {
                         </div>
                       </div>
 
-                      {/* Shipping address */}
+                      {/* Shipping address / pickup */}
                       {detail.shipping_address && (
                         <div className="mt-3 pt-3 border-t border-gray-100">
-                          <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Envío a</p>
-                          <p className="text-sm text-gray-700">
-                            {detail.shipping_address.street}
-                            {detail.shipping_address.address_line_2 && `, ${detail.shipping_address.address_line_2}`}
+                          <p className="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">
+                            {detail.shipping_address.pickup ? 'Retiro en sucursal' : 'Envío a'}
                           </p>
-                          <p className="text-sm text-gray-500">
-                            {detail.shipping_address.city}, {detail.shipping_address.state} {detail.shipping_address.zip_code}
-                          </p>
+                          {detail.shipping_address.pickup ? (
+                            <>
+                              {detail.shipping_address.street && (
+                                <p className="text-sm text-gray-700">{detail.shipping_address.street}</p>
+                              )}
+                              {detail.shipping_address.address_line_2 && (
+                                <p className="text-sm text-gray-500">{detail.shipping_address.address_line_2}</p>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-sm text-gray-700">
+                                {detail.shipping_address.street}
+                                {detail.shipping_address.address_line_2 && `, ${detail.shipping_address.address_line_2}`}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {detail.shipping_address.city}, {detail.shipping_address.state} {detail.shipping_address.zip_code}
+                              </p>
+                            </>
+                          )}
                         </div>
                       )}
 

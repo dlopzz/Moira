@@ -139,7 +139,8 @@ export default function CheckoutPaymentPage() {
           setCart(checkoutRes.cart);
           setAuthAddress(checkoutRes.checkout_address);
           setPaymentConfig(configRes.data);
-          if (!checkoutRes.checkout_address || !checkoutRes.cart.shipping?.code) {
+          const isPickup = checkoutRes.cart.shipping?.is_pickup;
+          if (!checkoutRes.cart.shipping?.code || (!isPickup && !checkoutRes.checkout_address)) {
             router.push('/checkout/shipping');
           }
         })
@@ -151,7 +152,8 @@ export default function CheckoutPaymentPage() {
           setCart(cartRes.data);
           setGuestAddress(guestRes.shipping_address);
           setPaymentConfig(configRes.data);
-          if (!guestRes.shipping_address || !guestRes.shipping_method) {
+          const method = guestRes.shipping_method;
+          if (!method || (!method.is_pickup && !guestRes.shipping_address)) {
             router.push('/checkout/shipping');
           }
         })
@@ -281,6 +283,7 @@ export default function CheckoutPaymentPage() {
   const sdkNotConfigured = !paymentConfig?.js_sdk_url || !paymentConfig?.public_key;
 
   // Normalised address for display
+  const isPickup   = cart?.shipping?.is_pickup ?? false;
   const addrLabel  = authAddress?.label ?? (guestAddress ? `${guestAddress.firstname} ${guestAddress.lastname}` : null);
   const addrStreet = authAddress?.street ?? guestAddress?.street ?? null;
   const addrCity   = authAddress ? `${authAddress.city}, ${authAddress.state} (${authAddress.zip_code})` : guestAddress ? `${guestAddress.city}, ${guestAddress.state} (${guestAddress.zip_code})` : null;
@@ -311,8 +314,19 @@ export default function CheckoutPaymentPage() {
           <div className="col2-set" id="customer_details_wrap">
             <div className="co-main-col">
 
-              {/* Dirección confirmada */}
-              {addrLabel && (
+              {/* Dirección confirmada / Retiro en sucursal */}
+              {isPickup ? (
+                <div className="co-confirmed-address">
+                  <div className="co-confirmed-address-header">
+                    <span>Retiro en sucursal</span>
+                    <button type="button" className="co-guest-link" onClick={() => router.push('/checkout/shipping')}>
+                      Cambiar
+                    </button>
+                  </div>
+                  {cart?.shipping?.pickup_address && <p>{cart.shipping.pickup_address}</p>}
+                  {cart?.shipping?.pickup_schedule && <p className="co-muted">{cart.shipping.pickup_schedule}</p>}
+                </div>
+              ) : addrLabel && (
                 <div className="co-confirmed-address">
                   <div className="co-confirmed-address-header">
                     <span>Dirección de envío</span>

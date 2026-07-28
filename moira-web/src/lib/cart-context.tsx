@@ -22,6 +22,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<Cart | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const initialized = useRef(false);
+  // Timers de debounce por ítem: N clicks rápidos de +/- = 1 solo request.
+  const qtyTimers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
 
   const refreshCart = useCallback(async () => {
     try {
@@ -45,14 +47,33 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const updateItem = useCallback(async (itemId: number, quantity: number) => {
-    if (quantity < 1) {
-      const res = await api.removeCartItem(itemId);
-      setCart(res.data);
-    } else {
-      const res = await api.updateCartItem(itemId, quantity);
-      setCart(res.data);
-    }
-  }, []);
+    // Optimistic: la UI reacciona al instante (así el usuario no re-clickea).
+    setCart(prev => {
+      if (!prev) return prev;
+      const items = quantity < 1
+        ? prev.items.filter(i => i.id !== itemId)
+        : prev.items.map(i => i.id === itemId
+            ? { ...i, quantity, subtotal: i.unit_price * quantity }
+            : i);
+      return { ...prev, items };
+    });
+
+    // Debounce del request por ítem: solo se envía la última cantidad.
+    const existing = qtyTimers.current.get(itemId);
+    if (existing) clearTimeout(existing);
+    qtyTimers.current.set(itemId, setTimeout(async () => {
+      qtyTimers.current.delete(itemId);
+      try {
+        const res = quantity < 1
+          ? await api.removeCartItem(itemId)
+          : await api.updateCartItem(itemId, quantity);
+        setCart(res.data);
+      } catch {
+        // 429 / error de red: resincronizar con el server (rollback).
+        refreshCart();
+      }
+    }, 400));
+  }, [refreshCart]);
 
   const removeItem = useCallback(async (itemId: number) => {
     const res = await api.removeCartItem(itemId);

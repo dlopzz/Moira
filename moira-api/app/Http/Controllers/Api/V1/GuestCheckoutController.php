@@ -14,6 +14,7 @@ use App\Models\Quote;
 use App\Models\ShippingMethod;
 use App\Services\Payment\PayWayProvider;
 use App\Services\Shipping\AndreaniProvider;
+use App\Services\Shipping\ShippingRate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -35,15 +36,21 @@ class GuestCheckoutController extends Controller
 
     public function saveAddress(Request $request): JsonResponse
     {
+        /* En retiro en sucursal solo se piden datos de contacto, no dirección de envío. */
+        $isPickup     = $request->boolean('pickup');
+        $addressRule  = $isPickup ? ['nullable', 'string', 'max:255'] : ['required', 'string', 'max:255'];
+        $shortRule    = $isPickup ? ['nullable', 'string', 'max:100'] : ['required', 'string', 'max:100'];
+        $zipRule      = $isPickup ? ['nullable', 'string', 'max:20'] : ['required', 'string', 'max:20'];
+
         $validated = $request->validate([
             'email'       => ['required', 'email', 'max:255'],
             'firstname'   => ['required', 'string', 'max:100'],
             'lastname'    => ['required', 'string', 'max:100'],
             'telephone'   => ['required', 'string', 'max:30'],
-            'street'      => ['required', 'string', 'max:255'],
-            'city'        => ['required', 'string', 'max:100'],
-            'state'       => ['required', 'string', 'max:100'],
-            'zip_code'    => ['required', 'string', 'max:20'],
+            'street'      => $addressRule,
+            'city'        => $shortRule,
+            'state'       => $shortRule,
+            'zip_code'    => $zipRule,
             'country'     => ['nullable', 'string', 'max:2'],
             'order_notes' => ['nullable', 'string', 'max:2000'],
         ]);
@@ -54,15 +61,51 @@ class GuestCheckoutController extends Controller
             'shipping_firstname'   => $validated['firstname'],
             'shipping_lastname'    => $validated['lastname'],
             'shipping_telephone'   => $validated['telephone'],
-            'shipping_street'      => $validated['street'],
-            'shipping_city'        => $validated['city'],
-            'shipping_state'       => $validated['state'],
-            'shipping_zip_code'    => $validated['zip_code'],
+            'shipping_street'      => $validated['street'] ?? null,
+            'shipping_city'        => $validated['city'] ?? null,
+            'shipping_state'       => $validated['state'] ?? null,
+            'shipping_zip_code'    => $validated['zip_code'] ?? null,
             'shipping_country'     => $validated['country'] ?? 'AR',
             'order_notes'          => $validated['order_notes'] ?? null,
         ]);
 
         return response()->json(['message' => 'Dirección guardada.']);
+    }
+
+    /**
+     * Dirección a guardar en la orden. En retiro en sucursal se guarda la
+     * ubicación del local (la orden no tiene dirección de envío del cliente).
+     *
+     * @return array<string, mixed>
+     */
+    private function guestShippingAddress(Quote $quote): array
+    {
+        if ($quote->shipping_method_code === 'retiro_sucursal') {
+            $pickup = ShippingMethod::where('code', 'retiro_sucursal')->first();
+
+            return [
+                'label'          => 'Retiro en sucursal',
+                'street'         => $pickup?->configValue('pickup_address'),
+                'address_line_2' => $pickup?->configValue('pickup_schedule'),
+                'city'           => null,
+                'state'          => null,
+                'zip_code'       => null,
+                'country'        => null,
+                'telephone'      => $quote->shipping_telephone,
+                'pickup'         => true,
+            ];
+        }
+
+        return [
+            'label'          => trim($quote->shipping_firstname . ' ' . $quote->shipping_lastname),
+            'street'         => $quote->shipping_street,
+            'address_line_2' => null,
+            'city'           => $quote->shipping_city,
+            'state'          => $quote->shipping_state,
+            'zip_code'       => $quote->shipping_zip_code,
+            'country'        => $quote->shipping_country,
+            'telephone'      => $quote->shipping_telephone,
+        ];
     }
 
     public function saveNotes(Request $request): JsonResponse
@@ -86,21 +129,30 @@ class GuestCheckoutController extends Controller
             return response()->json(['data' => []]);
         }
 
-        if (! $quote->shipping_zip_code) {
-            return response()->json(['message' => 'Ingresá una dirección de envío primero.'], 422);
+        $rates = [];
+
+        if ($pickup = ShippingMethod::where('code', 'retiro_sucursal')->where('is_active', true)->first()) {
+            $rates[] = new ShippingRate(
+                code: 'retiro_sucursal',
+                label: $pickup->name,
+                price: 0,
+                estimatedDays: 'Retirá en el local',
+                isPickup: true,
+                pickupAddress: $pickup->configValue('pickup_address'),
+                pickupSchedule: $pickup->configValue('pickup_schedule'),
+            );
         }
 
-        $weightGrams   = (int) $quote->items->sum(fn ($i) => $i->quantity * 500);
-        $declaredValue = (float) $quote->items->sum(fn ($i) => $i->unit_price * $i->quantity);
+        /* Andreani requiere una dirección para cotizar; el retiro no. */
+        if ($quote->shipping_zip_code) {
+            $weightGrams   = (int) $quote->items->sum(fn ($i) => $i->quantity * 500);
+            $declaredValue = (float) $quote->items->sum(fn ($i) => $i->unit_price * $i->quantity);
 
-        $method = ShippingMethod::where('code', 'andreani')->where('is_active', true)->first();
-
-        if (! $method) {
-            return response()->json(['data' => []]);
+            if ($method = ShippingMethod::where('code', 'andreani')->where('is_active', true)->first()) {
+                $provider = new AndreaniProvider($method);
+                $rates    = array_merge($rates, $provider->getRates($quote->shipping_zip_code, $weightGrams, $declaredValue));
+            }
         }
-
-        $provider = new AndreaniProvider($method);
-        $rates    = $provider->getRates($quote->shipping_zip_code, $weightGrams, $declaredValue);
 
         return response()->json([
             'data' => array_map(fn ($r) => $r->toArray(), $rates),
@@ -116,6 +168,22 @@ class GuestCheckoutController extends Controller
         ]);
 
         $quote = $this->resolveGuestQuote($request);
+
+        if ($request->code === 'retiro_sucursal') {
+            $pickup = ShippingMethod::where('code', 'retiro_sucursal')->where('is_active', true)->first();
+
+            if (! $pickup) {
+                return response()->json(['message' => 'El retiro en sucursal no está disponible.'], 422);
+            }
+
+            $quote->update([
+                'shipping_method_code'  => 'retiro_sucursal',
+                'shipping_method_label' => $pickup->name,
+                'shipping_cost'         => 0,
+            ]);
+
+            return response()->json(['message' => 'Método de envío seleccionado.']);
+        }
 
         if (! $quote->shipping_zip_code) {
             return response()->json(['message' => 'Ingresá una dirección de envío primero.'], 422);
@@ -150,7 +218,7 @@ class GuestCheckoutController extends Controller
             return response()->json(['message' => 'El carrito está vacío.'], 422);
         }
 
-        if (! $quote->shipping_zip_code) {
+        if ($quote->shipping_method_code !== 'retiro_sucursal' && ! $quote->shipping_zip_code) {
             return response()->json(['message' => 'Ingresá una dirección de envío.'], 422);
         }
 
@@ -244,16 +312,7 @@ class GuestCheckoutController extends Controller
                     'customer_id'           => null,
                     'payment_method_id'     => $method->id,
                     'status'                => $orderStatus,
-                    'shipping_address'      => [
-                        'label'          => trim($locked->shipping_firstname . ' ' . $locked->shipping_lastname),
-                        'street'         => $locked->shipping_street,
-                        'address_line_2' => null,
-                        'city'           => $locked->shipping_city,
-                        'state'          => $locked->shipping_state,
-                        'zip_code'       => $locked->shipping_zip_code,
-                        'country'        => $locked->shipping_country,
-                        'telephone'      => $locked->shipping_telephone,
-                    ],
+                    'shipping_address'      => $this->guestShippingAddress($locked),
                     'subtotal'              => $subtotal,
                     'shipping_cost'         => $shippingCost,
                     'shipping_method_label' => $locked->shipping_method_label,
@@ -347,7 +406,7 @@ class GuestCheckoutController extends Controller
             return response()->json(['message' => 'El carrito está vacío.'], 422);
         }
 
-        if (! $quote->shipping_zip_code) {
+        if ($quote->shipping_method_code !== 'retiro_sucursal' && ! $quote->shipping_zip_code) {
             return response()->json(['message' => 'Ingresá una dirección de envío.'], 422);
         }
 
@@ -373,16 +432,7 @@ class GuestCheckoutController extends Controller
                 $order = Order::create([
                     'customer_id'           => null,
                     'status'                => 'paid',
-                    'shipping_address'      => [
-                        'label'          => trim($locked->shipping_firstname . ' ' . $locked->shipping_lastname),
-                        'street'         => $locked->shipping_street,
-                        'address_line_2' => null,
-                        'city'           => $locked->shipping_city,
-                        'state'          => $locked->shipping_state,
-                        'zip_code'       => $locked->shipping_zip_code,
-                        'country'        => $locked->shipping_country,
-                        'telephone'      => $locked->shipping_telephone,
-                    ],
+                    'shipping_address'      => $this->guestShippingAddress($locked),
                     'subtotal'              => $subtotal,
                     'shipping_cost'         => $shippingCost,
                     'shipping_method_label' => $locked->shipping_method_label,
@@ -452,12 +502,24 @@ class GuestCheckoutController extends Controller
                 'country'   => $quote->shipping_country,
             ] : null,
             'shipping_method' => $quote->shipping_method_code ? [
-                'code'           => $quote->shipping_method_code,
-                'label'          => $quote->shipping_method_label,
-                'price'          => (float) $quote->shipping_cost,
-                'estimated_days' => null,
+                'code'            => $quote->shipping_method_code,
+                'label'           => $quote->shipping_method_label,
+                'price'           => (float) $quote->shipping_cost,
+                'estimated_days'  => null,
+                'is_pickup'       => $quote->shipping_method_code === 'retiro_sucursal',
+                'pickup_address'  => $this->pickupConfig('pickup_address', $quote),
+                'pickup_schedule' => $this->pickupConfig('pickup_schedule', $quote),
             ] : null,
             'order_notes' => $quote->order_notes,
         ]);
+    }
+
+    private function pickupConfig(string $key, Quote $quote): ?string
+    {
+        if ($quote->shipping_method_code !== 'retiro_sucursal') {
+            return null;
+        }
+
+        return ShippingMethod::where('code', 'retiro_sucursal')->first()?->configValue($key);
     }
 }

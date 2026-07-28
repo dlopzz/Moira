@@ -5,6 +5,7 @@
 <div
     x-data="{
         open: false,
+        dragOver: false,
         init() {
             const key = 'cat-open-{{ $category->id }}';
             const stored = sessionStorage.getItem(key);
@@ -21,7 +22,28 @@
     @collapse-all.window="open = false; sessionStorage.setItem('cat-open-{{ $category->id }}', 'false')"
 >
 
-    <div class="flex items-center">
+    <div
+        class="flex items-center group rounded transition-colors"
+        :class="dragOver ? 'ring-2 ring-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30' : ''"
+        x-on:dragover.prevent.stop="if (window.__catDrag && window.__catDrag !== {{ $category->id }}) dragOver = true"
+        x-on:dragleave.stop="dragOver = false"
+        x-on:drop.prevent.stop="dragOver = false; const s = window.__catDrag; window.__catDrag = null; if (s && s !== {{ $category->id }}) { let el = $el; while (el && !el.getAttribute('wire:id')) el = el.parentElement; if (el) window.Livewire.find(el.getAttribute('wire:id')).call('moveCategory', s, {{ $category->id }}); }"
+    >
+
+        {{-- Handle para arrastrar (no aplica a la raíz) --}}
+        @if($category->parent_id !== null)
+            <span
+                draggable="true"
+                title="Arrastrar para mover a otra categoría"
+                class="shrink-0 w-4 mr-0.5 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 dark:text-gray-600 dark:hover:text-gray-300 opacity-60 group-hover:opacity-100 transition-opacity"
+                x-on:dragstart="window.__catDrag = {{ $category->id }}; $event.dataTransfer.effectAllowed = 'move'; $event.dataTransfer.setData('text/plain', '{{ $category->id }}')"
+                x-on:dragend="window.__catDrag = null"
+            >
+                <x-heroicon-o-bars-3 class="w-3.5 h-3.5"/>
+            </span>
+        @else
+            <span class="w-4 mr-0.5 shrink-0"></span>
+        @endif
 
         {{-- Botón +/- --}}
         @if($hasChildren)
@@ -39,6 +61,7 @@
         {{-- Link navegable --}}
         <a
             wire:navigate
+            draggable="false"
             href="{{ \App\Filament\Resources\Categories\CategoryResource::getUrl('edit', ['record' => $category]) }}"
             class="flex-1 flex items-center gap-1.5 rounded-md px-2 py-1 text-sm transition-colors min-w-0
                 {{ $category->id === $currentCategoryId

@@ -39,4 +39,9 @@ class ShippingMethod extends Model
     {
         return $this->config[$key] ?? $default;
     }
+
+    public function isPickup(): bool
+    {
+        return $this->code === 'retiro_sucursal';
+    }
 }

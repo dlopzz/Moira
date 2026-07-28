@@ -9,6 +9,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
 
@@ -65,9 +66,28 @@ class ShippingMethodForm
                             ->columnSpanFull(),
                     ]),
 
+                Section::make('Retiro en sucursal')
+                    ->description('Dirección y horario que verá el cliente al elegir retiro en el checkout.')
+                    ->columnSpanFull()
+                    ->columns(1)
+                    ->visible(fn (Get $get): bool => $get('code') === 'retiro_sucursal')
+                    ->schema([
+                        Textarea::make('config.pickup_address')
+                            ->label('Dirección de retiro')
+                            ->nullable()
+                            ->rows(2),
+
+                        TextInput::make('config.pickup_schedule')
+                            ->label('Horario de retiro')
+                            ->nullable()
+                            ->maxLength(255)
+                            ->helperText('Ej: Lun a Vie de 9 a 18 hs'),
+                    ]),
+
                 Section::make('Credenciales API')
                     ->description('Datos provistos por Andreani al contratar el servicio. Dejar vacío mientras se usa modo simulación.')
                     ->columnSpanFull()
+                    ->hidden(fn (Get $get): bool => $get('code') === 'retiro_sucursal')
                     ->schema([
                         TextInput::make('credentials.username')
                             ->label('Usuario')
@@ -98,6 +118,7 @@ class ShippingMethodForm
                 Section::make('Configuración de tarifas')
                     ->columnSpanFull()
                     ->columns(2)
+                    ->hidden(fn (Get $get): bool => $get('code') === 'retiro_sucursal')
                     ->schema([
                         TextInput::make('config.markup_percentage')
                             ->label('Recargo (%)')

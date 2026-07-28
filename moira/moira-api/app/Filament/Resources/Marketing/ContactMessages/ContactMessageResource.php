@@ -7,7 +7,10 @@ use App\Filament\Resources\Marketing\ContactMessages\Pages\ViewContactMessage;
 use App\Filament\Resources\Marketing\ContactMessages\Tables\ContactMessagesTable;
 use App\Models\ContactMessage;
 use BackedEnum;
+use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
@@ -32,6 +35,39 @@ class ContactMessageResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema;
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Section::make('Datos del contacto')
+                    ->columns(2)
+                    ->schema([
+                        TextEntry::make('name')
+                            ->label('Nombre'),
+                        TextEntry::make('last_name')
+                            ->label('Apellido'),
+                        TextEntry::make('email')
+                            ->label('Correo electrónico')
+                            ->copyable()
+                            ->url(fn (ContactMessage $record): string => 'mailto:' . $record->email),
+                        IconEntry::make('is_read')
+                            ->label('Leído')
+                            ->boolean(),
+                        TextEntry::make('created_at')
+                            ->label('Recibido')
+                            ->dateTime('d/m/Y H:i'),
+                    ]),
+
+                Section::make('Mensaje')
+                    ->schema([
+                        TextEntry::make('message')
+                            ->hiddenLabel()
+                            ->prose()
+                            ->columnSpanFull(),
+                    ]),
+            ]);
     }
 
     public static function table(Table $table): Table

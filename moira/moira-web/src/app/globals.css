@@ -2127,6 +2127,77 @@ form.woocommerce-cart-form {
   margin: 0;
 }
 
+/* ── Qty editor (input + botón Actualizar) ── */
+.qty-editor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.qty-editor--page { flex-direction: row; flex-wrap: wrap; }
+.qty-editor--mini { flex-direction: column; align-items: flex-start; gap: 6px; }
+
+.qty-update-btn {
+  background: var(--global-palette-btn-bg);
+  color: var(--global-palette-btn);
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  transition: background 0.2s, opacity 0.2s;
+}
+.qty-update-btn:hover:not(:disabled) {
+  background: var(--global-palette-btn-bg-hover);
+  color: var(--global-palette-btn-hover);
+}
+.qty-update-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* Variante mini: el bloque de cantidad no hereda el scope de .woocommerce-cart-form */
+.qty-editor--mini .quantity.spinners-added {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--global-gray-400);
+  border-radius: 3px;
+  width: max-content;
+}
+.qty-editor--mini .quantity-btn {
+  width: 30px;
+  height: 30px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.qty-editor--mini .quantity-btn:hover { color: var(--global-palette-btn-bg); }
+.qty-editor--mini .qty {
+  width: 42px;
+  height: 30px;
+  text-align: center;
+  border: none;
+  border-left: 1px solid var(--global-gray-400);
+  border-right: 1px solid var(--global-gray-400);
+  background: none;
+  font-size: 14px;
+  color: var(--text);
+  padding: 0;
+  -moz-appearance: textfield;
+}
+.qty-editor--mini .qty::-webkit-outer-spin-button,
+.qty-editor--mini .qty::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* ── Actions row (coupon + update link) ── */
 .woocommerce-cart-form td.actions {
   padding-top: 1.25em;
@@ -2957,6 +3028,51 @@ form.woocommerce-cart-form {
   color: var(--text-medium);
   margin: 0.5em 0 1.5em;
 }
+
+/* Delivery mode selector (envío a domicilio / retiro en sucursal) */
+.co-delivery-modes {
+  display: flex;
+  gap: 0.75em;
+  margin-bottom: 1.5em;
+  flex-wrap: wrap;
+}
+
+.co-delivery-mode {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.8em 1em;
+  border: 1px solid var(--global-gray-400);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.co-delivery-mode--active {
+  border-color: var(--global-palette3);
+  background: var(--global-palette8);
+}
+
+.co-delivery-mode input[type="radio"] {
+  accent-color: var(--global-palette3);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.co-pickup-info {
+  padding: 1em 1.2em;
+  border: 1px solid var(--global-gray-400);
+  border-radius: 4px;
+  margin-bottom: 1.5em;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.co-pickup-info p { margin: 0.35em 0 0; }
 
 /* Shipping methods (Avanam list style) */
 .co-shipping-section {

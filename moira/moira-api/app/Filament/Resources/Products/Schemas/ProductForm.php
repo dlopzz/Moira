@@ -151,6 +151,44 @@ class ProductForm
                     ->columnSpanFull()
                     ->helperText('Se muestran al pie del producto en la tienda. Máximo recomendado: 6.'),
 
+                Section::make('Peso y dimensiones (envío)')
+                    ->description('Se usan para cotizar el envío por peso facturable. En configurables es el valor por defecto; cada variante puede sobreescribirlo.')
+                    ->columnSpanFull()
+                    ->columns(4)
+                    ->schema([
+                        TextInput::make('weight')
+                            ->label('Peso')
+                            ->numeric()
+                            ->integer()
+                            ->minValue(0)
+                            ->suffix('g')
+                            ->nullable(),
+
+                        TextInput::make('length')
+                            ->label('Largo')
+                            ->numeric()
+                            ->integer()
+                            ->minValue(0)
+                            ->suffix('cm')
+                            ->nullable(),
+
+                        TextInput::make('width')
+                            ->label('Ancho')
+                            ->numeric()
+                            ->integer()
+                            ->minValue(0)
+                            ->suffix('cm')
+                            ->nullable(),
+
+                        TextInput::make('height')
+                            ->label('Alto')
+                            ->numeric()
+                            ->integer()
+                            ->minValue(0)
+                            ->suffix('cm')
+                            ->nullable(),
+                    ]),
+
                 Section::make('SEO')
                     ->columnSpanFull()
                     ->columns(1)
@@ -224,6 +262,39 @@ class ProductForm
                                     ->minValue(0)
                                     ->default(0)
                                     ->required(),
+
+                                TextInput::make('weight')
+                                    ->label('Peso')
+                                    ->numeric()
+                                    ->integer()
+                                    ->minValue(0)
+                                    ->suffix('g')
+                                    ->nullable()
+                                    ->helperText('Vacío = hereda del producto'),
+
+                                TextInput::make('length')
+                                    ->label('Largo')
+                                    ->numeric()
+                                    ->integer()
+                                    ->minValue(0)
+                                    ->suffix('cm')
+                                    ->nullable(),
+
+                                TextInput::make('width')
+                                    ->label('Ancho')
+                                    ->numeric()
+                                    ->integer()
+                                    ->minValue(0)
+                                    ->suffix('cm')
+                                    ->nullable(),
+
+                                TextInput::make('height')
+                                    ->label('Alto')
+                                    ->numeric()
+                                    ->integer()
+                                    ->minValue(0)
+                                    ->suffix('cm')
+                                    ->nullable(),
 
                                 Toggle::make('is_active')
                                     ->label('Activa')

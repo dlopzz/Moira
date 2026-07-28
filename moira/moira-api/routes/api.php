@@ -95,8 +95,11 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::post('guest-checkout/shipping', [GuestCheckoutController::class, 'selectShipping']);
         Route::post('guest-checkout/pay', [GuestCheckoutController::class, 'pay']);
         Route::post('guest-checkout/simulate-pay', [GuestCheckoutController::class, 'simulatePayment']);
+    });
 
-        // Cart: accessible by guests (X-Guest-Token) or authenticated users
+    // Cart: accessible by guests (X-Guest-Token) or authenticated users.
+    // Límite propio y alto: sumar/restar cantidades genera varias requests.
+    Route::middleware('throttle:cart')->group(function (): void {
         Route::get('cart', [CartController::class, 'index']);
         Route::post('cart/items', [CartController::class, 'addItem']);
         Route::put('cart/items/{item}', [CartController::class, 'updateItem']);

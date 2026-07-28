@@ -52,12 +52,14 @@ export default function Footer() {
                           {info === undefined ? (
                             <div style={{ width: 156, height: 35 }} />
                           ) : (
-                            <img
-                              src={imageUrl(info?.logo) ?? '/logo.svg'}
-                              alt={info?.name ?? 'Logo'}
-                              width={156}
-                              height={35}
-                            />
+                            <a href="/" rel="home">
+                              <img
+                                src={imageUrl(info?.logo) ?? '/logo.svg'}
+                                alt={info?.name ?? 'Logo'}
+                                width={156}
+                                height={35}
+                              />
+                            </a>
                           )}
                         </figure>
                         <p className="footer-brand-description">

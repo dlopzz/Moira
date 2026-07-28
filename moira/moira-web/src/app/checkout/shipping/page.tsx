@@ -253,6 +253,9 @@ function GuestCheckout({ cart, onCartUpdate, onRateSelect }: {
   const [loadingRates, setLoadingRates] = useState(false);
   const [ratesError, setRatesError]     = useState('');
   const [confirming, setConfirming]     = useState(false);
+  const [deliveryMode, setDeliveryMode] = useState<'ship' | 'pickup'>('ship');
+
+  const pickupRate = rates.find(r => r.is_pickup) ?? null;
 
   function selectRate(rate: ShippingRate) {
     setSelectedRate(rate);
@@ -264,14 +267,17 @@ function GuestCheckout({ cart, onCartUpdate, onRateSelect }: {
       .then((res) => {
         if (res.shipping_address) {
           setForm(res.shipping_address);
-          setNotes(res.order_notes ?? '');
           setAddrSaved(true);
-          loadRates();
-          if (res.shipping_method) { setSelectedRate(res.shipping_method); onRateSelect(res.shipping_method); }
+        }
+        if (res.order_notes) setNotes(res.order_notes);
+        if (res.shipping_method) {
+          setSelectedRate(res.shipping_method);
+          onRateSelect(res.shipping_method);
+          if (res.shipping_method.is_pickup) setDeliveryMode('pickup');
         }
       })
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => { loadRates(); setLoading(false); });
   }, []);
 
   async function loadRates() {
@@ -316,6 +322,7 @@ function GuestCheckout({ cart, onCartUpdate, onRateSelect }: {
 
   async function handleAddressSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (deliveryMode === 'pickup') { handlePickupContinue(); return; }
     setErrors({});
     setSaving(true);
     try {
@@ -340,6 +347,28 @@ function GuestCheckout({ cart, onCartUpdate, onRateSelect }: {
       await api.selectGuestShipping(selectedRate);
       router.push('/checkout/payment');
     } catch {
+      setConfirming(false);
+    }
+  }
+
+  async function handlePickupContinue() {
+    if (!pickupRate) return;
+    setErrors({});
+    setConfirming(true);
+    try {
+      await api.saveGuestAddress({
+        email: form.email, firstname: form.firstname,
+        lastname: form.lastname, telephone: form.telephone,
+        order_notes: notes, pickup: true,
+      });
+      await api.selectGuestShipping(pickupRate);
+      router.push('/checkout/payment');
+    } catch (err) {
+      if (err instanceof ApiError && err.errors) {
+        const flat: Record<string, string> = {};
+        for (const [k, v] of Object.entries(err.errors)) flat[k] = Array.isArray(v) ? v[0] : v;
+        setErrors(flat);
+      }
       setConfirming(false);
     }
   }
@@ -415,6 +444,21 @@ function GuestCheckout({ cart, onCartUpdate, onRateSelect }: {
               {/* ── Formulario de invitado ── */}
               {showAddressFields && (
                 <>
+                  {pickupRate && (
+                    <div className="co-delivery-modes">
+                      <label className={`co-delivery-mode ${deliveryMode === 'ship' ? 'co-delivery-mode--active' : ''}`}>
+                        <input type="radio" name="delivery_mode" checked={deliveryMode === 'ship'}
+                          onChange={() => { setDeliveryMode('ship'); setSelectedRate(null); onRateSelect(null); }} />
+                        Envío a domicilio
+                      </label>
+                      <label className={`co-delivery-mode ${deliveryMode === 'pickup' ? 'co-delivery-mode--active' : ''}`}>
+                        <input type="radio" name="delivery_mode" checked={deliveryMode === 'pickup'}
+                          onChange={() => { setDeliveryMode('pickup'); selectRate(pickupRate); }} />
+                        Retiro en sucursal <span className="co-muted">— Gratis</span>
+                      </label>
+                    </div>
+                  )}
+
                   <Field label="Correo electrónico" required error={errors.email}>
                     <input
                       type="email" className="input-text" required value={form.email}
@@ -439,36 +483,46 @@ function GuestCheckout({ cart, onCartUpdate, onRateSelect }: {
                       onChange={e => setForm(f => ({ ...f, telephone: e.target.value }))} />
                   </Field>
 
-                  <Field label="Dirección de la calle" required error={errors.street}>
-                    <input type="text" className="input-text" placeholder="Número de la casa y nombre de la calle"
-                      required value={form.street}
-                      onChange={e => setForm(f => ({ ...f, street: e.target.value }))} />
-                  </Field>
+                  {deliveryMode === 'pickup' ? (
+                    <div className="co-pickup-info">
+                      <strong>Retiro en sucursal</strong>
+                      {pickupRate?.pickup_address && <p>{pickupRate.pickup_address}</p>}
+                      {pickupRate?.pickup_schedule && <p className="co-muted">{pickupRate.pickup_schedule}</p>}
+                    </div>
+                  ) : (
+                    <>
+                      <Field label="Dirección de la calle" required error={errors.street}>
+                        <input type="text" className="input-text" placeholder="Número de la casa y nombre de la calle"
+                          required value={form.street}
+                          onChange={e => setForm(f => ({ ...f, street: e.target.value }))} />
+                      </Field>
 
-                  <Field label="Código postal" required error={errors.zip_code}>
-                    <input type="text" className="input-text" required value={form.zip_code}
-                      onChange={e => setForm(f => ({ ...f, zip_code: e.target.value }))}
-                      onBlur={e => lookupZip(e.target.value)} />
-                    {zipLoading && <span className="co-muted" style={{ fontSize: 12 }}> buscando...</span>}
-                  </Field>
+                      <Field label="Código postal" required error={errors.zip_code}>
+                        <input type="text" className="input-text" required value={form.zip_code}
+                          onChange={e => setForm(f => ({ ...f, zip_code: e.target.value }))}
+                          onBlur={e => lookupZip(e.target.value)} />
+                        {zipLoading && <span className="co-muted" style={{ fontSize: 12 }}> buscando...</span>}
+                      </Field>
 
-                  <div className="co-row-2">
-                    <Field label="Localidad / Ciudad" required error={errors.city}>
-                      <input type="text" className="input-text" required value={form.city}
-                        onChange={e => setForm(f => ({ ...f, city: e.target.value }))} />
-                    </Field>
-                    <Field label="Provincia" required error={errors.state}>
-                      <select className="input-text addr-select" required value={form.state}
-                        onChange={e => setForm(f => ({ ...f, state: e.target.value }))}>
-                        <option value="">Seleccioná</option>
-                        {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
-                      </select>
-                    </Field>
-                  </div>
+                      <div className="co-row-2">
+                        <Field label="Localidad / Ciudad" required error={errors.city}>
+                          <input type="text" className="input-text" required value={form.city}
+                            onChange={e => setForm(f => ({ ...f, city: e.target.value }))} />
+                        </Field>
+                        <Field label="Provincia" required error={errors.state}>
+                          <select className="input-text addr-select" required value={form.state}
+                            onChange={e => setForm(f => ({ ...f, state: e.target.value }))}>
+                            <option value="">Seleccioná</option>
+                            {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
+                          </select>
+                        </Field>
+                      </div>
 
-                  <p className="co-billing-note">
-                    ✓ La dirección de facturación es la misma que la de envío.
-                  </p>
+                      <p className="co-billing-note">
+                        ✓ La dirección de facturación es la misma que la de envío.
+                      </p>
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -476,17 +530,17 @@ function GuestCheckout({ cart, onCartUpdate, onRateSelect }: {
         </div>
 
         {/* ── Método de envío ── */}
-        {addrSaved && (
+        {deliveryMode === 'ship' && addrSaved && (
           <div className="woocommerce-shipping-fields co-shipping-section">
             <h3>Método de envío</h3>
             {ratesError && <p className="co-error">{ratesError}</p>}
             {loadingRates ? (
               <p className="co-loading">Calculando tarifas de envío...</p>
-            ) : rates.length === 0 ? (
+            ) : rates.filter(r => !r.is_pickup).length === 0 ? (
               <p className="co-muted">No hay métodos de envío disponibles para este código postal.</p>
             ) : (
               <ul id="shipping_method" className="woocommerce-shipping-methods">
-                {rates.map(rate => (
+                {rates.filter(r => !r.is_pickup).map(rate => (
                   <li key={rate.code}>
                     <input
                       type="radio" id={`shipping_method_${rate.code}`}
@@ -533,17 +587,28 @@ function GuestCheckout({ cart, onCartUpdate, onRateSelect }: {
             <button type="button" className="co-back-link" onClick={() => router.push('/cart')}>
               ← Volver al carrito
             </button>
-            <button
-              type={addrSaved ? 'button' : 'submit'}
-              className="button alt"
-              disabled={saving || loadingRates || (addrSaved && !selectedRate) || confirming}
-              onClick={addrSaved ? handleContinue : undefined}
-            >
-              {confirming ? 'Guardando...' :
-               saving || loadingRates ? 'Cargando...' :
-               addrSaved ? 'Continuar al pago →' :
-               'Ver métodos de envío →'}
-            </button>
+            {deliveryMode === 'pickup' ? (
+              <button
+                type="button"
+                className="button alt"
+                disabled={confirming || !form.email || !form.firstname || !form.lastname || !form.telephone}
+                onClick={handlePickupContinue}
+              >
+                {confirming ? 'Guardando...' : 'Continuar al pago →'}
+              </button>
+            ) : (
+              <button
+                type={addrSaved ? 'button' : 'submit'}
+                className="button alt"
+                disabled={saving || loadingRates || (addrSaved && !selectedRate) || confirming}
+                onClick={addrSaved ? handleContinue : undefined}
+              >
+                {confirming ? 'Guardando...' :
+                 saving || loadingRates ? 'Cargando...' :
+                 addrSaved ? 'Continuar al pago →' :
+                 'Ver métodos de envío →'}
+              </button>
+            )}
           </div>
         )}
       </form>
@@ -574,9 +639,12 @@ function AuthCheckout({ cart, onCartUpdate, onRateSelect }: {
   const [ratesError, setRatesError]                 = useState('');
   const [addrConfirmed, setAddrConfirmed]           = useState(false);
   const [confirming, setConfirming]                 = useState(false);
+  const [deliveryMode, setDeliveryMode]             = useState<'ship' | 'pickup'>('ship');
   // Billing address
   const [billingSame, setBillingSame]               = useState(true);
   const [selectedBilling, setSelectedBilling]       = useState<number | null>(null);
+
+  const pickupRate = rates.find(r => r.is_pickup) ?? null;
 
   useEffect(() => {
     Promise.all([api.getAddresses(), api.getCheckout()])
@@ -594,14 +662,16 @@ function AuthCheckout({ cart, onCartUpdate, onRateSelect }: {
         const sameAsShipping = checkoutRes.billing_same_as_shipping ?? true;
         setBillingSame(sameAsShipping);
         setSelectedBilling(billingId && !sameAsShipping ? billingId : null);
-        // If address was already confirmed (shipping method set), show rates section
-        if (checkoutRes.checkout_address && checkoutRes.cart.shipping?.code) {
+        // Restore pickup selection
+        if (checkoutRes.cart.shipping?.is_pickup) {
+          setDeliveryMode('pickup');
+        } else if (checkoutRes.checkout_address && checkoutRes.cart.shipping?.code) {
+          // If address was already confirmed (shipping method set), show rates section
           setAddrConfirmed(true);
-          loadRates();
         }
       })
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => { loadRates(); setLoading(false); });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -609,6 +679,14 @@ function AuthCheckout({ cart, onCartUpdate, onRateSelect }: {
     setSelectedRate(rate);
     onRateSelect(rate);
   }
+
+  // Al elegir retiro (o restaurarlo), fijar el rate de retiro para el resumen.
+  useEffect(() => {
+    if (deliveryMode === 'pickup' && pickupRate && selectedRate?.code !== 'retiro_sucursal') {
+      selectRate(pickupRate);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deliveryMode, pickupRate]);
 
   async function loadRates() {
     setLoadingRates(true);
@@ -620,6 +698,18 @@ function AuthCheckout({ cart, onCartUpdate, onRateSelect }: {
       setRatesError(err instanceof ApiError ? err.message : 'Error al obtener tarifas.');
     } finally {
       setLoadingRates(false);
+    }
+  }
+
+  async function handlePickupContinue() {
+    if (!pickupRate) return;
+    setConfirming(true);
+    try {
+      if (notes.trim()) await api.saveCheckoutNotes(notes);
+      await api.selectShipping(pickupRate);
+      router.push('/checkout/payment');
+    } catch {
+      setConfirming(false);
     }
   }
 
@@ -688,8 +778,33 @@ function AuthCheckout({ cart, onCartUpdate, onRateSelect }: {
 
   return (
     <form className="woocommerce-checkout checkout" onSubmit={handleAddrContinue} noValidate>
+      {/* ── Modo de entrega ── */}
+      {pickupRate && (
+        <div className="co-delivery-modes">
+          <label className={`co-delivery-mode ${deliveryMode === 'ship' ? 'co-delivery-mode--active' : ''}`}>
+            <input type="radio" name="delivery_mode" checked={deliveryMode === 'ship'}
+              onChange={() => { setDeliveryMode('ship'); setSelectedRate(null); onRateSelect(null); }} />
+            Envío a domicilio
+          </label>
+          <label className={`co-delivery-mode ${deliveryMode === 'pickup' ? 'co-delivery-mode--active' : ''}`}>
+            <input type="radio" name="delivery_mode" checked={deliveryMode === 'pickup'}
+              onChange={() => { setDeliveryMode('pickup'); selectRate(pickupRate); }} />
+            Retiro en sucursal <span className="co-muted">— Gratis</span>
+          </label>
+        </div>
+      )}
+
+      {/* ── Retiro en sucursal ── */}
+      {deliveryMode === 'pickup' && (
+        <div className="co-pickup-info">
+          <strong>Retiro en sucursal</strong>
+          {pickupRate?.pickup_address && <p>{pickupRate.pickup_address}</p>}
+          {pickupRate?.pickup_schedule && <p className="co-muted">{pickupRate.pickup_schedule}</p>}
+        </div>
+      )}
+
       {/* ── Direcciones guardadas ── */}
-      <div id="customer_details">
+      {deliveryMode === 'ship' && <div id="customer_details">
         <div className="woocommerce-billing-fields">
           <h3>Dirección de envío</h3>
           <div className="woocommerce-billing-fields__field-wrapper">
@@ -768,10 +883,10 @@ function AuthCheckout({ cart, onCartUpdate, onRateSelect }: {
             )}
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* ── Dirección de facturación ── solo si hay una dirección de envío seleccionada */}
-      {selected && <div className="woocommerce-billing-fields co-billing-section">
+      {deliveryMode === 'ship' && selected && <div className="woocommerce-billing-fields co-billing-section">
         <h3>Dirección de facturación</h3>
         <label className="co-checkbox-label">
           <input
@@ -811,17 +926,17 @@ function AuthCheckout({ cart, onCartUpdate, onRateSelect }: {
       </div>}
 
       {/* ── Método de envío ── */}
-      {addrConfirmed && (
+      {deliveryMode === 'ship' && addrConfirmed && (
         <div className="woocommerce-shipping-fields co-shipping-section">
           <h3>Método de envío</h3>
           {ratesError && <p className="co-error">{ratesError}</p>}
           {loadingRates ? (
             <p className="co-loading">Calculando tarifas de envío...</p>
-          ) : rates.length === 0 ? (
+          ) : rates.filter(r => !r.is_pickup).length === 0 ? (
             <p className="co-muted">No hay métodos disponibles para esta dirección.</p>
           ) : (
             <ul id="shipping_method" className="woocommerce-shipping-methods">
-              {rates.map(rate => (
+              {rates.filter(r => !r.is_pickup).map(rate => (
                 <li key={rate.code}>
                   <input
                     type="radio" id={`shipping_method_auth_${rate.code}`}
@@ -865,7 +980,13 @@ function AuthCheckout({ cart, onCartUpdate, onRateSelect }: {
         <button type="button" className="co-back-link" onClick={() => router.push('/cart')}>
           ← Volver al carrito
         </button>
-        {addrConfirmed ? (
+        {deliveryMode === 'pickup' ? (
+          <button type="button" className="button alt"
+            disabled={!pickupRate || confirming}
+            onClick={handlePickupContinue}>
+            {confirming ? 'Guardando...' : 'Continuar al pago →'}
+          </button>
+        ) : addrConfirmed ? (
           <button type="button" className="button alt"
             disabled={!selectedRate || confirming}
             onClick={handleContinue}>

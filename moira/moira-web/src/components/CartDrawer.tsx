@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { imageThumbUrl, formatPrice } from '@/lib/api';
 import { useCart } from '@/lib/cart-context';
+import QtyEditor from '@/components/QtyEditor';
 
 export default function CartDrawer() {
   const { cart, cartOpen, closeCart, updateItem, removeItem } = useCart();
@@ -112,17 +113,11 @@ export default function CartDrawer() {
                         </span>
                       </span>
 
-                      <div className="moira-qty-controls">
-                        <button
-                          onClick={() => updateItem(item.id, item.quantity - 1)}
-                          aria-label="Reducir cantidad"
-                        >−</button>
-                        <span>{item.quantity}</span>
-                        <button
-                          onClick={() => updateItem(item.id, item.quantity + 1)}
-                          aria-label="Aumentar cantidad"
-                        >+</button>
-                      </div>
+                      <QtyEditor
+                        quantity={item.quantity}
+                        onChange={(q) => updateItem(item.id, q)}
+                        variant="mini"
+                      />
                     </li>
                   );
                 })}

@@ -55,5 +55,19 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(60)->by($request->ip());
         });
+
+        // Rate limiter del carrito. Sumar/restar cantidades puede generar varias
+        // requests seguidas; un tope alto evita el 429 en uso normal sin dejar el
+        // endpoint sin protección anti-abuso. El SSR interno queda exento igual que
+        // en 'catalog'.
+        RateLimiter::for('cart', function (Request $request): Limit {
+            $key = (string) config('services.internal.key');
+
+            if ($key !== '' && hash_equals($key, (string) $request->header('X-Internal-Key'))) {
+                return Limit::none();
+            }
+
+            return Limit::perMinute(300)->by($request->ip());
+        });
     }
 }

@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Quote;
 use App\Models\Review;
+use App\Models\ShippingMethod;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -109,7 +110,9 @@ class CheckoutController extends Controller
             return response()->json(['message' => 'El carrito está vacío.'], 422);
         }
 
-        if (! $quote->checkout_address_id) {
+        $isPickup = $quote->shipping_method_code === 'retiro_sucursal';
+
+        if (! $isPickup && ! $quote->checkout_address_id) {
             return response()->json(['message' => 'Seleccioná una dirección de envío.'], 422);
         }
 
@@ -117,7 +120,7 @@ class CheckoutController extends Controller
             return response()->json(['message' => 'Seleccioná un método de envío.'], 422);
         }
 
-        $address = CustomerAddress::findOrFail($quote->checkout_address_id);
+        $address = $isPickup ? null : CustomerAddress::findOrFail($quote->checkout_address_id);
 
         $quote->load('items.product', 'items.variant');
         foreach ($quote->items as $item) {
@@ -141,20 +144,37 @@ class CheckoutController extends Controller
         $discount     = (float) $quote->discount_amount;
         $total        = $quote->getTotal();
 
-        $order = DB::transaction(function () use ($customer, $quote, $address, $subtotal, $shippingCost, $discount, $total): Order {
+        if ($isPickup) {
+            $pickup          = ShippingMethod::where('code', 'retiro_sucursal')->first();
+            $shippingAddress = [
+                'label'          => 'Retiro en sucursal',
+                'street'         => $pickup?->configValue('pickup_address'),
+                'address_line_2' => $pickup?->configValue('pickup_schedule'),
+                'city'           => null,
+                'state'          => null,
+                'zip_code'       => null,
+                'country'        => null,
+                'telephone'      => null,
+                'pickup'         => true,
+            ];
+        } else {
+            $shippingAddress = [
+                'label'          => $address->label,
+                'street'         => $address->street,
+                'address_line_2' => $address->address_line_2,
+                'city'           => $address->city,
+                'state'          => $address->state,
+                'zip_code'       => $address->zip_code,
+                'country'        => $address->country,
+                'telephone'      => $address->telephone,
+            ];
+        }
+
+        $order = DB::transaction(function () use ($customer, $quote, $shippingAddress, $subtotal, $shippingCost, $discount, $total): Order {
             $order = Order::create([
                 'customer_id'     => $customer->id,
                 'status'          => 'pending',
-                'shipping_address' => [
-                    'label'          => $address->label,
-                    'street'         => $address->street,
-                    'address_line_2' => $address->address_line_2,
-                    'city'           => $address->city,
-                    'state'          => $address->state,
-                    'zip_code'       => $address->zip_code,
-                    'country'        => $address->country,
-                    'telephone'      => $address->telephone,
-                ],
+                'shipping_address' => $shippingAddress,
                 'subtotal'              => $subtotal,
                 'shipping_cost'         => $shippingCost,
                 'shipping_method_label' => $quote->shipping_method_label,

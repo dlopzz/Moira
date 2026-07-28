@@ -255,7 +255,7 @@ export const api = {
       '/guest-checkout', { guestToken: getGuestToken() }
     ),
 
-  saveGuestAddress: (data: GuestShippingAddress & { order_notes?: string }) =>
+  saveGuestAddress: (data: Partial<GuestShippingAddress> & { email: string; firstname: string; lastname: string; telephone: string; order_notes?: string; pickup?: boolean }) =>
     request<{ message: string }>('/guest-checkout/address', {
       method: 'POST', body: data, guestToken: getGuestToken(),
     }),
@@ -445,6 +445,9 @@ export type ShippingRate = {
   label: string;
   price: number;
   estimated_days: string;
+  is_pickup?: boolean;
+  pickup_address?: string | null;
+  pickup_schedule?: string | null;
 };
 
 export type GuestShippingAddress = {
@@ -472,7 +475,7 @@ export type Cart = {
   status: string;
   expires_at: string | null;
   coupon_code: string | null;
-  shipping: { code: string | null; label: string | null; price: number };
+  shipping: { code: string | null; label: string | null; price: number; is_pickup?: boolean; pickup_address?: string | null; pickup_schedule?: string | null };
   items: CartItem[];
   summary: CartSummary;
 };
@@ -495,11 +498,12 @@ export type Order = {
     label: string;
     street: string;
     address_line_2: string | null;
-    city: string;
-    state: string;
-    zip_code: string;
-    country: string;
-    telephone: string;
+    city: string | null;
+    state: string | null;
+    zip_code: string | null;
+    country: string | null;
+    telephone: string | null;
+    pickup?: boolean;
   };
   subtotal: number;
   shipping_cost: number;

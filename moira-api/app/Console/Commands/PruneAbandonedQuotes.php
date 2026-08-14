@@ -26,7 +26,19 @@ class PruneAbandonedQuotes extends Command
             ->where('expires_at', '<', $cutoff)
             ->delete();
 
+        // Los carritos vacíos son ruido puro: no hay nada que preservar, así que
+        // no tiene sentido esperar los 30 días de expiración + los de gracia.
+        // Se limpian aparte, con una ventana corta, para que el listado del admin
+        // no quede enterrado bajo carritos de visitantes que nunca agregaron nada.
+        $deletedEmpty = Quote::query()
+            ->whereNull('customer_id')
+            ->whereNotIn('status', [Quote::STATUS_CONVERTED, Quote::STATUS_PROCESSING])
+            ->whereDoesntHave('items')
+            ->where('created_at', '<', now()->subDay())
+            ->delete();
+
         $this->info("Carritos de invitado abandonados borrados: {$deleted}");
+        $this->info("Carritos de invitado vacíos borrados: {$deletedEmpty}");
 
         return self::SUCCESS;
     }

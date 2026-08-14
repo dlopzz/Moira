@@ -16,7 +16,12 @@ class ShippingController extends Controller
     public function rates(Request $request): JsonResponse
     {
         $customer = $request->user();
-        $quote    = Quote::getActiveForCustomer($customer);
+        $quote    = Quote::findActiveForCustomer($customer);
+
+        if (! $quote) {
+            return response()->json(['data' => []]);
+        }
+
         $quote->load('items');
 
         if ($quote->items->isEmpty()) {

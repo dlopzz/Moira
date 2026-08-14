@@ -24,11 +24,27 @@ class CheckoutController extends Controller
 {
     public function show(Request $request): JsonResponse
     {
-        $quote      = Quote::getActiveForCustomer($request->user());
-        $guestToken = $request->header('X-Guest-Token', '');
+        $customer      = $request->user();
+        $guestToken    = $request->header('X-Guest-Token', '');
+        $hasGuestToken = $guestToken && preg_match('/^[0-9a-f\-]{36}$/i', $guestToken);
+
+        // Lectura: no crear un carrito solo por abrir el checkout. Se crea nada
+        // más si ya existe uno o si hay un carrito de invitado con ítems por mergear.
+        if (! Quote::findActiveForCustomer($customer)
+            && ! ($hasGuestToken && Quote::guestCartHasItems($guestToken))
+        ) {
+            return response()->json([
+                'cart'             => new CartResource(Quote::emptyCart()),
+                'checkout_address' => null,
+                'billing_address'  => null,
+                'billing_same_as_shipping' => false,
+            ]);
+        }
+
+        $quote = Quote::getActiveForCustomer($customer);
 
         // Merge guest cart when the customer arrives at checkout after a guest session
-        if ($guestToken && preg_match('/^[0-9a-f\-]{36}$/i', $guestToken)) {
+        if ($hasGuestToken) {
             $this->mergeGuestCart($quote, $guestToken);
         }
 

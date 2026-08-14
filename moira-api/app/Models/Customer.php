@@ -47,6 +47,26 @@ class Customer extends Authenticatable implements MustVerifyEmail
         return trim("{$this->first_name} {$this->last_name}");
     }
 
+    public function suspend(): void
+    {
+        $this->update(['is_active' => false]);
+    }
+
+    /**
+     * is_active solo se chequea al iniciar sesión, así que sin revocar los tokens
+     * ya emitidos un cliente suspendido seguiría operando con la sesión que tenía
+     * abierta. Va como evento y no dentro de suspend() para cubrir también al
+     * admin que baja el toggle "Activo" desde el formulario.
+     */
+    protected static function booted(): void
+    {
+        static::updated(function (self $customer): void {
+            if ($customer->wasChanged('is_active') && ! $customer->is_active) {
+                $customer->tokens()->delete();
+            }
+        });
+    }
+
     public function reviews()
     {
         return $this->hasMany(Review::class);

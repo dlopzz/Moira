@@ -35,9 +35,6 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::get('categories', [CategoryController::class, 'index'])->name('categories.index');
         Route::get('categories/{slug}', [CategoryController::class, 'show'])->name('categories.show');
         Route::get('products/featured', [ProductController::class,  'featured'])->name('products.featured');
-
-        Route::get('products/pokemon', [ProductController::class,  'getPokemon'])->name('products.pokemon');
-
         Route::get('products/filters', [ProductController::class,  'filters'])->name('products.filters');
         Route::get('products', [ProductController::class,  'index'])->name('products.index');
         Route::get('products/{slug}', [ProductController::class,  'show'])->name('products.show');

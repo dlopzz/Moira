@@ -8,6 +8,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
+use Illuminate\Validation\Rules\Password;
 
 class CustomerForm
 {
@@ -43,6 +44,21 @@ class CustomerForm
                     ->nullable()
                     ->rows(3)
                     ->columnSpanFull(),
+
+                // customers.password es NOT NULL, así que sin este campo el alta
+                // desde el admin fallaba con una violación de constraint. Es
+                // opcional: si se deja vacío, CreateCustomer guarda una contraseña
+                // aleatoria y el cliente entra definiendo la suya con el botón
+                // "Enviar reseteo de contraseña" de la ficha.
+                TextInput::make('password')
+                    ->label('Contraseña')
+                    ->password()
+                    ->revealable()
+                    ->rule(Password::default())
+                    ->dehydrated(fn ($state) => filled($state))
+                    ->helperText(fn (string $operation) => $operation === 'create'
+                        ? 'Opcional. Si la dejás vacía, mandale el reseteo de contraseña desde la ficha del cliente.'
+                        : 'Dejá en blanco para mantener la contraseña actual.'),
 
                 Toggle::make('is_active')
                     ->label('Activo')

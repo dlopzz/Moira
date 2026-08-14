@@ -19,7 +19,13 @@ use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
 {
-    private function resolveQuote(Request $request): Quote
+    /**
+     * @param  bool  $create  false en lecturas: no se inserta ninguna fila y se
+     *                        devuelve null si todavía no hay carrito. Sin esto,
+     *                        el GET /cart que el front dispara al montar creaba
+     *                        un carrito vacío por cada visitante nuevo del sitio.
+     */
+    private function resolveQuote(Request $request, bool $create = true): ?Quote
     {
         // Cart routes carry no auth middleware (guests are welcome), so resolve
         // manually against the 'customer' guard specifically — not the generic
@@ -30,21 +36,34 @@ class CartController extends Controller
         // is never populated — resolve directly against 'customer'.
         $customer = Auth::guard('customer')->user();
         $guestToken = $request->header('X-Guest-Token', '');
+        $hasGuestToken = $guestToken && preg_match('/^[0-9a-f\-]{36}$/i', $guestToken);
 
         if ($customer) {
+            // En lectura solo se crea el carrito del cliente si hay algo real que
+            // poner adentro: o ya existe, o hay un carrito de invitado con ítems
+            // esperando el merge.
+            if (! $create
+                && ! Quote::findActiveForCustomer($customer)
+                && ! ($hasGuestToken && Quote::guestCartHasItems($guestToken))
+            ) {
+                return null;
+            }
+
             $quote = Quote::getActiveForCustomer($customer);
 
             // Merge guest cart items if the request carries a guest token
-            if ($guestToken && preg_match('/^[0-9a-f\-]{36}$/i', $guestToken)) {
+            if ($hasGuestToken) {
                 $this->mergeGuestCart($quote, $guestToken);
             }
 
             return $quote;
         }
 
-        abort_if(! $guestToken || ! preg_match('/^[0-9a-f\-]{36}$/i', $guestToken), 400, 'Token de invitado requerido.');
+        abort_if(! $hasGuestToken, 400, 'Token de invitado requerido.');
 
-        return Quote::getActiveForGuest($guestToken);
+        return $create
+            ? Quote::getActiveForGuest($guestToken)
+            : Quote::findActiveForGuest($guestToken);
     }
 
     private function mergeGuestCart(Quote $customerQuote, string $guestToken): void
@@ -92,7 +111,12 @@ class CartController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $quote = $this->resolveQuote($request);
+        $quote = $this->resolveQuote($request, create: false);
+
+        if (! $quote) {
+            return response()->json(['data' => new CartResource(Quote::emptyCart())]);
+        }
+
         $quote->load('items');
 
         return response()->json(['data' => new CartResource($quote)]);

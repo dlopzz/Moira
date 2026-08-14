@@ -4,8 +4,6 @@ namespace App\Filament\Resources\Customers\Pages;
 
 use App\Filament\Resources\Customers\CustomerResource;
 use Filament\Actions\Action;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
@@ -47,8 +45,45 @@ class EditCustomer extends EditRecord
                         ->body(__($status))
                         ->send();
                 }),
-            DeleteAction::make(),
-            ForceDeleteAction::make(),
+            // Suspender en vez de eliminar: borrar un cliente deja su email
+            // bloqueado por el índice único de la tabla, así que ni el admin ni
+            // el propio cliente pueden volver a crear la cuenta con ese mail.
+            Action::make('suspender')
+                ->label('Suspender cliente')
+                ->button()
+                ->icon(Heroicon::NoSymbol)
+                ->color('danger')
+                ->visible(fn (): bool => $this->record->is_active && ! $this->record->trashed())
+                ->requiresConfirmation()
+                ->modalHeading('Suspender cliente')
+                ->modalDescription('No va a poder iniciar sesión ni comprar. Se cierran sus sesiones abiertas. Sus datos y órdenes se conservan y podés reactivarlo cuando quieras.')
+                ->action(function (): void {
+                    $this->record->suspend();
+
+                    Notification::make()
+                        ->success()
+                        ->title('Cliente suspendido')
+                        ->send();
+                }),
+
+            Action::make('reactivar')
+                ->label('Reactivar cliente')
+                ->button()
+                ->icon(Heroicon::CheckCircle)
+                ->color('success')
+                ->visible(fn (): bool => ! $this->record->is_active && ! $this->record->trashed())
+                ->requiresConfirmation()
+                ->action(function (): void {
+                    $this->record->update(['is_active' => true]);
+
+                    Notification::make()
+                        ->success()
+                        ->title('Cliente reactivado')
+                        ->send();
+                }),
+
+            // Se conserva para rescatar los clientes borrados antes de que se
+            // quitara la opción de eliminar.
             RestoreAction::make(),
         ];
     }

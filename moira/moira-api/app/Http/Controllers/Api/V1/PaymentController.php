@@ -105,14 +105,6 @@ class PaymentController extends Controller
         $quote    = Quote::getActiveForCustomer($customer);
         $quote->load('items.product', 'items.variant');
 
-        \Log::debug('[Pay] quote check', [
-            'quote_id'            => $quote?->id,
-            'quote_status'        => $quote?->status,
-            'items_count'         => $quote?->items->count(),
-            'checkout_address_id' => $quote?->checkout_address_id,
-            'shipping_method'     => $quote?->shipping_method_code,
-        ]);
-
         if ($quote->items->isEmpty()) {
             return response()->json(['message' => 'El carrito está vacío.'], 422);
         }

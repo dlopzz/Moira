@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -135,6 +136,66 @@ class Quote extends Model
             'status' => self::STATUS_ACTIVE,
             'expires_at' => now()->addDays($expirationDays),
         ]);
+    }
+
+    /**
+     * Variante de solo lectura de getActiveForCustomer(): nunca inserta una fila.
+     * Devuelve null si el cliente todavía no tiene ningún carrito, así un GET no
+     * deja un carrito vacío en la tabla.
+     */
+    public static function findActiveForCustomer(Customer $customer): ?static
+    {
+        $exists = static::where('customer_id', $customer->id)
+            ->whereIn('status', [self::STATUS_ACTIVE, self::STATUS_EXPIRED])
+            ->exists();
+
+        return $exists ? static::getActiveForCustomer($customer) : null;
+    }
+
+    /**
+     * Variante de solo lectura de getActiveForGuest(): nunca inserta una fila.
+     * Esto es lo que evita que cada visitante nuevo del sitio genere un carrito
+     * vacío — el front pide GET /cart al montar, mucho antes de agregar nada.
+     */
+    public static function findActiveForGuest(string $guestToken): ?static
+    {
+        $quote = static::where('guest_token', $guestToken)->first();
+
+        if (! $quote) {
+            return null;
+        }
+
+        // Ya convertido en orden o con un pago en curso: para una lectura equivale
+        // a un carrito vacío, porque getActiveForGuest le vaciaría los ítems al
+        // reutilizar la fila. Devolver null evita hacer esa escritura acá.
+        if (in_array($quote->status, [self::STATUS_CONVERTED, self::STATUS_PROCESSING], true)) {
+            return null;
+        }
+
+        // La fila ya existe, así que reutilizarla (reactivándola si expiró) no
+        // agrega basura a la tabla.
+        return static::getActiveForGuest($guestToken);
+    }
+
+    public static function guestCartHasItems(string $guestToken): bool
+    {
+        return static::where('guest_token', $guestToken)
+            ->where('status', self::STATUS_ACTIVE)
+            ->whereHas('items')
+            ->exists();
+    }
+
+    /**
+     * Carrito vacío sin persistir, para responder lecturas cuando no hay ninguna
+     * fila que devolver. Se le fija la relación items para que CartResource no
+     * dispare una query con quote_id null.
+     */
+    public static function emptyCart(): static
+    {
+        $quote = new static(['status' => self::STATUS_ACTIVE]);
+        $quote->setRelation('items', new EloquentCollection());
+
+        return $quote;
     }
 
     private static function reactivateOrCreate(Customer $customer, int $expirationDays): static

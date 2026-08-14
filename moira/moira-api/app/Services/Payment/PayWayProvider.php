@@ -5,6 +5,7 @@ namespace App\Services\Payment;
 use App\Models\PaymentMethod;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class PayWayProvider
@@ -72,23 +73,23 @@ class PayWayProvider
             );
         }
 
-        \Illuminate\Support\Facades\Log::debug('[PayWay] charge request', [
-            'endpoint'                 => "{$baseUrl}/api/v2/payments",
-            'payment_method_id'        => (int) $tokenData['payment_method_id'],
-            'bin'                      => $tokenData['bin'],
-            'installments'             => (int) $tokenData['installments'],
-            'amount_cents'             => $amountCents,
-            'device_unique_identifier' => $tokenData['device_unique_identifier'] ?? 'NOT SET',
-            'token_prefix'             => substr($tokenData['token'], 0, 8),
-        ]);
-        \Illuminate\Support\Facades\Log::debug('[PayWay] charge response', [
-            'http_status' => $response->status(),
-            'body'        => $response->body(),
-        ]);
-
         $data    = $response->json() ?? [];
         $status  = $data['status'] ?? 'error';
         $authCode = $data['status_details']['card_authorization_code'] ?? null;
+
+        // Campos explícitos, nunca el body crudo: la respuesta de PayWay incluye
+        // datos del titular y de la tarjeta. Va en info y no en debug para que el
+        // diagnóstico de pagos no dependa de dejar LOG_LEVEL en debug en producción.
+        Log::info('[PayWay] charge', [
+            'site_transaction_id' => $siteId,
+            'http_status'         => $response->status(),
+            'status'              => $status,
+            'transaction_id'      => $data['id'] ?? null,
+            'amount_cents'        => $amountCents,
+            'installments'        => (int) $tokenData['installments'],
+            'bin'                 => $tokenData['bin'],
+            'error_type'          => $data['status_details']['error_type'] ?? null,
+        ]);
 
         return new PayWayResult(
             approved: in_array($status, ['approved', 'pre_approved']),

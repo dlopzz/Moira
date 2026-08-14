@@ -22,7 +22,11 @@ use Illuminate\Support\Facades\Mail;
 
 class GuestCheckoutController extends Controller
 {
-    private function resolveGuestQuote(Request $request): Quote
+    /**
+     * @param  bool  $create  false en lecturas: devuelve null en vez de insertar
+     *                        un carrito vacío para un token que nunca compró.
+     */
+    private function resolveGuestQuote(Request $request, bool $create = true): ?Quote
     {
         $guestToken = $request->header('X-Guest-Token', '');
         abort_if(
@@ -31,7 +35,9 @@ class GuestCheckoutController extends Controller
             'Token de invitado requerido.'
         );
 
-        return Quote::getActiveForGuest($guestToken);
+        return $create
+            ? Quote::getActiveForGuest($guestToken)
+            : Quote::findActiveForGuest($guestToken);
     }
 
     public function saveAddress(Request $request): JsonResponse
@@ -122,7 +128,12 @@ class GuestCheckoutController extends Controller
 
     public function shippingRates(Request $request): JsonResponse
     {
-        $quote = $this->resolveGuestQuote($request);
+        $quote = $this->resolveGuestQuote($request, create: false);
+
+        if (! $quote) {
+            return response()->json(['data' => []]);
+        }
+
         $quote->load('items');
 
         if ($quote->items->isEmpty()) {
@@ -487,7 +498,15 @@ class GuestCheckoutController extends Controller
 
     public function show(Request $request): JsonResponse
     {
-        $quote = $this->resolveGuestQuote($request);
+        $quote = $this->resolveGuestQuote($request, create: false);
+
+        if (! $quote) {
+            return response()->json([
+                'shipping_address' => null,
+                'shipping_method'  => null,
+                'order_notes'      => null,
+            ]);
+        }
 
         return response()->json([
             'shipping_address' => $quote->shipping_zip_code ? [

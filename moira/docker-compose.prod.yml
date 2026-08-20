@@ -80,7 +80,9 @@ services:
       # Alcanza con que el server responda: no importa si devuelve 200, 307 al
       # gate de QA o 404. Se usa node y no wget porque el wget de BusyBox falla
       # con cualquier respuesta que no sea 200.
-      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/', () => process.exit(0)).on('error', () => process.exit(1))"]
+      # Se prueba loopback y la IP del contenedor: si Next quedara escuchando
+      # solo en eth0 (HOSTNAME), el chequeo igual pasa.
+      test: ["CMD", "node", "-e", "const h=require('http');const t=(u,n)=>h.get(u,()=>process.exit(0)).on('error',n);t('http://127.0.0.1:3000/',()=>t('http://'+process.env.HOSTNAME+':3000/',()=>process.exit(1)))"]
       interval: 5s
       timeout: 5s
       retries: 12

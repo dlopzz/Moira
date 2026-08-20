@@ -74,9 +74,23 @@ services:
       QA_AUTH_SECRET: ${QA_AUTH_SECRET:-}
     networks:
       - moira_internal
+    healthcheck:
+      # Sin esto Traefik empieza a rutear apenas arranca el contenedor, antes de
+      # que Next.js acepte conexiones, y el visitante ve un error crudo.
+      # Alcanza con que el server responda: no importa si devuelve 200, 307 al
+      # gate de QA o 404. Se usa node y no wget porque el wget de BusyBox falla
+      # con cualquier respuesta que no sea 200.
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/', () => process.exit(0)).on('error', () => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
     labels:
       - traefik.enable=true
       - traefik.http.routers.moira-web.rule=Host(`${WEB_DOMAIN}`) || Host(`${WEB_DOMAIN_ALT}`) || Host(`www.${WEB_DOMAIN_ALT}`)
+      # Prioridad alta: mientras el sitio esté arriba, este router le gana al de
+      # mantenimiento, que matchea los mismos dominios.
+      - traefik.http.routers.moira-web.priority=100
       - traefik.http.routers.moira-web.entrypoints=websecure
       - traefik.http.routers.moira-web.tls.certresolver=letsencrypt
       - traefik.http.services.moira-web.loadbalancer.server.port=3000
@@ -97,6 +111,18 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.services.moira-maintenance.loadbalancer.server.port=80
+      # Router de respaldo, siempre presente y con prioridad baja. Cubre el hueco
+      # del deploy: mientras el contenedor "web" se recrea, sus labels
+      # desaparecen del socket de Docker y Traefik se queda sin regla para el
+      # dominio, devolviendo su 404 por defecto. Ese 404 no lo agarra el
+      # middleware de errores, porque solo cubre 502-504 y los emite el servicio
+      # que en ese momento ya no existe. Con este router el dominio siempre
+      # matchea algo, así que el visitante ve la página de mantenimiento.
+      - traefik.http.routers.moira-maintenance.rule=Host(`${WEB_DOMAIN}`) || Host(`${WEB_DOMAIN_ALT}`) || Host(`www.${WEB_DOMAIN_ALT}`)
+      - traefik.http.routers.moira-maintenance.priority=1
+      - traefik.http.routers.moira-maintenance.entrypoints=websecure
+      - traefik.http.routers.moira-maintenance.tls.certresolver=letsencrypt
+      - traefik.http.routers.moira-maintenance.service=moira-maintenance
 
 networks:
   moira_internal:

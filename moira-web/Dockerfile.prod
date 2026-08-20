@@ -20,8 +20,13 @@ RUN npm run build
 # ---- Stage 3: runtime ----
 FROM node:20-alpine AS runtime
 WORKDIR /app
+# HOSTNAME explícito: el server.js de Next.js standalone hace
+# process.env.HOSTNAME || '0.0.0.0', y Docker setea HOSTNAME al id del
+# contenedor. Sin esto Next escucha solo en la IP de eth0 y no en loopback,
+# así que cualquier healthcheck contra 127.0.0.1 falla.
 ENV NODE_ENV=production \
-    PORT=3000
+    PORT=3000 \
+    HOSTNAME=0.0.0.0
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static

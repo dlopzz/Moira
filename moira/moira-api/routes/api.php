@@ -54,8 +54,12 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         ->middleware('throttle:5,1');
     Route::get('newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe']);
 
-    Route::get('reviews/{token}', [ReviewController::class, 'show']);
-    Route::post('reviews/{token}', [ReviewController::class, 'submit']);
+    // Únicas rutas públicas que quedaban sin throttle. El token es un UUID, así
+    // que no es forzable, pero sin límite un bot puede martillarlas gratis.
+    Route::get('reviews/{token}', [ReviewController::class, 'show'])
+        ->middleware('throttle:20,1');
+    Route::post('reviews/{token}', [ReviewController::class, 'submit'])
+        ->middleware('throttle:5,1');
 
     Route::get('checkout/payment-config', [PaymentController::class, 'config']);
 
@@ -77,6 +81,11 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::get('auth/verify-email/{id}/{hash}', [VerifyEmailController::class, 'verify'])->name('auth.verify-email');
     Route::get('auth/google', [SocialAuthController::class, 'redirect'])->name('auth.google');
     Route::get('auth/google/callback', [SocialAuthController::class, 'callback'])->name('auth.google.callback');
+    // Canje del codigo de un solo uso que deja el callback de Google. Throttle
+    // bajo: es un POST puntual por login, no algo que el front repita.
+    Route::post('auth/social/exchange', [SocialAuthController::class, 'exchange'])
+        ->name('auth.social.exchange')
+        ->middleware('throttle:10,1');
 
     // Throttle por IP: cada request con un X-Guest-Token nuevo crea un Quote en
     // DB (ver Quote::getActiveForGuest), así que sin límite un atacante infla la

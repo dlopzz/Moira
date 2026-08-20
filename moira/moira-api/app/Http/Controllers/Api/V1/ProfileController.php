@@ -23,7 +23,10 @@ class ProfileController extends Controller
         /** @var Customer $customer */
         $customer = $request->user();
 
-        $customer->update($request->validated());
+        // validated() ya excluye el email (ver UpdateProfileRequest). El except
+        // es un segundo cerrojo: si alguien vuelve a agregar la regla sin pensar
+        // en email_verified_at, el email igual no se toca desde acá.
+        $customer->update($request->safe()->except('email'));
 
         return response()->json([
             'data' => new CustomerResource($customer->fresh()),

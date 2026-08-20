@@ -288,6 +288,10 @@ class GuestCheckoutController extends Controller
                 'card_holder_doc_type', 'card_holder_doc_number',
                 'device_unique_identifier',
             ]),
+            // Derivado del quote y del monto: si la request muere por timeout
+            // después de que PayWay ya procesó, el reintento manda el mismo
+            // site_transaction_id y PayWay lo rechaza en vez de cobrar de nuevo.
+            idempotencyKey: 'quote-'.$quote->id.'-'.$amountCents,
         );
 
         if (! $result->approved && ! $result->pending) {

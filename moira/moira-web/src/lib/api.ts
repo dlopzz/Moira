@@ -108,6 +108,11 @@ export const api = {
   logout: () =>
     request<void>('/auth/logout', { method: 'POST' }),
 
+  // Canjea el código de un solo uso que deja el callback de Google por el token
+  // de acceso. El token nunca viaja en la URL (historial, logs, header Referer).
+  exchangeSocialCode: (code: string) =>
+    request<{ token: string }>('/auth/social/exchange', { method: 'POST', body: { code } }),
+
   forgotPassword: (email: string) =>
     request<{ message: string }>('/auth/forgot-password', { method: 'POST', body: { email } }),
 
@@ -120,7 +125,8 @@ export const api = {
   getProfile: () =>
     request<{ data: Customer }>('/profile'),
 
-  updateProfile: (data: { first_name: string; last_name: string; email: string; date_of_birth?: string }) =>
+  // Sin email: es el identificador de la cuenta y la API lo ignora (ver UpdateProfileRequest).
+  updateProfile: (data: { first_name: string; last_name: string; date_of_birth?: string }) =>
     request<{ data: Customer }>('/profile', { method: 'PUT', body: data }),
 
   updatePassword: (data: { current_password: string; password: string; password_confirmation: string }) =>

@@ -15,10 +15,21 @@ class PayWayProvider
     /**
      * @param  array{token: string, bin: string, payment_method_id: int, installments: int, card_holder_name: string, card_holder_doc_type: string, card_holder_doc_number: string} $tokenData
      */
+    /**
+     * @param string|null $idempotencyKey  Identificador estable del intento de
+     *        cobro (normalmente el id del quote). PayWay rechaza un
+     *        site_transaction_id repetido, así que pasarlo convierte el reintento
+     *        en un no-op del lado del proveedor: si la primera llamada llegó a
+     *        procesarse y nosotros no vimos la respuesta (timeout, corte de red),
+     *        el reintento NO genera un segundo cobro. Sin esta clave, cada
+     *        llamada genera un site_transaction_id nuevo y el cliente puede
+     *        terminar pagando dos veces.
+     */
     public function charge(
-        string $customerEmail,
-        int    $amountCents,
-        array  $tokenData,
+        string  $customerEmail,
+        int     $amountCents,
+        array   $tokenData,
+        ?string $idempotencyKey = null,
     ): PayWayResult {
         $privateKey = $this->method->activePrivateKey();
         $baseUrl    = $this->apiBaseUrl();
@@ -36,7 +47,9 @@ class PayWayProvider
             );
         }
 
-        $siteId = 'MR-' . now()->format('ymdHis') . '-' . strtoupper(Str::random(6));
+        $siteId = $idempotencyKey
+            ? 'MR-' . substr(strtoupper(hash('sha256', $idempotencyKey)), 0, 24)
+            : 'MR-' . now()->format('ymdHis') . '-' . strtoupper(Str::random(6));
 
         try {
             $response = Http::withHeaders([

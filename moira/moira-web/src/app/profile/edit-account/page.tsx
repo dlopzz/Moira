@@ -47,7 +47,6 @@ export default function EditAccountPage() {
     const localErrors: string[] = [];
     if (!form.first_name.trim()) localErrors.push('El nombre es obligatorio.');
     if (!form.last_name.trim()) localErrors.push('El apellido es obligatorio.');
-    if (!form.email.trim()) localErrors.push('El correo electrónico es obligatorio.');
     if (!form.date_of_birth) localErrors.push('La fecha de nacimiento es obligatoria.');
     if (changingPassword) {
       if (!form.current_password) localErrors.push('La contraseña actual es obligatoria.');
@@ -58,10 +57,11 @@ export default function EditAccountPage() {
 
     setLoading(true);
     try {
+      // El email no se manda: es el identificador de la cuenta y la API lo
+      // rechaza. Se muestra solo como lectura.
       const profileRes = await api.updateProfile({
         first_name: form.first_name,
         last_name: form.last_name,
-        email: form.email,
         date_of_birth: form.date_of_birth,
       });
       setCustomer(profileRes.data);
@@ -135,15 +135,19 @@ export default function EditAccountPage() {
 
         <p className="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">
           <label htmlFor="email">
-            Correo electrónico&nbsp;<span className="required" aria-hidden="true">*</span>
+            Correo electrónico
           </label>
           <input
             id="email"
             type="email"
-            className="woocommerce-Input woocommerce-Input--email input-text"
+            className="woocommerce-Input woocommerce-Input--email input-text bg-gray-100 cursor-not-allowed"
             value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            readOnly
+            disabled
           />
+          <span className="text-xs text-gray-500">
+            El correo electrónico no se puede modificar porque identifica tu cuenta.
+          </span>
         </p>
 
         <p className="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide">

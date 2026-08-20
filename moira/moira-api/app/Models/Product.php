@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\HtmlSanitizer;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -30,6 +32,16 @@ class Product extends Model
         'is_active',
         'product_type',
     ];
+
+    /**
+     * El front renderiza la descripción con dangerouslySetInnerHTML, así que
+     * aunque el campo del admin sea un textarea plano hay que sanitizarla:
+     * un <script> escrito ahí se ejecutaría en la ficha del producto.
+     */
+    protected function description(): Attribute
+    {
+        return Attribute::set(fn (?string $value) => HtmlSanitizer::clean($value));
+    }
 
     protected function casts(): array
     {

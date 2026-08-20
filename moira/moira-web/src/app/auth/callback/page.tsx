@@ -3,13 +3,14 @@
 import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { saveToken } from '@/lib/auth';
+import { api } from '@/lib/api';
 
 function CallbackContent() {
   const router = useRouter();
   const params = useSearchParams();
 
   useEffect(() => {
-    const token = params.get('token');
+    const code = params.get('code');
     const error = params.get('error');
 
     if (error === 'account_disabled') {
@@ -22,10 +23,31 @@ function CallbackContent() {
       return;
     }
 
-    if (token) {
-      saveToken(token);
-      router.push('/profile');
+    if (!code) {
+      router.push('/auth/login?error=google_failed');
+      return;
     }
+
+    // El backend deja un código de un solo uso, no el token: así el token no
+    // queda en el historial del navegador, en los access logs ni en el Referer.
+    let cancelled = false;
+
+    api
+      .exchangeSocialCode(code)
+      .then(({ token }) => {
+        if (cancelled) return;
+        saveToken(token);
+        // replace, no push: saca el código de la URL y del historial.
+        router.replace('/profile');
+      })
+      .catch(() => {
+        if (cancelled) return;
+        router.replace('/auth/login?error=google_failed');
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [params, router]);
 
   return (

@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use RuntimeException;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -18,6 +19,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->assertDebugIsOffInProduction();
+
         ResetPassword::createUrlUsing(function (mixed $notifiable, string $token): string {
             $storedUrl = SiteSetting::getValue('url');
             $frontendUrl = rtrim(
@@ -69,5 +72,29 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(300)->by($request->ip());
         });
+    }
+
+    /**
+     * Aborta el arranque si producción quedó con APP_DEBUG=true.
+     *
+     * El .env.example (el de desarrollo local) trae APP_DEBUG=true y
+     * LOG_LEVEL=debug. Si alguien monta el servidor copiando ese archivo en vez
+     * de .env.production.example, Laravel muestra el stack trace completo ante
+     * cualquier error: rutas del filesystem, queries con sus bindings y el
+     * contenido del entorno, incluidas las credenciales.
+     *
+     * Falla en el arranque, no en el primer error: preferimos que el deploy no
+     * levante antes que servir una página que filtra la configuración. Es el
+     * mismo criterio que usa Laravel cuando falta APP_KEY.
+     */
+    private function assertDebugIsOffInProduction(): void
+    {
+        if ($this->app->isProduction() && config('app.debug')) {
+            throw new RuntimeException(
+                'APP_DEBUG=true con APP_ENV=production. Los errores expondrían rutas, '
+                .'queries y variables de entorno. Revisá el .env del servidor: '
+                .'debe salir de .env.production.example, no de .env.example.'
+            );
+        }
     }
 }

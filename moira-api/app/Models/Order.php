@@ -16,7 +16,7 @@ class Order extends Model
     public const STATUS_LABELS = [
         'pending' => 'Pendiente',
         'paid' => 'Pagado',
-        'processing' => 'En proceso',
+        'processing' => 'Pendiente de envío',
         'shipped' => 'Enviado',
         'delivered' => 'Entregado',
         'cancelled' => 'Cancelado',

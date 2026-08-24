@@ -346,3 +346,16 @@ h1.fi-header-heading,
 .fi-user-menu-trigger-btn:hover {
     background-color: #1f2937 !important;
 }
+
+/* ===== Filtros de los widgets de gráficos ===== */
+/*
+ * Los ChartWidget con filtro de período y filtro por schema meten el <select> y
+ * el botón de embudo en el mismo slot del encabezado, y ese contenedor viene
+ * como display:block: los dos controles quedan encimados y el embudo se corta
+ * contra el borde de la sección.
+ */
+.fi-wi-chart .fi-section-header-after-ctn {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+}

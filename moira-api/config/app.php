@@ -56,6 +56,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Frontend URL
+    |--------------------------------------------------------------------------
+    |
+    | Dónde vive moira-web. La API redirige acá al terminar los flujos que
+    | arrancan en el navegador (callback de Google, verificación de email), así
+    | que sin esta clave config('app.frontend_url') cae siempre al default y en
+    | producción manda al usuario al localhost de su propia máquina.
+    |
+    */
+
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

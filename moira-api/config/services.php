@@ -46,7 +46,10 @@ return [
     'google' => [
         'client_id'     => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect'      => env('APP_URL') . '/api/v1/auth/google/callback',
+        // Variable propia y no APP_URL a secas: en local la API se sirve por el
+        // puerto 8080, y Google exige que el redirect_uri coincida caracter por
+        // caracter con el que tiene registrado.
+        'redirect'      => env('GOOGLE_REDIRECT_URI', env('APP_URL') . '/api/v1/auth/google/callback'),
     ],
 
     'recaptcha' => [

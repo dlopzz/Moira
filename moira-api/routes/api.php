@@ -79,8 +79,16 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
     Route::post('auth/reset-password', [ResetPasswordController::class,  'store'])->name('auth.reset-password')
         ->middleware('throttle:5,1');
     Route::get('auth/verify-email/{id}/{hash}', [VerifyEmailController::class, 'verify'])->name('auth.verify-email');
-    Route::get('auth/google', [SocialAuthController::class, 'redirect'])->name('auth.google');
-    Route::get('auth/google/callback', [SocialAuthController::class, 'callback'])->name('auth.google.callback');
+    // Estas dos van con sesion (middleware 'web'), a diferencia del resto de la
+    // API: Socialite guarda ahi el parametro "state" que despues compara al
+    // volver de Google, y esa comparacion es la que evita que un tercero dispare
+    // el callback con un codigo ajeno. Sin sesion Socialite tira "Session store
+    // not set on request"; la alternativa (->stateless()) resuelve el error pero
+    // apagando justamente esa proteccion.
+    Route::middleware('web')->group(function (): void {
+        Route::get('auth/google', [SocialAuthController::class, 'redirect'])->name('auth.google');
+        Route::get('auth/google/callback', [SocialAuthController::class, 'callback'])->name('auth.google.callback');
+    });
     // Canje del codigo de un solo uso que deja el callback de Google. Throttle
     // bajo: es un POST puntual por login, no algo que el front repita.
     Route::post('auth/social/exchange', [SocialAuthController::class, 'exchange'])

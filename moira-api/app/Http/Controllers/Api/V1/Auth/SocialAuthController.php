@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -27,12 +28,29 @@ class SocialAuthController extends Controller
 
         try {
             $googleUser = Socialite::driver('google')->user();
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            // Al usuario se le muestra un error generico, pero sin dejar rastro
+            // en el log un fallo aca es imposible de diagnosticar: los motivos
+            // habituales (state vencido, codigo ya canjeado, credenciales mal
+            // cargadas) se distinguen solo por el mensaje de la excepcion.
+            Log::warning('Fallo el callback de Google', [
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+            ]);
+
             return redirect("{$frontend}/auth/callback?error=google_failed");
         }
 
-        $customer = Customer::where('google_id', $googleUser->getId())->first()
-            ?? Customer::where('email', $googleUser->getEmail())->first();
+        // withTrashed: el indice unico de customers.email tambien ve las filas
+        // dadas de baja, asi que buscando solo entre las activas el create de
+        // mas abajo explota con violacion de unicidad en vez de dar un error
+        // entendible. Una cuenta dada de baja no revive por entrar con Google.
+        $customer = Customer::withTrashed()->where('google_id', $googleUser->getId())->first()
+            ?? Customer::withTrashed()->where('email', $googleUser->getEmail())->first();
+
+        if ($customer && ($customer->trashed() || ! $customer->is_active)) {
+            return redirect("{$frontend}/auth/callback?error=account_disabled");
+        }
 
         if ($customer) {
             if (! $customer->google_id) {
@@ -55,10 +73,6 @@ class SocialAuthController extends Controller
                 'email_verified_at' => now(),
                 'is_active'         => true,
             ]);
-        }
-
-        if (! $customer->is_active) {
-            return redirect("{$frontend}/auth/callback?error=account_disabled");
         }
 
         // El token NUNCA viaja en la URL: quedaria en el historial del navegador,

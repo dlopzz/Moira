@@ -18,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // and generates http:// asset/URL links, tripping mixed-content
         // blocks in the browser.
         $middleware->trustProxies(at: '*');
+
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

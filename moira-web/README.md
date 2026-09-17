@@ -25,12 +25,12 @@ Plataforma de e-commerce headless compuesta por una API REST en Laravel y un fro
 ## Arquitectura
 
 ```
-moira/
+.
 ├── moira-api/     # Laravel 13 — API REST + Filament admin
 └── moira-web/     # Next.js 16 — Storefront headless
 ```
 
-El frontend consume la API en `http://moura.test:8080/api/v1`. La autenticación usa tokens Bearer (Laravel Sanctum). Los guests se identifican con un `X-Guest-Token` almacenado en `localStorage`.
+El frontend consume la API en `http://localhost:8080/api/v1`. La autenticación usa tokens Bearer (Laravel Sanctum). Los guests se identifican con un `X-Guest-Token` almacenado en `localStorage`.
 
 ## Funcionalidades
 

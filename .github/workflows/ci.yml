@@ -44,13 +44,9 @@ jobs:
           coverage: none
 
       # El schema dump (database/schema/pgsql-schema.sql) se carga con psql y usa
-      # \restrict, que solo entiende un cliente reciente: instalar el de Postgres 18.
-      - name: Install psql 18
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-common
-          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
-          sudo apt-get install -y postgresql-client-18
+      # \restrict: hace falta psql 18. El runner ya lo trae; esto solo lo deja en el log.
+      - name: psql version
+        run: psql --version
 
       - uses: actions/setup-node@v5
         with:

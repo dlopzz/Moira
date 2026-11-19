@@ -1,0 +1,1273 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Using nullsafe property access "\?\-\>email" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Filament/Pages/Auth/Login.php
+
+		-
+			message: '#^Access to an undefined property App\\Filament\\Pages\\Settings\\CartSettings\:\:\$form\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Filament/Pages/Settings/CartSettings.php
+
+		-
+			message: '#^Access to an undefined property App\\Filament\\Pages\\Settings\\CookieSettings\:\:\$form\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Filament/Pages/Settings/CookieSettings.php
+
+		-
+			message: '#^Access to an undefined property App\\Filament\\Pages\\Settings\\MoiraSettings\:\:\$form\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Filament/Pages/Settings/MoiraSettings.php
+
+		-
+			message: '#^Access to an undefined property App\\Filament\\Pages\\Settings\\SecuritySettings\:\:\$form\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Filament/Pages/Settings/SecuritySettings.php
+
+		-
+			message: '#^Cannot access property \$image on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: app/Filament/Resources/Categories/Pages/EditCategory.php
+
+		-
+			message: '#^Parameter \#1 \$height of method Filament\\Forms\\Components\\FileUpload\:\:imageResizeTargetHeight\(\) expects Closure\|string\|null, 600 given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Filament/Resources/Categories/Schemas/CategoryForm.php
+
+		-
+			message: '#^Parameter \#1 \$label of method Filament\\Forms\\Components\\Field\:\:label\(\) expects Closure\|Illuminate\\Contracts\\Support\\Htmlable\|string\|null, false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Filament/Resources/Categories/Schemas/CategoryForm.php
+
+		-
+			message: '#^Parameter \#1 \$width of method Filament\\Forms\\Components\\FileUpload\:\:imageResizeTargetWidth\(\) expects Closure\|string\|null, 600 given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Filament/Resources/Categories/Schemas/CategoryForm.php
+
+		-
+			message: '#^Cannot access property \$email on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: property.nonObject
+			count: 3
+			path: app/Filament/Resources/Customers/Pages/EditCustomer.php
+
+		-
+			message: '#^Cannot access property \$is_active on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: app/Filament/Resources/Customers/Pages/EditCustomer.php
+
+		-
+			message: '#^Cannot call method suspend\(\) on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Filament/Resources/Customers/Pages/EditCustomer.php
+
+		-
+			message: '#^Cannot call method trashed\(\) on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Filament/Resources/Customers/Pages/EditCustomer.php
+
+		-
+			message: '#^Cannot access property \$is_read on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: property.nonObject
+			count: 5
+			path: app/Filament/Resources/Marketing/ContactMessages/Pages/ViewContactMessage.php
+
+		-
+			message: '#^Parameter \#1 \$height of method Filament\\Forms\\Components\\FileUpload\:\:imageResizeTargetHeight\(\) expects Closure\|string\|null, 720 given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Filament/Resources/Marketing/HomeSections/Schemas/HomeSectionForm.php
+
+		-
+			message: '#^Parameter \#1 \$width of method Filament\\Forms\\Components\\FileUpload\:\:imageResizeTargetWidth\(\) expects Closure\|string\|null, 1920 given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Filament/Resources/Marketing/HomeSections/Schemas/HomeSectionForm.php
+
+		-
+			message: '#^Cannot access property \$id on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: property.nonObject
+			count: 3
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Cannot access property \$status on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: property.nonObject
+			count: 3
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Cannot access property \$tracking_number on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Cannot call method transitionStatus\(\) on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Cannot access property \$status on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: property.nonObject
+			count: 5
+			path: app/Filament/Resources/Orders/Returns/Pages/ViewOrderReturn.php
+
+		-
+			message: '#^Cannot call method transitionStatus\(\) on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Filament/Resources/Orders/Returns/Pages/ViewOrderReturn.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Order\:\:\$items\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Filament/Resources/Orders/Returns/Schemas/OrderReturnForm.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:mapWithKeys\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<int\<0, max\>, non\-falsy\-string\>, Closure\(App\\Models\\Order\)\: non\-empty\-array\<int\<0, max\>, non\-falsy\-string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Filament/Resources/Orders/Returns/Schemas/OrderReturnForm.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\Order model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Filament/Resources/Orders/Returns/Schemas/OrderReturnForm.php
+
+		-
+			message: '#^Parameter \#1 \$height of method Filament\\Forms\\Components\\FileUpload\:\:imageResizeTargetHeight\(\) expects Closure\|string\|null, 1000 given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Filament/Resources/Products/Schemas/ProductForm.php
+
+		-
+			message: '#^Parameter \#1 \$width of method Filament\\Forms\\Components\\FileUpload\:\:imageResizeTargetWidth\(\) expects Closure\|string\|null, 750 given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Filament/Resources/Products/Schemas/ProductForm.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Product\:\:\$categories\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Filament/Resources/Products/Tables/ProductsTable.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Product\:\:\$relatedProducts\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Filament/Resources/Products/Tables/ProductsTable.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Filament/Resources/Products/Tables/ProductsTable.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$sku\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Filament/Resources/Products/Tables/ProductsTable.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type mixed\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Filament/Resources/Users/Schemas/UserForm.php
+
+		-
+			message: '#^Parameter \#1 \$rows of method App\\Support\\Dashboard\\SalesPeriod\:\:fill\(\) expects Illuminate\\Support\\Collection\<string, float\|int\>, Illuminate\\Support\\Collection\<\(int\|string\), float\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Filament/Widgets/RevenueChart.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Api\\V1\\Auth\\SocialAuthController\:\:redirect\(\) should return Illuminate\\Http\\RedirectResponse but returns Symfony\\Component\\HttpFoundation\\RedirectResponse\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Api/V1/Auth/SocialAuthController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$coupon_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/CartController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/CartController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Api/V1/CartController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$unit_price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/CartController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$variant_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/CartController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:recalculateDiscount\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/CartController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:refreshExpiry\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/CartController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Order\:\:\$items\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product_id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Api/V1/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product_name\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Api/V1/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 6
+			path: app/Http/Controllers/Api/V1/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$subtotal\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$unit_price\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$variant\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$variant_id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Api/V1/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$variant_label\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/CheckoutController.php
+
+		-
+			message: '#^Call to method Illuminate\\Support\\Collection\<int,\*NEVER\*\>\:\:isNotEmpty\(\) will always evaluate to false\.$#'
+			identifier: method.impossibleType
+			count: 1
+			path: app/Http/Controllers/Api/V1/CheckoutController.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\Order model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Api/V1/CheckoutController.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\Order model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Api/V1/CheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/GuestCheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product_id\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Http/Controllers/Api/V1/GuestCheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product_name\.$#'
+			identifier: property.notFound
+			count: 6
+			path: app/Http/Controllers/Api/V1/GuestCheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 13
+			path: app/Http/Controllers/Api/V1/GuestCheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$subtotal\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/GuestCheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$unit_price\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Api/V1/GuestCheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$variant\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/GuestCheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$variant_id\.$#'
+			identifier: property.notFound
+			count: 5
+			path: app/Http/Controllers/Api/V1/GuestCheckoutController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$variant_label\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Api/V1/GuestCheckoutController.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\Order model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Api/V1/GuestCheckoutController.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: app/Http/Controllers/Api/V1/GuestCheckoutController.php
+
+		-
+			message: '#^Anonymous function should never return but return statement found\.$#'
+			identifier: return.never
+			count: 1
+			path: app/Http/Controllers/Api/V1/HomeController.php
+
+		-
+			message: '#^Offset ''button_link'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Api/V1/HomeController.php
+
+		-
+			message: '#^Offset ''button_link'' on array\{\}\|array\{slides\?\: array\{\}, tabs\?\: array\{\}\}\|string on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Api/V1/HomeController.php
+
+		-
+			message: '#^Offset ''image'' does not exist on array\{\}\|array\{slides\?\: array\{\}, tabs\?\: array\{\}\}\|string\.$#'
+			identifier: offsetAccess.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/HomeController.php
+
+		-
+			message: '#^Offset ''image'' on array\{\}\|array\{slides\?\: array\{\}, tabs\?\: array\{\}\}\|string in empty\(\) does not exist\.$#'
+			identifier: empty.offset
+			count: 1
+			path: app/Http/Controllers/Api/V1/HomeController.php
+
+		-
+			message: '#^Offset ''link'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Api/V1/HomeController.php
+
+		-
+			message: '#^Offset ''link'' on array\{\}\|array\{slides\?\: array\{\}, tabs\?\: array\{\}\}\|string on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Api/V1/HomeController.php
+
+		-
+			message: '#^Offset ''per_tab'' on array\{\}\|array\{slides\: array\{\}\}\|string on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Api/V1/HomeController.php
+
+		-
+			message: '#^Offset ''slides'' on array\{\}\|string on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Api/V1/HomeController.php
+
+		-
+			message: '#^Offset ''tabs'' on array\{\}\|array\{slides\: array\{\}\}\|string on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/Api/V1/HomeController.php
+
+		-
+			message: '#^Relation ''categories'' is not found in App\\Models\\Product model\.$#'
+			identifier: larastan.relationExistence
+			count: 7
+			path: app/Http/Controllers/Api/V1/HomeController.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: app/Http/Controllers/Api/V1/HomeController.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\Order model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Api/V1/OrderController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Order\:\:\$items\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/OrderReturnController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Order\:\:\$items\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/PaymentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Api/V1/PaymentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product_id\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Http/Controllers/Api/V1/PaymentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product_name\.$#'
+			identifier: property.notFound
+			count: 6
+			path: app/Http/Controllers/Api/V1/PaymentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 11
+			path: app/Http/Controllers/Api/V1/PaymentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$subtotal\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/PaymentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$unit_price\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/PaymentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$variant\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/PaymentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$variant_id\.$#'
+			identifier: property.notFound
+			count: 5
+			path: app/Http/Controllers/Api/V1/PaymentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$variant_label\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Api/V1/PaymentController.php
+
+		-
+			message: '#^Call to method Illuminate\\Support\\Collection\<int,\*NEVER\*\>\:\:isNotEmpty\(\) will always evaluate to false\.$#'
+			identifier: method.impossibleType
+			count: 2
+			path: app/Http/Controllers/Api/V1/PaymentController.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\Order model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Api/V1/PaymentController.php
+
+		-
+			message: '#^Relation ''categories'' is not found in App\\Models\\Product model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Http/Controllers/Api/V1/ProductController.php
+
+		-
+			message: '#^Relation ''relatedProducts'' is not found in App\\Models\\Product model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Api/V1/ProductController.php
+
+		-
+			message: '#^Relation ''reviews'' is not found in App\\Models\\Product model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Api/V1/ProductController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/ReviewController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$images\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/ReviewController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Api/V1/ReviewController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/ReviewController.php
+
+		-
+			message: '#^Cannot call method toISOString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Api/V1/ReviewController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Review\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Api/V1/ReviewController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/V1/ShippingController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$unit_price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/V1/ShippingController.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\AddressResource\:\:\$address_line_2\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/AddressResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\AddressResource\:\:\$city\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/AddressResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\AddressResource\:\:\$country\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/AddressResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\AddressResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Resources/Api/AddressResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\AddressResource\:\:\$label\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/AddressResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\AddressResource\:\:\$state\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/AddressResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\AddressResource\:\:\$street\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/AddressResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\AddressResource\:\:\$telephone\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/AddressResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\AddressResource\:\:\$zip_code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/AddressResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartItemResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartItemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartItemResource\:\:\$product_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartItemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartItemResource\:\:\$product_image\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartItemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartItemResource\:\:\$product_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartItemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartItemResource\:\:\$product_sku\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartItemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartItemResource\:\:\$product_slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartItemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartItemResource\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartItemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartItemResource\:\:\$subtotal\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartItemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartItemResource\:\:\$unit_price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartItemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartItemResource\:\:\$variant_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartItemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartItemResource\:\:\$variant_label\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartItemResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartResource\:\:\$coupon_code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartResource\:\:\$discount_amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartResource\:\:\$expires_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartResource\:\:\$items\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/Api/CartResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartResource\:\:\$shipping_cost\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartResource\:\:\$shipping_method_code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartResource\:\:\$shipping_method_label\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CartResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartResource.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Resources\\Api\\CartResource\:\:getSubtotal\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartResource.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Resources\\Api\\CartResource\:\:getTotal\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Resources/Api/CartResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CategoryResource\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CategoryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CategoryResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CategoryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CategoryResource\:\:\$image\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CategoryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CategoryResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CategoryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CategoryResource\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CategoryResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CmsPageResource\:\:\$content\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/Api/CmsPageResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CmsPageResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CmsPageResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CmsPageResource\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CmsPageResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CmsPageResource\:\:\$subtitle\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CmsPageResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CmsPageResource\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CmsPageResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CustomerResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CustomerResource\:\:\$date_of_birth\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CustomerResource\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CustomerResource\:\:\$first_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CustomerResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CustomerResource\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CustomerResource\:\:\$last_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\CustomerResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/CustomerResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\OrderResource\:\:\$coupon_code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\OrderResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\OrderResource\:\:\$discount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\OrderResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/Api/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\OrderResource\:\:\$items\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\OrderResource\:\:\$shipping_address\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\OrderResource\:\:\$shipping_cost\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\OrderResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\OrderResource\:\:\$subtotal\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\OrderResource\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/OrderResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\ProductResource\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\ProductResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\ProductResource\:\:\$meta_description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\ProductResource\:\:\$meta_title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\ProductResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\ProductResource\:\:\$price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\ProductResource\:\:\$product_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\ProductResource\:\:\$relatedProducts\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\ProductResource\:\:\$reviews\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Http/Resources/Api/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\ProductResource\:\:\$sale_price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\ProductResource\:\:\$short_description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\ProductResource\:\:\$sku\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\ProductResource\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\ProductResource\:\:\$stock\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/ProductResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\Api\\ProductResource\:\:\$variants\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Api/ProductResource.php
+
+		-
+			message: '#^Called ''contains'' on Laravel collection, but could have been retrieved as a query\.$#'
+			identifier: larastan.noUnnecessaryCollectionCall
+			count: 1
+			path: app/Livewire/CategoryTree.php
+
+		-
+			message: '#^Relation ''products'' is not found in App\\Models\\Category model\.$#'
+			identifier: larastan.relationExistence
+			count: 5
+			path: app/Livewire/CategoryTree.php
+
+		-
+			message: '#^Relation ''customer'' is not found in App\\Models\\Order model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Mail/OrderConfirmationMail.php
+
+		-
+			message: '#^Relation ''items'' is not found in App\\Models\\Order model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Mail/OrderConfirmationMail.php
+
+		-
+			message: '#^Cannot call method isPast\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/Coupon.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Order\:\:\$items\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Models/Order.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$orderItem\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/OrderReturn.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/OrderReturn.php
+
+		-
+			message: '#^Offset ''quantity'' on array\{order_item_id\: int, quantity\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Models/OrderReturn.php
+
+		-
+			message: '#^Offset string on string\|null on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Models/PaymentMethod.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$height\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/ProductVariant.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$length\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/ProductVariant.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/ProductVariant.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$weight\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/ProductVariant.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$width\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/ProductVariant.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$product\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Quote.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Quote.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Quote.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$value\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Models/Quote.php
+
+		-
+			message: '#^Cannot call method isPast\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Models/Quote.php
+
+		-
+			message: '#^Method App\\Models\\Quote\:\:getActiveForCustomer\(\) should return static\(App\\Models\\Quote\) but returns App\\Models\\Quote\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Quote.php
+
+		-
+			message: '#^Method App\\Models\\Quote\:\:getActiveForGuest\(\) should return static\(App\\Models\\Quote\) but returns App\\Models\\Quote\.$#'
+			identifier: return.type
+			count: 3
+			path: app/Models/Quote.php
+
+		-
+			message: '#^Method App\\Models\\Quote\:\:reactivateOrCreate\(\) should return static\(App\\Models\\Quote\) but returns App\\Models\\Quote\.$#'
+			identifier: return.type
+			count: 2
+			path: app/Models/Quote.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:sum\(\) expects \(callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: float\)\|string\|null, Closure\(App\\Models\\QuoteItem\)\: float given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Models/Quote.php
+
+		-
+			message: '#^Unsafe call to private method App\\Models\\Quote\:\:reactivateOrCreate\(\) through static\:\:\.$#'
+			identifier: staticClassAccess.privateMethod
+			count: 2
+			path: app/Models/Quote.php
+
+		-
+			message: '#^Unsafe usage of new static\(\)\.$#'
+			identifier: new.static
+			count: 1
+			path: app/Models/Quote.php
+
+		-
+			message: '#^Offset string on string\|null on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Models/ShippingMethod.php
+
+		-
+			message: '#^Method App\\Models\\SiteSetting\:\:instance\(\) should return static\(App\\Models\\SiteSetting\) but returns App\\Models\\SiteSetting\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/SiteSetting.php
+
+		-
+			message: '#^Call to function in_array\(\) with string and array\{App\\Enums\\Role\:\:SuperAdmin, App\\Enums\\Role\:\:Admin, App\\Enums\\Role\:\:Editor\} will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Call to function in_array\(\) with string and array\{App\\Enums\\Role\:\:SuperAdmin, App\\Enums\\Role\:\:Admin\} will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Cannot call method canAccessPanel\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and App\\Enums\\Role\:\:SuperAdmin will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type string\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: app/Providers/AppServiceProvider.php
+
+		-
+			message: '#^Property App\\Support\\Dashboard\\SalesPeriod\:\:\$key is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: app/Support/Dashboard/SalesPeriod.php
+
+		-
+			message: '#^Offset ''\*'' on array\{a\: array\{''href'', ''title'', ''target'', ''rel''\}, img\: array\{''src'', ''alt'', ''title'', ''width'', ''height''\}, td\: array\{''colspan'', ''rowspan''\}, th\: array\{''colspan'', ''rowspan''\}, ''\*''\: array\{''class''\}\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Support/HtmlSanitizer.php

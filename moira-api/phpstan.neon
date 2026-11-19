@@ -1,0 +1,9 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    # Errores que ya existían al agregar Larastan (19/11/2026). El CI falla solo con errores nuevos.
+    - phpstan-baseline.neon
+
+parameters:
+    paths:
+        - app/
+    level: 5
